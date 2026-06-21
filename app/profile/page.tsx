@@ -1,0 +1,380 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useUser } from '@/app/context/UserContext';
+import Link from 'next/link';
+import { 
+  User, 
+  Mail, 
+  Shield, 
+  Terminal, 
+  Briefcase, 
+  Users, 
+  FileText, 
+  CheckCircle,
+  Calendar,
+  Activity,
+  ArrowRight,
+  Save
+} from 'lucide-react';
+
+interface ProfileData {
+  fullName: string;
+  bio: string;
+  github: string;
+  track: string;
+  team: string;
+}
+
+export default function ProfilePage() {
+  const { user, role } = useUser();
+  
+  // Profile form state
+  const [fullName, setFullName] = useState('');
+  const [bio, setBio] = useState('');
+  const [github, setGithub] = useState('');
+  const [track, setTrack] = useState('Fullstack Developer');
+  const [team, setTeam] = useState('');
+  
+  // UI States
+  const [loading, setLoading] = useState(true);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [attendingCount, setAttendingCount] = useState(0);
+  const [hostedCount, setHostedCount] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      try {
+        // Load custom profile details
+        const storedProfileStr = localStorage.getItem(`profile_${user}`);
+        if (storedProfileStr) {
+          const profile: ProfileData = JSON.parse(storedProfileStr);
+          setFullName(profile.fullName || '');
+          setBio(profile.bio || '');
+          setGithub(profile.github || '');
+          setTrack(profile.track || 'Fullstack Developer');
+          setTeam(profile.team || '');
+        } else {
+          // Pre-populate with username
+          setFullName(user.split('@')[0]);
+        }
+
+        // Calculate counts
+        const storedRegs = JSON.parse(localStorage.getItem('registrations') || '[]');
+        const userRegs = storedRegs.filter((reg: any) => reg.email === user);
+        setAttendingCount(userRegs.length);
+
+        const storedHosted = JSON.parse(localStorage.getItem('hosted_events') || '[]');
+        const userHosted = storedHosted.filter((ev: any) => ev.hostEmail === user);
+        setHostedCount(userHosted.length);
+
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (typeof window !== 'undefined' && user) {
+      try {
+        const payload: ProfileData = {
+          fullName,
+          bio,
+          github,
+          track,
+          team
+        };
+        localStorage.setItem(`profile_${user}`, JSON.stringify(payload));
+        
+        // Enrich registrations in localStorage matching this email with the updated fullName/track/team
+        const storedRegs = JSON.parse(localStorage.getItem('registrations') || '[]');
+        const updatedRegs = storedRegs.map((reg: any) => {
+          if (reg.email === user) {
+            return {
+              ...reg,
+              name: fullName || reg.name,
+              track: track || reg.track,
+              team: team || reg.team
+            };
+          }
+          return reg;
+        });
+        localStorage.setItem('registrations', JSON.stringify(updatedRegs));
+
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+        window.dispatchEvent(new Event('storage'));
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  // Auth Guard
+  if (!user) {
+    return (
+      <div className="min-h-[80vh] bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-6 bg-dark-card border border-dark-border p-8 rounded-2xl text-center shadow-neon">
+          <span className="text-4xl block">🔒</span>
+          <h2 className="text-2xl font-black text-white tracking-tight">Login Required</h2>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Please sign in to your campus builder account to view and customize your profile console.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/login"
+              className="w-full py-2.5 bg-neon-purple text-white text-xs font-bold rounded-lg hover:bg-neon-purple/95 transition-all shadow-neon"
+            >
+              Sign In to Campus Account
+            </Link>
+            <Link
+              href="/"
+              className="text-xs text-gray-500 hover:text-white transition-colors"
+            >
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const initials = fullName ? fullName.substring(0, 2) : user.substring(0, 2);
+
+  return (
+    <div className="relative isolate overflow-hidden bg-black w-full min-h-[85vh] py-12 sm:py-16">
+      {/* Background neon decoration */}
+      <div className="absolute inset-0 -z-10 transform-gpu overflow-hidden blur-3xl opacity-25 animate-pulse" aria-hidden="true">
+        <div
+          className="relative left-[50%] top-[10%] aspect-[1155/678] w-[45rem] -translate-x-1/2 bg-gradient-to-tr from-neon-purple to-neon-lavender"
+          style={{
+            clipPath:
+              'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
+          }}
+        />
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-10">
+        
+        {/* Page title */}
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold bg-neon-purple/10 text-neon-lavender border border-neon-purple/30 shadow-neon">
+            <User className="h-3 w-3" /> Student Profile Console
+          </span>
+          <h1 className="text-3xl font-black text-white tracking-tight sm:text-4xl mt-3">
+            Profile Settings
+          </h1>
+          <p className="text-xs text-gray-400 mt-1 leading-normal">
+            Customize your student credentials, social links, and coordinate with campus clubs.
+          </p>
+        </div>
+
+        {loading ? (
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-10 animate-pulse h-96" />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
+            {/* Left side: Avatar and Stats Card */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-neon text-center flex flex-col items-center space-y-4">
+                
+                {/* Big Glowing Avatar */}
+                <div className="w-24 h-24 rounded-full bg-neon-purple/15 border-2 border-neon-purple/50 flex items-center justify-center text-3xl font-black text-neon-lavender uppercase tracking-widest ring-4 ring-neon-purple/10 shadow-[0_0_30px_rgba(191,64,255,0.4)] relative group select-none">
+                  {initials}
+                  <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border border-dark-card animate-pulse" />
+                </div>
+
+                <div className="space-y-1">
+                  <h2 className="text-lg font-black text-white leading-normal truncate max-w-[220px]">
+                    {fullName || user.split('@')[0]}
+                  </h2>
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400 font-mono">
+                    <Mail className="h-3.5 w-3.5 text-neon-purple" />
+                    <span className="truncate max-w-[180px]">{user}</span>
+                  </div>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-900 border border-dark-border rounded-full text-[10px] text-gray-300 font-bold uppercase tracking-wider font-mono">
+                  <Shield className="h-3.5 w-3.5 text-neon-purple" />
+                  <span>{role === 'organizer' ? 'Coordinator' : 'Attendee'}</span>
+                </div>
+              </div>
+
+              {/* Console Metrics */}
+              <div className="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-neon space-y-4 font-mono">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider border-b border-dark-border/40 pb-2 flex items-center gap-1.5">
+                  <Activity className="h-4 w-4 text-neon-purple" /> Registration Index
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <Link 
+                    href="/dashboard" 
+                    className="p-3 bg-zinc-900/60 hover:bg-neon-purple/5 border border-dark-border rounded-xl transition-all hover:border-neon-purple/30 group"
+                  >
+                    <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Attending</div>
+                    <div className="text-xl font-black text-white group-hover:text-neon-purple mt-1">{attendingCount}</div>
+                  </Link>
+
+                  <Link 
+                    href="/dashboard"
+                    className="p-3 bg-zinc-900/60 hover:bg-neon-purple/5 border border-dark-border rounded-xl transition-all hover:border-neon-purple/30 group"
+                  >
+                    <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Hosting</div>
+                    <div className="text-xl font-black text-white group-hover:text-neon-purple mt-1">{hostedCount}</div>
+                  </Link>
+                </div>
+
+                <Link
+                  href="/dashboard"
+                  className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold text-neon-lavender hover:text-white transition-colors pt-1"
+                >
+                  Open Console Dashboard <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Right side: Profile Form Card */}
+            <div className="lg:col-span-2">
+              <form onSubmit={handleSaveProfile} className="bg-dark-card border border-dark-border rounded-2xl p-6 sm:p-8 shadow-neon space-y-6">
+                
+                <div className="border-b border-dark-border/40 pb-4">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>⚙️</span> Custom Student Profile Details
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-normal">
+                    This metadata will automatically fill your ticket bookings and event guest lists.
+                  </p>
+                </div>
+
+                {/* Grid inputs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  
+                  {/* Full Name */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="profile-fullname" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
+                      Full Display Name
+                    </label>
+                    <input
+                      id="profile-fullname"
+                      required
+                      type="text"
+                      placeholder="e.g. John Doe"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="block w-full rounded-lg border border-dark-border bg-black px-3.5 py-2.5 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                    />
+                  </div>
+
+                  {/* GitHub Profile */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="profile-github" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
+                      Social Profile / Portfolio Link
+                    </label>
+                    <div className="relative">
+                      <Terminal className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
+                      <input
+                        id="profile-github"
+                        type="url"
+                        placeholder="https://instagram.com/username or https://linkedin.com/in/username"
+                        value={github}
+                        onChange={(e) => setGithub(e.target.value)}
+                        className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Builder Track Dropdown */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="profile-track" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
+                      Department / Branch of Study
+                    </label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
+                      <select
+                        id="profile-track"
+                        value={track}
+                        onChange={(e) => setTrack(e.target.value)}
+                        className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono appearance-none"
+                      >
+                        <option value="Computer Science & Tech">Computer Science & Tech</option>
+                        <option value="Engineering & Applied Sciences">Engineering & Applied Sciences</option>
+                        <option value="Business & Economics">Business & Economics</option>
+                        <option value="Fine Arts & Design">Fine Arts & Design</option>
+                        <option value="Humanities & Liberal Arts">Humanities & Liberal Arts</option>
+                        <option value="Natural Sciences">Natural Sciences</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Team Association */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="profile-team" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
+                      Club / Student Society Name
+                    </label>
+                    <div className="relative">
+                      <Users className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
+                      <input
+                        id="profile-team"
+                        type="text"
+                        placeholder="e.g. Cultural Dance Club / Tech Society"
+                        value={team}
+                        onChange={(e) => setTeam(e.target.value)}
+                        className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Biography */}
+                <div className="space-y-1.5">
+                  <label htmlFor="profile-bio" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
+                    Biography / Status Bio
+                  </label>
+                  <div className="relative">
+                    <FileText className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
+                    <textarea
+                      id="profile-bio"
+                      rows={3}
+                      placeholder="Share your branch, interests, and active club associations..."
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="block w-full pl-10 pr-3.5 py-3 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Buttons / Save Feedback */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-dark-border/40">
+                  <div className="w-full sm:w-auto">
+                    {saveSuccess && (
+                      <span className="flex items-center gap-1.5 text-xs text-green-300 font-bold bg-green-950/20 border border-green-800/40 px-3.5 py-2 rounded-lg animate-fadeIn font-mono">
+                        <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
+                        ✓ Student profile saved successfully!
+                      </span>
+                    )}
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto px-6 py-3 bg-neon-purple hover:bg-neon-purple/95 text-white text-xs font-black uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-neon transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Save className="h-4 w-4" /> Save Student Profile
+                  </button>
+                </div>
+
+              </form>
+            </div>
+
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}

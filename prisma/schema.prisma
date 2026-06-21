@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  passwordHash    String
+  fullName        String
+  role            String         @default("attendee") // attendee, organizer
+  department      String?
+  clubAssociation String?
+  portfolioUrl    String?
+  createdAt       DateTime       @default(now())
+  registrations   Registration[]
+}
+
+model Event {
+  id              String           @id // e.g. hackathon-2026
+  title           String
+  type            String // Fest, Party, Hackathon, etc.
+  date            DateTime
+  location        String
+  description     String
+  schedule        String? // Markdown
+  prizePool       String? // Markdown
+  bannerUrl       String?
+  ticketType      String           @default("Free") // Free, Paid
+  price           Float?
+  capacity        Int
+  waitlistEnabled Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  registrations   Registration[]
+  bulletinUpdates BulletinUpdate[]
+}
+
+model Registration {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  event        Event    @relation(fields: [eventId], references: [id])
+  eventId      String
+  status       String   @default("Pending") // Pending, Confirmed, Checked In
+  teamName     String?
+  track        String?
+  registeredAt DateTime @default(now())
+}
+
+model BulletinUpdate {
+  id       String   @id @default(uuid())
+  event    Event    @relation(fields: [eventId], references: [id])
+  eventId  String
+  title    String
+  content  String
+  postedAt DateTime @default(now())
+}
