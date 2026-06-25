@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import { Save, AlertTriangle, Shield, Bell, Users, Globe } from "lucide-react";
 
 export default function SettingsPage({ params }) {
   const unwrappedParams = use(params);
   const eventId = unwrappedParams.eventId;
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   
   const [settings, setSettings] = useState({
     visibility: "Public",
@@ -25,8 +28,8 @@ export default function SettingsPage({ params }) {
     // Mock Fetch
     setTimeout(() => {
       setManagers([
-        { id: "mgr-1", name: "Alice Smith", email: "alice@campus.edu", role: "Owner" },
-        { id: "mgr-2", name: "Bob Johnson", email: "bob@campus.edu", role: "Admin" },
+        { id: "mgr-1", name: "Alice Smith", email: "alice@campus.edu", role: "Coordinator" },
+        { id: "mgr-2", name: "Bob Johnson", email: "bob@campus.edu", role: "Coordinator" },
       ]);
       setLoading(false);
     }, 400);
@@ -40,13 +43,53 @@ export default function SettingsPage({ params }) {
   const handleAddManager = (e) => {
     e.preventDefault();
     if(!newManagerEmail) return;
-    setManagers([...managers, { id: `mgr-${Date.now()}`, name: "New User", email: newManagerEmail, role: "Moderator" }]);
+    setManagers([...managers, { id: `mgr-${Date.now()}`, name: "New User", email: newManagerEmail, role: "Coordinator" }]);
     setNewManagerEmail("");
   };
 
   const removeManager = (id) => {
     if(confirm("Remove this manager?")) {
       setManagers(managers.filter(m => m.id !== id));
+    }
+  };
+
+  const handleArchiveEvent = async () => {
+    if(!confirm("Are you sure you want to archive this event? It will be hidden from the public matrix.")) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: true })
+      });
+      if(res.ok) {
+        alert("Event successfully archived.");
+        router.push("/dashboard");
+      } else {
+        alert("Failed to archive event.");
+      }
+    } catch (e) {
+      alert("Error archiving event.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if(!confirm("DANGER: Are you sure you want to permanently delete this event and all its data? This cannot be undone.")) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}`, { method: 'DELETE' });
+      if(res.ok) {
+        alert("Event permanently deleted.");
+        router.push("/dashboard");
+      } else {
+        alert("Failed to delete event.");
+      }
+    } catch (e) {
+      alert("Error deleting event.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -130,11 +173,18 @@ export default function SettingsPage({ params }) {
               onChange={e => setNewManagerEmail(e.target.value)}
               className="flex-1 bg-black border border-dark-border rounded-lg p-2.5 text-sm text-white focus:border-neon-purple outline-none"
             />
-            <button type="submit" className="px-4 py-2 bg-zinc-900 border border-dark-border text-white text-xs font-bold rounded-lg hover:border-blue-500/50 hover:text-blue-400 transition-all">
-              Invite Manager
+            <button 
+              type="submit" 
+              disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newManagerEmail)}
+              className={`px-6 py-2 text-xs font-bold rounded-lg transition-all ${
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newManagerEmail) 
+                  ? "bg-neon-purple text-white border border-neon-purple shadow-[0_0_15px_rgba(191,64,255,0.4)] hover:bg-neon-purple/90 scale-[1.02]" 
+                  : "bg-zinc-900 border border-dark-border text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Add
             </button>
           </form>
-
           <div className="space-y-3">
             {managers.map(mgr => (
               <div key={mgr.id} className="flex items-center justify-between p-3 border border-dark-border rounded-lg bg-black/40">
@@ -146,21 +196,10 @@ export default function SettingsPage({ params }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <select 
-                    value={mgr.role}
-                    onChange={(e) => {
-                      setManagers(managers.map(m => m.id === mgr.id ? {...m, role: e.target.value} : m));
-                    }}
-                    disabled={mgr.role === "Owner"}
-                    className="bg-zinc-900 border border-dark-border rounded p-1.5 text-[11px] text-white focus:border-neon-purple outline-none"
-                  >
-                    <option value="Owner">Owner</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Moderator">Moderator</option>
-                  </select>
-                  {mgr.role !== "Owner" && (
-                    <button onClick={() => removeManager(mgr.id)} className="text-gray-500 hover:text-red-400 text-xs font-bold">Remove</button>
-                  )}
+                  <span className="bg-zinc-900 border border-dark-border rounded px-2 py-1 text-[11px] font-bold text-white">
+                    Coordinator
+                  </span>
+                  <button onClick={() => removeManager(mgr.id)} className="text-gray-500 hover:text-red-400 text-xs font-bold">Remove</button>
                 </div>
               </div>
             ))}
@@ -180,8 +219,8 @@ export default function SettingsPage({ params }) {
               <h3 className="text-sm font-bold text-white">Archive Event</h3>
               <p className="text-[10px] text-gray-400 mt-0.5">Hide the event from the public matrix but keep the data for analytics.</p>
             </div>
-            <button className="px-4 py-2 border border-amber-900/50 text-amber-500 bg-amber-950/20 hover:bg-amber-950/40 text-xs font-bold rounded-lg transition-all whitespace-nowrap">
-              Archive Event
+            <button disabled={actionLoading} onClick={handleArchiveEvent} className="px-4 py-2 border border-amber-900/50 text-amber-500 bg-amber-950/20 hover:bg-amber-950/40 text-xs font-bold rounded-lg transition-all whitespace-nowrap disabled:opacity-50">
+              {actionLoading ? 'Processing...' : 'Archive Event'}
             </button>
           </div>
           
@@ -190,8 +229,8 @@ export default function SettingsPage({ params }) {
               <h3 className="text-sm font-bold text-white">Delete Event</h3>
               <p className="text-[10px] text-gray-400 mt-0.5">Permanently delete this event and all associated registrations and data.</p>
             </div>
-            <button className="px-4 py-2 border border-red-900/50 text-red-400 bg-red-950/20 hover:bg-red-950/40 text-xs font-bold rounded-lg transition-all whitespace-nowrap">
-              Delete Event
+            <button disabled={actionLoading} onClick={handleDeleteEvent} className="px-4 py-2 border border-red-900/50 text-red-400 bg-red-950/20 hover:bg-red-950/40 text-xs font-bold rounded-lg transition-all whitespace-nowrap disabled:opacity-50">
+              {actionLoading ? 'Processing...' : 'Delete Event'}
             </button>
           </div>
         </div>

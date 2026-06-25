@@ -190,19 +190,6 @@ export default function TwinLayout({ event, onBack }) {
                 </div>
               </div>
 
-              <div className="flex flex-col lg:flex-row justify-end items-start gap-6 border-b border-dark-border/40 pb-6">
-                  <div className="flex items-center gap-3 pt-2">
-                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-900 border border-dark-border text-gray-300 hover:text-white hover:border-neon-purple transition-all text-xs font-bold">
-                      <Share className="w-3.5 h-3.5" /> Share
-                    </button>
-                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-900 border border-dark-border text-gray-300 hover:text-white hover:border-neon-purple transition-all text-xs font-bold">
-                      <Bookmark className="w-3.5 h-3.5" /> Save
-                    </button>
-                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-900/50 border border-dark-border/50 text-gray-500 hover:text-red-400 hover:border-red-900/50 transition-all text-xs font-bold ml-auto lg:ml-0">
-                      <Flag className="w-3.5 h-3.5" /> Report
-                    </button>
-                  </div>
-              </div>
             </div>
 
             <EventDescription event={event} />

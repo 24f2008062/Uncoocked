@@ -6,10 +6,19 @@ const prisma = new PrismaClient({});
 
 export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const includeArchived = searchParams.get('includeArchived') === 'true';
+
+    const whereClause = {
+      city: { in: ACTIVE_CITIES }
+    };
+
+    if (!includeArchived) {
+      whereClause.archived = false;
+    }
+
     const events = await prisma.event.findMany({
-      where: {
-        city: { in: ACTIVE_CITIES }
-      },
+      where: whereClause,
       orderBy: {
         date: 'asc'
       },
@@ -64,6 +73,7 @@ export async function POST(request) {
         type: data.type,
         date: new Date(data.date),
         location: data.location,
+        zone: data.zone || null,
         city: data.city || DEFAULT_CITY,
         state: data.state || DEFAULT_STATE,
         country: data.country || DEFAULT_COUNTRY,

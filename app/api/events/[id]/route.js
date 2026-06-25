@@ -22,6 +22,7 @@ export async function PUT(request, context) {
         price: data.price ? parseFloat(data.price) : 0,
         capacity: data.capacity ? parseInt(data.capacity) : 100,
         waitlistEnabled: data.waitlistEnabled ?? true,
+        archived: data.archived !== undefined ? data.archived : undefined,
       },
     });
 

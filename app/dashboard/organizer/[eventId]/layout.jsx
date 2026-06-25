@@ -42,8 +42,8 @@ export default function OrganizerLayout({ children, params }) {
     { label: "Overview", icon: LayoutDashboard, href: `/dashboard/organizer/${eventId}` },
     { label: "Attendees", icon: Users, href: `/dashboard/organizer/${eventId}/attendees` },
     { label: "Announcements", icon: Megaphone, href: `/dashboard/organizer/${eventId}/announcements` },
-    { label: "Tickets", icon: Ticket, href: `/dashboard/organizer/${eventId}/tickets` },
-    { label: "Analytics", icon: BarChart3, href: `/dashboard/organizer/${eventId}/analytics` },
+
+
     { label: "Settings", icon: Settings, href: `/dashboard/organizer/${eventId}/settings` },
   ];
 

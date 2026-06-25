@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, Calendar, MapPin, ArrowRight } from "lucide-react";
+import { LUCKNOW_ZONES } from "@/app/config/cities";
 
 export const mockEvents = [
   {
@@ -228,7 +230,7 @@ export const mockEvents = [
   },
 ];
 
-import HostEventModal from "./HostEventModal";
+
 
 export default function EventsExplorer({
   events,
@@ -236,8 +238,9 @@ export default function EventsExplorer({
   onSearchChange,
   onSelectEvent,
 }) {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("All");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeZone, setActiveZone] = useState("All");
 
   // Extract unique categories from events
   const categories = useMemo(() => {
@@ -245,20 +248,23 @@ export default function EventsExplorer({
     return ["All", ...Array.from(types)];
   }, [events]);
 
-  // Filter events based on search query and category in real-time
+  // Filter events based on search query, category, and zone in real-time
   const filteredEvents = useMemo(() => {
     return events.filter((ev) => {
       const matchCategory =
         activeCategory === "All" || ev.type === activeCategory;
+      const matchZone =
+        activeZone === "All" || ev.zone === activeZone;
       const matchText = searchQuery.toLowerCase().trim();
       const matchSearch =
         ev.title.toLowerCase().includes(matchText) ||
         ev.type.toLowerCase().includes(matchText) ||
         ev.description.toLowerCase().includes(matchText) ||
-        ev.location.toLowerCase().includes(matchText);
-      return matchCategory && matchSearch;
+        ev.location.toLowerCase().includes(matchText) ||
+        (ev.zone && ev.zone.toLowerCase().includes(matchText));
+      return matchCategory && matchZone && matchSearch;
     });
-  }, [events, searchQuery, activeCategory]);
+  }, [events, searchQuery, activeCategory, activeZone]);
 
   // Framer Motion staggered transition configurations
   const containerVariants = {
@@ -320,8 +326,8 @@ export default function EventsExplorer({
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
           {/* Create Event Button */}
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-neon-purple text-white text-xs font-bold rounded-xl hover:bg-neon-purple/90 transition-all shadow-neon whitespace-nowrap"
+              onClick={() => router.push("/dashboard/organizer/new")}
+              className="px-6 py-2 bg-neon-purple text-white text-xs font-bold rounded-lg hover:bg-neon-purple/90 transition-all shadow-neon whitespace-nowrap"
           >
             <span className="text-base leading-none mb-[2px]">+</span> Host
             Event
@@ -341,16 +347,6 @@ export default function EventsExplorer({
         </div>
       </div>
 
-      <HostEventModal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSaved={() => {
-          // Trigger a global storage event so the parent pages refresh
-          window.dispatchEvent(new Event("storage"));
-        }}
-      />
-
-      {/* Category Tabs */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
         {categories.map((category) => (
           <button
@@ -363,6 +359,33 @@ export default function EventsExplorer({
             }`}
           >
             {category}
+          </button>
+        ))}
+      </div>
+      
+      {/* Zone Filters */}
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+        <button
+          onClick={() => setActiveZone("All")}
+          className={`flex-shrink-0 px-4 py-1.5 rounded-full font-bold text-xs transition-all whitespace-nowrap ${
+            activeZone === "All"
+              ? "bg-gray-100 text-black shadow-sm"
+              : "bg-zinc-900/50 text-gray-400 hover:text-white hover:bg-zinc-800 border border-dark-border"
+          }`}
+        >
+          All Zones
+        </button>
+        {LUCKNOW_ZONES.map((zone) => (
+          <button
+            key={zone}
+            onClick={() => setActiveZone(zone)}
+            className={`flex-shrink-0 px-4 py-1.5 rounded-full font-bold text-xs transition-all whitespace-nowrap ${
+              activeZone === zone
+                ? "bg-gray-100 text-black shadow-sm"
+                : "bg-zinc-900/50 text-gray-400 hover:text-white hover:bg-zinc-800 border border-dark-border"
+            }`}
+          >
+            {zone}
           </button>
         ))}
       </div>
@@ -419,7 +442,7 @@ export default function EventsExplorer({
                     <div className="flex items-center gap-1">
                       <MapPin className="h-3 w-3 text-neon-purple shrink-0" />
                       <span className="truncate max-w-[140px]">
-                        {ev.location.split(",")[0]}
+                        {ev.zone ? ev.zone : ev.location.split(",")[0]}
                       </span>
                     </div>
                   </div>
