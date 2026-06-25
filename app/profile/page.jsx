@@ -15,6 +15,8 @@ import {
   Activity,
   ArrowRight,
   Save,
+  Edit2,
+  X,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -30,6 +32,7 @@ export default function ProfilePage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [attendingCount, setAttendingCount] = useState(0);
   const [hostedCount, setHostedCount] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && user) {
@@ -102,6 +105,7 @@ export default function ProfilePage() {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
         window.dispatchEvent(new Event("storage"));
+        setIsEditing(false); // Close edit section after saving
       } catch (err) {
         console.error(err);
       }
@@ -160,17 +164,25 @@ export default function ProfilePage() {
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-10">
         {/* Page title */}
-        <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold bg-neon-purple/10 text-neon-lavender border border-neon-purple/30 shadow-neon">
-            <User className="h-3 w-3" /> Student Profile Console
-          </span>
-          <h1 className="text-3xl font-black text-white tracking-tight sm:text-4xl mt-3">
-            Profile Settings
-          </h1>
-          <p className="text-xs text-gray-400 mt-1 leading-normal">
-            Customize your student credentials, social links, and coordinate
-            with campus clubs.
-          </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold bg-neon-purple/10 text-neon-lavender border border-neon-purple/30 shadow-neon">
+              <User className="h-3 w-3" /> Student Profile Console
+            </span>
+            <h1 className="text-3xl font-black text-white tracking-tight sm:text-4xl mt-3">
+              Profile Settings
+            </h1>
+            <p className="text-xs text-gray-400 mt-1 leading-normal">
+              Customize your student credentials, social links, and coordinate
+              with campus clubs.
+            </p>
+          </div>
+          {saveSuccess && (
+            <span className="flex items-center gap-1.5 text-xs text-green-300 font-bold bg-green-950/20 border border-green-800/40 px-3.5 py-2 rounded-lg animate-fadeIn font-mono">
+              <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
+              Saved successfully!
+            </span>
+          )}
         </div>
 
         {loading ? (
@@ -179,15 +191,15 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Left side: Avatar and Stats Card */}
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-neon text-center flex flex-col items-center space-y-4">
+              <div className="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-neon flex flex-col items-center space-y-5">
                 {/* Big Glowing Avatar */}
                 <div className="w-24 h-24 rounded-full bg-neon-purple/15 border-2 border-neon-purple/50 flex items-center justify-center text-3xl font-black text-neon-lavender uppercase tracking-widest ring-4 ring-neon-purple/10 shadow-[0_0_30px_rgba(191,64,255,0.4)] relative group select-none">
                   {initials}
                   <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border border-dark-card animate-pulse" />
                 </div>
 
-                <div className="space-y-1">
-                  <h2 className="text-lg font-black text-white leading-normal truncate max-w-[220px]">
+                <div className="space-y-1 text-center w-full">
+                  <h2 className="text-lg font-black text-white leading-normal truncate w-full px-2">
                     {fullName || user.split("@")[0]}
                   </h2>
                   <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400 font-mono">
@@ -246,164 +258,233 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Right side: Profile Form Card */}
+            {/* Right side: Profile Form / View Card */}
             <div className="lg:col-span-2">
-              <form
-                onSubmit={handleSaveProfile}
-                className="bg-dark-card border border-dark-border rounded-2xl p-6 sm:p-8 shadow-neon space-y-6"
-              >
-                <div className="border-b border-dark-border/40 pb-4">
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    <span>⚙️</span> Custom Student Profile Details
-                  </h3>
-                  <p className="text-[11px] text-gray-400 mt-1 leading-normal">
-                    This metadata will automatically fill your ticket bookings
-                    and event guest lists.
-                  </p>
-                </div>
-
-                {/* Grid inputs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Full Name */}
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="profile-fullname"
-                      className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                    >
-                      Full Display Name
-                    </label>
-                    <input
-                      id="profile-fullname"
-                      required
-                      type="text"
-                      placeholder="e.g. John Doe"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="block w-full rounded-lg border border-dark-border bg-black px-3.5 py-2.5 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
-                    />
-                  </div>
-
-                  {/* GitHub Profile */}
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="profile-github"
-                      className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                    >
-                      Social Profile / Portfolio Link
-                    </label>
-                    <div className="relative">
-                      <Terminal className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
-                      <input
-                        id="profile-github"
-                        type="url"
-                        placeholder="https://instagram.com/username or https://linkedin.com/in/username"
-                        value={github}
-                        onChange={(e) => setGithub(e.target.value)}
-                        className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
-                      />
+              {isEditing ? (
+                <form
+                  onSubmit={handleSaveProfile}
+                  className="bg-dark-card border border-neon-purple/30 rounded-2xl p-6 sm:p-8 shadow-[0_0_30px_rgba(191,64,255,0.1)] space-y-6 animate-fadeIn"
+                >
+                  <div className="border-b border-dark-border/40 pb-4 flex justify-between items-start">
+                    <div>
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <Edit2 className="h-4 w-4 text-neon-purple" /> Edit Student Profile
+                      </h3>
+                      <p className="text-[11px] text-gray-400 mt-1 leading-normal">
+                        Update your metadata. Changes will reflect across your event registrations.
+                      </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="p-1.5 hover:bg-zinc-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
 
-                  {/* Builder Track Dropdown */}
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="profile-track"
-                      className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                    >
-                      Department / Branch of Study
-                    </label>
-                    <div className="relative">
-                      <Briefcase className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
-                      <select
-                        id="profile-track"
-                        value={track}
-                        onChange={(e) => setTrack(e.target.value)}
-                        className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono appearance-none"
+                  {/* Grid inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Full Name */}
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="profile-fullname"
+                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
                       >
-                        <option value="Computer Science & Tech">
-                          Computer Science & Tech
-                        </option>
-                        <option value="Engineering & Applied Sciences">
-                          Engineering & Applied Sciences
-                        </option>
-                        <option value="Business & Economics">
-                          Business & Economics
-                        </option>
-                        <option value="Fine Arts & Design">
-                          Fine Arts & Design
-                        </option>
-                        <option value="Humanities & Liberal Arts">
-                          Humanities & Liberal Arts
-                        </option>
-                        <option value="Natural Sciences">
-                          Natural Sciences
-                        </option>
-                      </select>
+                        Full Display Name
+                      </label>
+                      <input
+                        id="profile-fullname"
+                        required
+                        type="text"
+                        placeholder="e.g. John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="block w-full rounded-lg border border-dark-border bg-black px-3.5 py-2.5 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                      />
+                    </div>
+
+                    {/* GitHub Profile */}
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="profile-github"
+                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
+                      >
+                        Social Profile / Link
+                      </label>
+                      <div className="relative">
+                        <Terminal className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
+                        <input
+                          id="profile-github"
+                          type="url"
+                          placeholder="https://github.com/user"
+                          value={github}
+                          onChange={(e) => setGithub(e.target.value)}
+                          className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Builder Track Dropdown */}
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="profile-track"
+                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
+                      >
+                        Department / Branch
+                      </label>
+                      <div className="relative">
+                        <Briefcase className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
+                        <select
+                          id="profile-track"
+                          value={track}
+                          onChange={(e) => setTrack(e.target.value)}
+                          className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono appearance-none"
+                        >
+                          <option value="Computer Science & Tech">
+                            Computer Science & Tech
+                          </option>
+                          <option value="Engineering & Applied Sciences">
+                            Engineering & Applied Sciences
+                          </option>
+                          <option value="Business & Economics">
+                            Business & Economics
+                          </option>
+                          <option value="Fine Arts & Design">
+                            Fine Arts & Design
+                          </option>
+                          <option value="Humanities & Liberal Arts">
+                            Humanities & Liberal Arts
+                          </option>
+                          <option value="Natural Sciences">
+                            Natural Sciences
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Team Association */}
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="profile-team"
+                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
+                      >
+                        Club / Society
+                      </label>
+                      <div className="relative">
+                        <Users className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
+                        <input
+                          id="profile-team"
+                          type="text"
+                          placeholder="e.g. Cultural Dance Club"
+                          value={team}
+                          onChange={(e) => setTeam(e.target.value)}
+                          className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Team Association */}
+                  {/* Biography */}
                   <div className="space-y-1.5">
                     <label
-                      htmlFor="profile-team"
+                      htmlFor="profile-bio"
                       className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
                     >
-                      Club / Student Society Name
+                      Biography / Status Bio
                     </label>
                     <div className="relative">
-                      <Users className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
-                      <input
-                        id="profile-team"
-                        type="text"
-                        placeholder="e.g. Cultural Dance Club / Tech Society"
-                        value={team}
-                        onChange={(e) => setTeam(e.target.value)}
-                        className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                      <FileText className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
+                      <textarea
+                        id="profile-bio"
+                        rows={3}
+                        placeholder="Share your branch, interests, and active club associations..."
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        className="block w-full pl-10 pr-3.5 py-3 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono resize-none"
                       />
                     </div>
                   </div>
-                </div>
 
-                {/* Biography */}
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="profile-bio"
-                    className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                  >
-                    Biography / Status Bio
-                  </label>
-                  <div className="relative">
-                    <FileText className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-500" />
-                    <textarea
-                      id="profile-bio"
-                      rows={3}
-                      placeholder="Share your branch, interests, and active club associations..."
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      className="block w-full pl-10 pr-3.5 py-3 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono resize-none"
-                    />
+                  {/* Buttons / Save Feedback */}
+                  <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-dark-border/40">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="w-full sm:w-auto px-6 py-3 bg-transparent hover:bg-zinc-900 border border-dark-border text-gray-300 text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="w-full sm:w-auto px-6 py-3 bg-neon-purple hover:bg-neon-purple/95 text-white text-xs font-black uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-neon transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Save className="h-4 w-4" /> Save Changes
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="bg-dark-card border border-dark-border rounded-2xl p-6 sm:p-8 shadow-neon space-y-8 animate-fadeIn h-full">
+                  <div className="border-b border-dark-border/40 pb-4 flex justify-between items-start">
+                    <div>
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <User className="h-4 w-4 text-neon-purple" /> Profile Details
+                      </h3>
+                      <p className="text-[11px] text-gray-400 mt-1 leading-normal">
+                        Your visible campus profile information.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-4 py-2 bg-neon-purple/10 text-neon-lavender hover:bg-neon-purple hover:text-white border border-neon-purple/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(191,64,255,0.15)]"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" /> Edit
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
+                        <Briefcase className="h-3.5 w-3.5 text-neon-purple" /> Department / Branch
+                      </p>
+                      <p className="text-sm text-white font-medium">{track || <span className="text-gray-600 italic text-xs">Not specified</span>}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-neon-purple" /> Club / Society
+                      </p>
+                      <p className="text-sm text-white font-medium">{team || <span className="text-gray-600 italic text-xs">Not specified</span>}</p>
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
+                        <Terminal className="h-3.5 w-3.5 text-neon-purple" /> Social Profile / Link
+                      </p>
+                      {github ? (
+                        <a href={github} target="_blank" rel="noopener noreferrer" className="text-sm text-neon-lavender hover:underline break-all inline-flex items-center gap-1">
+                          {github.replace(/^https?:\/\//, '')}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-gray-600 italic">Not provided</span>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5 text-neon-purple" /> Biography
+                      </p>
+                      {bio ? (
+                        <div className="bg-zinc-900/50 p-4 rounded-xl border border-dark-border/50 text-sm text-gray-300 leading-relaxed italic">
+                          "{bio}"
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-600 italic">No biography provided</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                {/* Buttons / Save Feedback */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-dark-border/40">
-                  <div className="w-full sm:w-auto">
-                    {saveSuccess && (
-                      <span className="flex items-center gap-1.5 text-xs text-green-300 font-bold bg-green-950/20 border border-green-800/40 px-3.5 py-2 rounded-lg animate-fadeIn font-mono">
-                        <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
-                        ✓ Student profile saved successfully!
-                      </span>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full sm:w-auto px-6 py-3 bg-neon-purple hover:bg-neon-purple/95 text-white text-xs font-black uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-neon transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <Save className="h-4 w-4" /> Save Student Profile
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
           </div>
         )}

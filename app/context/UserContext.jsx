@@ -1,12 +1,22 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 
 const UserContext = createContext(undefined);
 
 export function UserProvider({ children }) {
   const [role, setRoleState] = useState("organizer");
   const [user, setUserState] = useState(null);
+  const { data: session, status } = useSession();
+
+  // Synchronize NextAuth session with UserContext state
+  useEffect(() => {
+    if (session?.user) {
+      setUserState(session.user.email);
+      setRoleState(session.user.role || "attendee");
+    }
+  }, [session]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -58,13 +68,15 @@ export function UserProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUserState(null);
     setRoleState("organizer");
     if (typeof window !== "undefined") {
       localStorage.removeItem("user_session");
       localStorage.removeItem("user_role");
     }
+    // Also sign out of NextAuth
+    await nextAuthSignOut({ redirect: false });
   };
 
   return (

@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { UserProvider } from "@/app/context/UserContext";
+import { NextAuthProvider } from "@/app/context/NextAuthProvider";
 import SplashScreen from "./components/SplashScreen";
 
 const geistSans = Geist({
@@ -30,11 +31,13 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col bg-black text-gray-100 transition-colors duration-300">
         <SplashScreen />
-        <UserProvider>
-          <Navbar />
-          <main className="flex-1 w-full flex flex-col pt-20">{children}</main>
-          <Footer />
-        </UserProvider>
+        <NextAuthProvider>
+          <UserProvider>
+            <Navbar />
+            <main className="flex-1 w-full flex flex-col pt-20">{children}</main>
+            <Footer />
+          </UserProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

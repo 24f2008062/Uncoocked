@@ -2,29 +2,30 @@
 
 import { useState, useEffect } from "react";
 import TwinLayout from "@/app/components/TwinLayout";
-import EventsExplorer, { mockEvents } from "@/app/components/EventsExplorer";
+import EventsExplorer from "@/app/components/EventsExplorer";
+import RecommendedEvents from "@/app/components/RecommendedEvents";
+import { useUser } from "@/app/context/UserContext";
 
 export default function EventPage() {
+  const { user } = useUser();
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [allEvents, setAllEvents] = useState(mockEvents);
+  const [allEvents, setAllEvents] = useState([]);
 
-  const loadEvents = () => {
-    if (typeof window !== "undefined") {
-      try {
-        const storedStr = localStorage.getItem("hosted_events") || "[]";
-        const hosted = JSON.parse(storedStr);
-        setAllEvents([...mockEvents, ...hosted]);
-      } catch (err) {
-        console.error(err);
+  const loadEvents = async () => {
+    try {
+      const res = await fetch("/api/events");
+      const data = await res.json();
+      if (data.success) {
+        setAllEvents(data.events);
       }
+    } catch (err) {
+      console.error("Failed to load events", err);
     }
   };
 
   useEffect(() => {
     loadEvents();
-    window.addEventListener("storage", loadEvents);
-    return () => window.removeEventListener("storage", loadEvents);
   }, []);
 
   // Check URL query parameters and hash on mount
@@ -53,12 +54,7 @@ export default function EventPage() {
     const selectedEvent = allEvents.find((e) => e.id === selectedEventId);
     if (selectedEvent) {
       const eventData = {
-        id: selectedEvent.id,
-        title: selectedEvent.title,
-        type: selectedEvent.type,
-        date: selectedEvent.date,
-        location: selectedEvent.location,
-        description: selectedEvent.description,
+        ...selectedEvent,
         schedule:
           selectedEvent.schedule ||
           `
@@ -86,7 +82,7 @@ export default function EventPage() {
               setSelectedEventId(null);
               // Clean up URL query param and hash when going back
               if (window.history.pushState) {
-                window.history.pushState("", "", "/event");
+                window.history.pushState({}, "", "/event");
               } else {
                 window.location.href = "/event";
               }
@@ -99,7 +95,14 @@ export default function EventPage() {
 
   return (
     <div className="bg-black w-full min-h-screen pt-8 pb-16 px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-12">
+        {user && (
+          <RecommendedEvents 
+            userEmail={user} 
+            onSelectEvent={setSelectedEventId} 
+          />
+        )}
+
         {/* Unified Events Explorer */}
         <EventsExplorer
           events={allEvents}

@@ -73,14 +73,7 @@ export default function Footer() {
                   Contact Support
                 </Link>
               </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-400 hover:text-neon-purple transition-colors"
-                >
-                  Documentation
-                </a>
-              </li>
+
             </ul>
           </div>
 

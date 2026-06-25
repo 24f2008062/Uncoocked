@@ -4,31 +4,46 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+  url      = "file:../dev.db"
 }
 
 model User {
-  id              String         @id @default(uuid())
-  email           String         @unique
-  passwordHash    String
-  fullName        String
+  id              String         @id @default(cuid())
+  name            String?
+  fullName        String?
+  email           String?        @unique
+  emailVerified   DateTime?
+  image           String?
+  passwordHash    String?
   role            String         @default("attendee") // attendee, organizer
   department      String?
   clubAssociation String?
   portfolioUrl    String?
+  interests       String?        // JSON serialized array of interests
+  preferenceScore Float          @default(0)
+  onboardingCompleted Boolean    @default(false)
   createdAt       DateTime       @default(now())
   registrations   Registration[]
+  activities      UserActivity[]
+  organizedEvents Event[]        @relation("OrganizedEvents")
+  managedEvents   EventManager[]
+  accounts        Account[]
+  sessions        Session[]
 }
 
 model Event {
   id              String           @id // e.g. hackathon-2026
   title           String
   type            String // Fest, Party, Hackathon, etc.
+  category        String?
+  tags            String? // JSON string
+  keywords        String? // JSON string
+  popularityScore Float            @default(0)
   date            DateTime
   location        String
   description     String
@@ -40,8 +55,42 @@ model Event {
   capacity        Int
   waitlistEnabled Boolean          @default(false)
   createdAt       DateTime         @default(now())
+  
+  organizerId     String?
+  organizer       User?            @relation("OrganizedEvents", fields: [organizerId], references: [id])
+  hostEmail       String?          // For quick lookup of the host
+
   registrations   Registration[]
   bulletinUpdates BulletinUpdate[]
+  activities      UserActivity[]
+  ticketTiers     TicketTier[]
+  coupons         Coupon[]
+  analytics       EventAnalytic[]
+  managers        EventManager[]
+  activityLogs    EventActivityLog[]
+}
+
+model TicketTier {
+  id          String   @id @default(uuid())
+  event       Event    @relation(fields: [eventId], references: [id])
+  eventId     String
+  name        String
+  price       Float    @default(0)
+  capacity    Int?
+  soldCount   Int      @default(0)
+  description String?
+  registrations Registration[]
+}
+
+model Coupon {
+  id          String   @id @default(uuid())
+  event       Event    @relation(fields: [eventId], references: [id])
+  eventId     String
+  code        String
+  discountPct Float
+  maxUses     Int?
+  currentUses Int      @default(0)
+  registrations Registration[]
 }
 
 model Registration {
@@ -50,10 +99,19 @@ model Registration {
   userId       String
   event        Event    @relation(fields: [eventId], references: [id])
   eventId      String
+  
+  ticketTier   TicketTier? @relation(fields: [ticketTierId], references: [id])
+  ticketTierId String?
+  
+  coupon       Coupon?     @relation(fields: [couponId], references: [id])
+  couponId     String?
+  
   status       String   @default("Pending") // Pending, Confirmed, Checked In
+  checkInStatus Boolean  @default(false)
   teamName     String?
   track        String?
   registeredAt DateTime @default(now())
+  logs         RegistrationLog[]
 }
 
 model BulletinUpdate {
@@ -63,4 +121,97 @@ model BulletinUpdate {
   title    String
   content  String
   postedAt DateTime @default(now())
+}
+
+model UserActivity {
+  id              String   @id @default(uuid())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String
+  event           Event    @relation(fields: [eventId], references: [id])
+  eventId         String
+  interactionType String   // VIEW, SAVE, REGISTER
+  timestamp       DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventId])
+}
+
+model EventAnalytic {
+  id              String   @id @default(uuid())
+  event           Event    @relation(fields: [eventId], references: [id])
+  eventId         String
+  date            DateTime @default(now()) // Can be used to track daily stats
+  views           Int      @default(0)
+  uniqueVisitors  Int      @default(0)
+  registrations   Int      @default(0)
+  attendance      Int      @default(0)
+  revenue         Float    @default(0)
+}
+
+model EventManager {
+  id              String   @id @default(uuid())
+  event           Event    @relation(fields: [eventId], references: [id])
+  eventId         String
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String
+  role            String   @default("Admin") // Owner, Admin, Moderator
+  addedAt         DateTime @default(now())
+}
+
+model RegistrationLog {
+  id              String   @id @default(uuid())
+  registration    Registration @relation(fields: [registrationId], references: [id])
+  registrationId  String
+  action          String   // Status Change, Check In
+  oldStatus       String?
+  newStatus       String?
+  timestamp       DateTime @default(now())
+  performedBy     String?  // User ID who performed the action
+}
+
+model EventActivityLog {
+  id              String   @id @default(uuid())
+  event           Event    @relation(fields: [eventId], references: [id])
+  eventId         String
+  action          String   // e.g., "Updated Content", "Changed Settings"
+  details         String?
+  performedBy     String   // User ID
+  timestamp       DateTime @default(now())
+}
+
+// NextAuth Models
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }

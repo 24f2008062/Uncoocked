@@ -441,7 +441,6 @@ export default function EventsExplorer({
 
                   <button
                     onClick={() => {
-                      console.log(`Event selected ID: ${ev.id}`);
                       onSelectEvent(ev.id);
                     }}
                     className="inline-flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-lg bg-neon-purple text-white hover:bg-neon-purple/90 font-bold transition-all shadow-neon hover:scale-[1.03] active:scale-[0.97]"
