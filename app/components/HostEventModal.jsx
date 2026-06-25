@@ -45,6 +45,7 @@ export default function HostEventModal({
   const [newPrice, setNewPrice] = useState(0);
   const [newCapacity, setNewCapacity] = useState(100);
   const [newWaitlistEnabled, setNewWaitlistEnabled] = useState(true);
+  const [newCity, setNewCity] = useState("Lucknow"); // Hardcoded for MVP
 
   useEffect(() => {
     if (editingEvent) {
@@ -58,6 +59,7 @@ export default function HostEventModal({
       setNewPrice(editingEvent.price || 0);
       setNewCapacity(editingEvent.capacity || 100);
       setNewWaitlistEnabled(editingEvent.waitlistEnabled ?? true);
+      setNewCity(editingEvent.city || "Lucknow");
     } else {
       setNewTitle("");
       setNewType("Hackathon");
@@ -69,6 +71,7 @@ export default function HostEventModal({
       setNewPrice(0);
       setNewCapacity(100);
       setNewWaitlistEnabled(true);
+      setNewCity("Lucknow");
     }
   }, [editingEvent, open]);
 
@@ -94,6 +97,7 @@ export default function HostEventModal({
         price: newPrice,
         capacity: newCapacity,
         waitlistEnabled: newWaitlistEnabled,
+        city: newCity,
         organizerId: user,
       };
 
@@ -185,18 +189,31 @@ export default function HostEventModal({
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-[10px] uppercase font-bold text-gray-500">
-              Location Venue
-            </label>
-            <input
-              required
-              type="text"
-              placeholder="e.g. Seminar Hall, block 2"
-              value={newLocation}
-              onChange={(e) => setNewLocation(e.target.value)}
-              className="w-full px-3 py-2 bg-black border border-dark-border rounded-lg text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="block text-[10px] uppercase font-bold text-gray-500">
+                City <span className="text-neon-purple">(MVP Lock)</span>
+              </label>
+              <input
+                readOnly
+                type="text"
+                value={newCity}
+                className="w-full px-3 py-2 bg-zinc-900 border border-dark-border rounded-lg text-xs text-gray-400 cursor-not-allowed focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[10px] uppercase font-bold text-gray-500">
+                Area / Venue
+              </label>
+              <input
+                required
+                type="text"
+                placeholder="e.g. Gomti Nagar"
+                value={newLocation}
+                onChange={(e) => setNewLocation(e.target.value)}
+                className="w-full px-3 py-2 bg-black border border-dark-border rounded-lg text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple"
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5">

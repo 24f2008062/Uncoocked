@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '../../config/cities';
 
 const prisma = new PrismaClient({});
 
 export async function GET(request) {
   try {
     const events = await prisma.event.findMany({
+      where: {
+        city: { in: ACTIVE_CITIES }
+      },
       orderBy: {
         date: 'asc'
       },
@@ -60,6 +64,9 @@ export async function POST(request) {
         type: data.type,
         date: new Date(data.date),
         location: data.location,
+        city: data.city || DEFAULT_CITY,
+        state: data.state || DEFAULT_STATE,
+        country: data.country || DEFAULT_COUNTRY,
         description: data.description,
         bannerUrl: data.bannerUrl,
         ticketType: data.ticketType || "Free",

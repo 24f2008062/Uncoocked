@@ -46,6 +46,9 @@ model Event {
   popularityScore Float            @default(0)
   date            DateTime
   location        String
+  city            String           @default("Lucknow")
+  state           String           @default("Uttar Pradesh")
+  country         String           @default("India")
   description     String
   schedule        String? // Markdown
   prizePool       String? // Markdown

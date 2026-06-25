@@ -26,7 +26,7 @@ export default function Hero() {
               className="space-y-4"
             >
               <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-neon-purple/10 text-neon-lavender border border-neon-purple/30 shadow-neon">
-                ⚡ Campus Operating System v1.0
+                ⚡ The Event Discovery Platform for Lucknow
               </span>
 
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-none">
@@ -46,9 +46,7 @@ export default function Hero() {
               </h1>
 
               <p className="text-base sm:text-lg leading-relaxed text-gray-400 max-w-2xl mx-auto lg:mx-0">
-                Join campus fests, discover workshops and dandiya nights,
-                coordinate in noise-free channels, and book tickets instantly
-                from a single unified workspace.
+                Join campus fests, hackathons, startup meetups, and cultural events exclusively in Lucknow. Coordinate in noise-free channels and book tickets instantly.
               </p>
             </motion.div>
 
