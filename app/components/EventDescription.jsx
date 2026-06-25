@@ -52,7 +52,7 @@ export default function EventDescription({ event }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-dark-card rounded-2xl p-5 border border-dark-border shadow-sm">
           <h3 className="text-sm font-bold text-white mb-2">Organizer</h3>
-          <p className="text-xs text-gray-400">{event.hostEmail}</p>
+          <p className="text-xs text-gray-400">{event.organizerId || event.organizer?.email}</p>
         </div>
         <div className="bg-dark-card rounded-2xl p-5 border border-dark-border shadow-sm">
           <h3 className="text-sm font-bold text-white mb-2">Venue</h3>

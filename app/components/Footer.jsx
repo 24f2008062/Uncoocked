@@ -5,7 +5,7 @@ import { useUser } from "@/app/context/UserContext";
 import { usePathname } from "next/navigation";
 
 export default function Footer() {
-  const { role, user } = useUser();
+  const { user } = useUser();
   const currentYear = new Date().getFullYear();
   const pathname = usePathname();
 

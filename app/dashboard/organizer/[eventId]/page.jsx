@@ -19,23 +19,23 @@ export default function OrganizerOverviewPage({ params }) {
   const unwrappedParams = use(params);
   
   useEffect(() => {
-    // In a real app, fetch from `/api/organizer/${unwrappedParams.eventId}/overview`
-    // Mocking for now since API isn't built yet
-    setTimeout(() => {
-      setStats({
-        views: 1250,
-        registrations: 45,
-        revenue: 675,
-        capacityUtil: 45,
-        capacity: 100,
-      });
-      setActivities([
-        { id: 1, type: "REGISTER", user: "Alice Smith", time: "2 hours ago" },
-        { id: 2, type: "VIEW", user: "Bob Johnson", time: "3 hours ago" },
-        { id: 3, type: "REGISTER", user: "Charlie Davis", time: "5 hours ago" },
-      ]);
-      setLoading(false);
-    }, 500);
+    let isMounted = true;
+    const fetchOverview = async () => {
+      try {
+        const res = await fetch(`/api/organizer/${unwrappedParams.eventId}/overview`);
+        const data = await res.json();
+        if (data.success && isMounted) {
+          setStats(data.stats);
+          setActivities(data.activities);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchOverview();
+    return () => { isMounted = false; };
   }, [unwrappedParams.eventId]);
 
   const StatCard = ({ title, value, icon: Icon, trend, prefix = "" }) => (

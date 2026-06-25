@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useUser } from "@/app/context/UserContext";
 import Image from "next/image";
 
@@ -10,7 +11,8 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const pathname = usePathname();
-  const { role, user, logout } = useUser();
+  const { user, logout } = useUser();
+  const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -81,11 +83,11 @@ export default function Navbar() {
                   >
                     {/* Glowing Avatar */}
                     <div className="w-5 h-5 rounded-full bg-neon-purple/15 border border-neon-purple/40 text-[9px] font-black text-neon-lavender flex items-center justify-center uppercase ring-1 ring-neon-purple/20 shadow-[0_0_10px_rgba(191,64,255,0.25)]">
-                      {user.substring(0, 2)}
+                      {(session?.user?.name || user).substring(0, 2)}
                     </div>
                     <div className="flex flex-col text-left">
                       <span className="text-[10px] text-gray-300 font-bold leading-none truncate max-w-[90px]">
-                        {user.split("@")[0]}
+                        {session?.user?.name || user.split("@")[0]}
                       </span>
                       <span className="text-[7.5px] text-neon-lavender font-black uppercase tracking-wider mt-0.5">
                         Account
@@ -126,14 +128,12 @@ export default function Navbar() {
                           </span>
                           <span
                             className="text-[10px] text-white font-bold block truncate mt-0.5"
-                            title={user}
+                            title={session?.user?.name || user}
                           >
-                            {user}
+                            {session?.user?.name || user}
                           </span>
                           <span className="inline-block mt-1.5 text-[8px] bg-neon-purple/15 text-neon-lavender border border-neon-purple/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider font-mono">
-                            {role === "organizer"
-                              ? "Ecosystem Coordinator"
-                              : "Campus Student / Attendee"}
+                            Campus Member
                           </span>
                         </div>
 

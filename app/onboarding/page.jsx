@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/app/context/UserContext";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 
 const SUGGESTED_CATEGORIES = [
@@ -15,16 +16,17 @@ const SUGGESTED_CATEGORIES = [
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoading: isContextLoading } = useUser();
+  const { update } = useSession();
   const [selectedInterests, setSelectedInterests] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // If no mock user session is active, go to login
   useEffect(() => {
-    if (!user) {
+    if (!isContextLoading && !user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, isContextLoading, router]);
 
   const toggleInterest = (interest) => {
     setSelectedInterests((prev) =>
@@ -46,6 +48,8 @@ export default function OnboardingPage() {
         })
       });
       if (res.ok) {
+        // Update the NextAuth session so it knows onboarding is complete
+        await update({ onboardingCompleted: true });
         router.push("/event");
       } else {
         console.error("Failed to save interests");
@@ -57,7 +61,7 @@ export default function OnboardingPage() {
     }
   };
 
-  if (!user) return null; // Prevent flicker
+  if (isContextLoading || !user) return null; // Prevent flicker
 
   return (
     <div className="min-h-screen bg-black text-white px-6 py-12 flex flex-col items-center justify-center">

@@ -18,7 +18,7 @@ export default function TwinLayout({ event, onBack }) {
   const [localUserEmail, setLocalUserEmail] = useState(null);
   const router = useRouter();
 
-  const { user, role } = useUser();
+  const { user } = useUser();
 
   const [bulletins, setBulletins] = useState(event.bulletinUpdates || []);
   const [registrations, setRegistrations] = useState([]);
@@ -27,92 +27,119 @@ export default function TwinLayout({ event, onBack }) {
   const [broadcastContent, setBroadcastContent] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    let isMounted = true;
+    const fetchRegistrations = async () => {
       try {
-        const stored = JSON.parse(localStorage.getItem("registrations") || "[]");
-        const filtered = stored.filter((r) => r.eventId === event.id);
-        const timer = setTimeout(() => setRegistrations(filtered), 0);
-        return () => clearTimeout(timer);
-      } catch {}
-    }
-  }, [event.id]);
-
-  async function handleRegister(payload) {
-    await new Promise((r) => setTimeout(r, 700));
-    setModalOpen(false);
-    if (typeof window !== "undefined") {
-      try {
-        const stored = JSON.parse(localStorage.getItem("registrations") || "[]");
-        const currentTicketsSold = stored.filter((r) => r.eventId === event.id && r.status !== "Waitlisted").length;
-        const isFull = event.capacity ? currentTicketsSold >= event.capacity : false;
-        const finalStatus = isFull && event.waitlistEnabled ? "Waitlisted" : "Confirmed";
-        const ticketId = "TKT-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-
-        const newReg = {
-          ...payload,
-          email: user || payload.email,
-          eventId: event.id,
-          ts: Date.now(),
-          status: finalStatus,
-          ticketId: finalStatus === "Confirmed" ? ticketId : undefined,
-        };
-        stored.push(newReg);
-        localStorage.setItem("registrations", JSON.stringify(stored));
-        setRegistrations((prev) => [...prev, newReg]);
-        setLocalUserEmail(payload.email);
-        window.dispatchEvent(new Event("storage"));
-      } catch {}
-    }
-  }
-
-  const handleCancelRegistration = (eventId) => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = JSON.parse(localStorage.getItem("registrations") || "[]");
-        const activeEmail = user || localUserEmail;
-        if (activeEmail) {
-          const updated = stored.filter((reg) => !(reg.email === activeEmail && reg.eventId === eventId));
-          localStorage.setItem("registrations", JSON.stringify(updated));
-          setRegistrations((prev) => prev.filter((r) => r.email !== activeEmail));
-          if (!user) setLocalUserEmail(null);
-          window.dispatchEvent(new Event("storage"));
+        const res = await fetch(`/api/registrations?eventId=${event.id}`);
+        const data = await res.json();
+        if (data.success && isMounted) {
+          // Flatten user relation
+          const formatted = data.registrations.map(r => ({
+            ...r,
+            email: r.user.email,
+            name: r.user.name,
+            github: r.user.portfolioUrl,
+            ts: new Date(r.registeredAt).getTime(),
+          }));
+          setRegistrations(formatted);
         }
       } catch (err) {
         console.error(err);
       }
+    };
+    fetchRegistrations();
+    return () => { isMounted = false; };
+  }, [event.id]);
+
+  async function handleRegister(payload) {
+    setModalOpen(false);
+    try {
+      const currentTicketsSold = registrations.filter((r) => r.status !== "Waitlisted").length;
+      const isFull = event.capacity ? currentTicketsSold >= event.capacity : false;
+      const finalStatus = isFull && event.waitlistEnabled ? "Waitlisted" : "Confirmed";
+
+      const res = await fetch(`/api/registrations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          email: user || payload.email,
+          eventId: event.id,
+          status: finalStatus,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to register");
+
+      const data = await res.json();
+      if (data.success) {
+        const newReg = {
+          ...data.registration,
+          email: data.registration.user.email,
+          name: data.registration.user.name,
+          ts: new Date(data.registration.registeredAt).getTime(),
+        };
+        setRegistrations((prev) => [...prev, newReg]);
+        setLocalUserEmail(user || payload.email);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Registration failed. Please check logs.");
+    }
+  }
+
+  const handleCancelRegistration = async (eventId) => {
+    try {
+      const activeEmail = user || localUserEmail;
+      const regToCancel = registrations.find(r => r.email === activeEmail && r.eventId === eventId);
+      if (!regToCancel) return;
+
+      const res = await fetch(`/api/registrations/${regToCancel.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to cancel");
+
+      setRegistrations((prev) => prev.filter((r) => r.id !== regToCancel.id));
+      if (!user) setLocalUserEmail(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to cancel registration.");
     }
   };
 
-  const handleAddUpdate = (e) => {
+  const handleAddUpdate = async (e) => {
     e.preventDefault();
     if (!broadcastTitle.trim() || !broadcastContent.trim()) return;
 
-    const fresh = {
-      id: `update-${Date.now()}`,
-      date: new Date().toISOString().split("T")[0],
-      title: broadcastTitle.trim(),
-      content: broadcastContent.trim(),
-    };
-    
-    setBulletins((prev) => [fresh, ...prev]);
+    try {
+      const res = await fetch(`/api/events/${event.id}/bulletins`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: broadcastTitle.trim(),
+          content: broadcastContent.trim(),
+        }),
+      });
 
-    if (typeof window !== "undefined") {
-      try {
-        const storedHostedStr = localStorage.getItem("hosted_events");
-        if (storedHostedStr) {
-          const hosted = JSON.parse(storedHostedStr);
-          const updated = hosted.map((hEv) => {
-            if (hEv.id === event.id) {
-              const updates = hEv.bulletinUpdates || [];
-              updates.unshift(fresh);
-              return { ...hEv, bulletinUpdates: updates };
-            }
-            return hEv;
-          });
-          localStorage.setItem("hosted_events", JSON.stringify(updated));
-        }
-      } catch (err) {}
+      if (!res.ok) throw new Error("Failed to add announcement");
+
+      const data = await res.json();
+      if (data.success && data.bulletin) {
+        // Assume API returns the new bulletin with date and id properly formatted.
+        // Or we can just mock the date here if it doesn't return full details formatted exactly
+        setBulletins((prev) => [{
+          id: data.bulletin.id,
+          date: new Date(data.bulletin.postedAt).toISOString().split("T")[0],
+          title: data.bulletin.title,
+          content: data.bulletin.content,
+        }, ...prev]);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to post update. Please check logs.");
     }
+
     setBroadcastTitle("");
     setBroadcastContent("");
   };
@@ -197,7 +224,7 @@ export default function TwinLayout({ event, onBack }) {
             />
 
             {/* Organizer Broadcast Tool */}
-            {user && role === "organizer" && event.hostEmail === user && (
+            {user && (event.organizer?.email === user || event.organizerId === user) && (
               <div className="bg-dark-card border border-dark-border rounded-2xl p-5 space-y-4 shadow-sm">
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-dark-border pb-3">
                   <span className="text-neon-purple">⚡</span> Broadcast Update
@@ -221,7 +248,7 @@ export default function TwinLayout({ event, onBack }) {
             )}
 
             {/* Announcement Board - Only for Registered Users or Organizers */}
-            {(isRegistered || (user && role === "organizer" && event.hostEmail === user)) && (
+            {(isRegistered || (user && (event.organizer?.email === user || event.organizerId === user))) && (
               <div className="bg-dark-card rounded-2xl border border-dark-border p-1">
                 <BulletinBoard updates={bulletins} />
               </div>

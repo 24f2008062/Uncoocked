@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useUser } from "@/app/context/UserContext";
 import Link from "next/link";
 import TicketModal from "@/app/components/TicketModal";
@@ -23,48 +24,7 @@ import {
 } from "lucide-react";
 import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
 
-const getInitialHostedEvents = (email) => [
-  {
-    id: "hosted-ev-1",
-    title: "Generative AI & LLM Workshop",
-    type: "Workshop",
-    date: "July 2, 2026",
-    location: "Tech Lab 102, Main Campus",
-    description:
-      "Learn prompt engineering, vector databases, embeddings, and building active AI agents with PyTorch.",
-    hostEmail: email,
-    bulletinUpdates: [
-      {
-        id: "hu-1",
-        date: "2026-06-17",
-        title: "Speaker Schedule Released",
-        content: "The full panel timing is now published.",
-      },
-    ],
-    bannerUrl:
-      "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=60",
-    ticketType: "Free",
-    capacity: 100,
-    waitlistEnabled: true,
-  },
-  {
-    id: "hosted-ev-2",
-    title: "Grand Dandiya Festive Night 2026",
-    type: "Festive Night",
-    date: "October 12, 2026",
-    location: "Auditorium Hall, Main Campus",
-    description:
-      "Celebrate the festive season with traditional Garba, live orchestra, authentic food stalls, and prizes.",
-    hostEmail: email,
-    bulletinUpdates: [],
-    bannerUrl:
-      "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=600&auto=format&fit=crop&q=60",
-    ticketType: "Paid",
-    price: 15.0,
-    capacity: 50,
-    waitlistEnabled: true,
-  },
-];
+// getInitialHostedEvents is obsolete, handled by seed or empty start
 
 const BANNER_PRESETS = [
   {
@@ -91,7 +51,8 @@ const BANNER_PRESETS = [
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
+  const { data: session } = useSession();
   const [registrations, setRegistrations] = useState([]);
   const [hostedEvents, setHostedEvents] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
@@ -125,93 +86,47 @@ export default function DashboardPage() {
   const [announcementContents, setAnnouncementContents] = useState({});
   const [expandedAnnouncements, setExpandedAnnouncements] = useState({});
 
-  const loadDashboardData = () => {
+  const loadDashboardData = async () => {
     if (typeof window !== "undefined" && user) {
       try {
-        // 1. Load Hosted Events
-        const storedHostedStr = localStorage.getItem("hosted_events");
-        let hosted = [];
-        if (!storedHostedStr) {
-          hosted = getInitialHostedEvents(user);
-          localStorage.setItem("hosted_events", JSON.stringify(hosted));
-        } else {
-          const parsed = JSON.parse(storedHostedStr);
-          hosted = parsed.filter((ev) => ev.hostEmail === user);
+        setLoading(true);
+        // 1. Fetch Events from Backend
+        const res = await fetch("/api/events");
+        const data = await res.json();
+        
+        let fetchedEvents = [];
+        if (data.success) {
+          fetchedEvents = data.events;
         }
+
+        // Format dates for display
+        fetchedEvents = fetchedEvents.map(ev => ({
+          ...ev,
+          dateStr: ev.date, // keep original date string
+          date: new Date(ev.date).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }),
+          ts: new Date(ev.date).getTime()
+        }));
+
+        setAllEvents(fetchedEvents);
+
+        // Filter Hosted Events
+        const hosted = fetchedEvents.filter((ev) => ev.organizer?.email === user || ev.organizerId === user);
         setHostedEvents(hosted);
 
-        // 2. Seed default event registrations if not present
-        const storedRegs = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        let updatedRegs = [...storedRegs];
-        let regSeeded = false;
-
-        hosted.forEach((hEv) => {
-          const hasRegs = storedRegs.some((r) => r.eventId === hEv.id);
-          if (!hasRegs) {
-            regSeeded = true;
-            if (hEv.id === "hosted-ev-1") {
-              updatedRegs.push(
-                {
-                  name: "Emily Davis",
-                  email: "emily@campus.edu",
-                  eventId: hEv.id,
-                  ts: Date.now() - 86400000,
-                  status: "Confirmed",
-                  track: "Fine Arts & Design",
-                  team: "Creative Arts Society",
-                },
-                {
-                  name: "Michael Chen",
-                  email: "michael@campus.edu",
-                  eventId: hEv.id,
-                  ts: Date.now() - 43200000,
-                  status: "Checked In",
-                  track: "Computer Science & Tech",
-                  team: "Tech Club",
-                },
-              );
-            } else if (hEv.id === "hosted-ev-2") {
-              updatedRegs.push(
-                {
-                  name: "Sarah Connor",
-                  email: "sarah@campus.edu",
-                  eventId: hEv.id,
-                  ts: Date.now() - 120000000,
-                  status: "Confirmed",
-                  track: "Engineering & Applied Sciences",
-                  team: "Robotics Club",
-                },
-                {
-                  name: "John Connor",
-                  email: "john@campus.edu",
-                  eventId: hEv.id,
-                  ts: Date.now() - 60000000,
-                  status: "Confirmed",
-                  track: "Natural Sciences",
-                  team: "Astronomy Club",
-                },
-              );
-            }
-          }
-        });
-
-        if (regSeeded) {
-          localStorage.setItem("registrations", JSON.stringify(updatedRegs));
+        // 2. Fetch user's registrations from API
+        const resReg = await fetch(`/api/registrations?email=${user}`);
+        const regData = await resReg.json();
+        if (regData.success) {
+          setRegistrations(regData.registrations.map(r => ({
+            ...r,
+            email: r.user.email,
+            name: r.user.name,
+            ts: new Date(r.registeredAt).getTime()
+          })));
         }
 
-        // 3. Set registrations state for current user
-        const userRegs = updatedRegs.filter((reg) => reg.email === user);
-        setRegistrations(userRegs);
-
-        // 4. Merge mockEvents and all hosted events to resolve event details
-        const allHosted = JSON.parse(
-          localStorage.getItem("hosted_events") || "[]",
-        );
-        setAllEvents([...mockEvents, ...allHosted]);
       } catch (err) {
-        console.error(err);
+        console.error("Dashboard Load Error:", err);
       } finally {
         setLoading(false);
       }
@@ -231,18 +146,15 @@ export default function DashboardPage() {
     }
   }, [user]);
 
-  const handleCancelRegistration = (eventId) => {
+  const handleCancelRegistration = async (eventId) => {
     if (typeof window !== "undefined" && user) {
       try {
-        const stored = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        const updated = stored.filter(
-          (reg) => !(reg.email === user && reg.eventId === eventId),
-        );
-        localStorage.setItem("registrations", JSON.stringify(updated));
-        loadDashboardData();
-        window.dispatchEvent(new Event("storage"));
+        const regToCancel = registrations.find(r => r.email === user && r.eventId === eventId);
+        if (!regToCancel) return;
+        const res = await fetch(`/api/registrations/${regToCancel.id}`, { method: "DELETE" });
+        if (res.ok) {
+          await loadDashboardData();
+        }
       } catch (err) {
         console.error(err);
       }
@@ -282,87 +194,46 @@ export default function DashboardPage() {
     setHostModalOpen(true);
   };
 
-  const handleHostNewEvent = (e) => {
+  const handleHostNewEvent = async (e) => {
     e.preventDefault();
     if (!user) return;
 
     try {
-      const storedHosted = JSON.parse(
-        localStorage.getItem("hosted_events") || "[]",
-      );
+      const eventPayload = {
+        id: isEditing && editingEventId ? editingEventId : `hosted-ev-${Date.now()}`,
+        title: newTitle,
+        type: newType,
+        date: newDate,
+        location: newLocation,
+        description: newDescription,
+        bannerUrl: newBannerUrl,
+        ticketType: newTicketType,
+        price: newPrice,
+        capacity: newCapacity,
+        waitlistEnabled: newWaitlistEnabled,
+        organizerId: user,
+      };
 
+      let res;
       if (isEditing && editingEventId) {
-        // Edit Mode
-        const updated = storedHosted.map((hev) => {
-          if (hev.id === editingEventId) {
-            return {
-              ...hev,
-              title: newTitle,
-              type: newType,
-              date: newDate,
-              location: newLocation,
-              description: newDescription,
-              bannerUrl: newBannerUrl,
-              ticketType: newTicketType,
-              price: newPrice,
-              capacity: newCapacity,
-              waitlistEnabled: newWaitlistEnabled,
-            };
-          }
-          return hev;
+        res = await fetch(`/api/events/${editingEventId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(eventPayload),
         });
-        localStorage.setItem("hosted_events", JSON.stringify(updated));
-        alert(`Successfully updated event: ${newTitle}`);
       } else {
-        // Create Mode
-        const newEv = {
-          id: `hosted-ev-${Date.now()}`,
-          title: newTitle,
-          type: newType,
-          date: newDate,
-          location: newLocation,
-          description: newDescription,
-          hostEmail: user,
-          bulletinUpdates: [],
-          bannerUrl: newBannerUrl,
-          ticketType: newTicketType,
-          price: newPrice,
-          capacity: newCapacity,
-          waitlistEnabled: newWaitlistEnabled,
-        };
-
-        storedHosted.push(newEv);
-        localStorage.setItem("hosted_events", JSON.stringify(storedHosted));
-
-        // Auto-seed 2 mock registrations for the new hosted event
-        const storedRegs = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        storedRegs.push(
-          {
-            name: "Alice Smith",
-            email: "alice@campus.edu",
-            eventId: newEv.id,
-            ts: Date.now(),
-            status: "Confirmed",
-            track: "Computer Science & Tech",
-            team: "Individual",
-          },
-          {
-            name: "Bob Johnson",
-            email: "bob@campus.edu",
-            eventId: newEv.id,
-            ts: Date.now(),
-            status: "Pending",
-            track: "Engineering & Applied Sciences",
-            team: "Tech Club",
-          },
-        );
-        localStorage.setItem("registrations", JSON.stringify(storedRegs));
-        alert(`Successfully launched event: ${newTitle}`);
+        res = await fetch("/api/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(eventPayload),
+        });
       }
 
-      loadDashboardData();
+      if (!res.ok) throw new Error("Failed to save event to database");
+      
+      alert(`Successfully ${isEditing ? 'updated' : 'launched'} event: ${newTitle}`);
+
+      await loadDashboardData();
 
       // Reset
       setNewTitle("");
@@ -374,13 +245,13 @@ export default function DashboardPage() {
       setIsEditing(false);
       setEditingEventId(null);
       setHostModalOpen(false);
-      window.dispatchEvent(new Event("storage"));
     } catch (err) {
       console.error(err);
+      alert("Failed to save event. Please check the logs.");
     }
   };
 
-  const handleCancelHostedEvent = (eventId) => {
+  const handleCancelHostedEvent = async (eventId) => {
     if (typeof window !== "undefined" && user) {
       if (
         !confirm(
@@ -389,63 +260,56 @@ export default function DashboardPage() {
       )
         return;
       try {
-        // Remove from hosted events
-        const storedHosted = JSON.parse(
-          localStorage.getItem("hosted_events") || "[]",
-        );
-        const updatedHosted = storedHosted.filter((ev) => ev.id !== eventId);
-        localStorage.setItem("hosted_events", JSON.stringify(updatedHosted));
+        const res = await fetch(`/api/events/${eventId}`, {
+          method: "DELETE",
+        });
 
-        // Remove registrations for this event
-        const storedRegs = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        const updatedRegs = storedRegs.filter((reg) => reg.eventId !== eventId);
-        localStorage.setItem("registrations", JSON.stringify(updatedRegs));
+        if (!res.ok) throw new Error("Failed to delete event from database");
 
-        loadDashboardData();
-        window.dispatchEvent(new Event("storage"));
+
+
+        await loadDashboardData();
       } catch (err) {
         console.error(err);
+        alert("Failed to delete event. Please check the logs.");
       }
     }
   };
 
-  const handleAddAnnouncement = (eventId) => {
+  const handleAddAnnouncement = async (eventId) => {
     const title = announcementTitles[eventId]?.trim();
     const content = announcementContents[eventId]?.trim();
     if (!title || !content) return;
 
     try {
-      const storedHosted = JSON.parse(
-        localStorage.getItem("hosted_events") || "[]",
-      );
-      const updatedHosted = storedHosted.map((ev) => {
-        if (ev.id === eventId) {
-          const updates = ev.bulletinUpdates || [];
-          updates.unshift({
-            id: `update-${Date.now()}`,
-            date: new Date().toISOString().split("T")[0],
-            title,
-            content,
-          });
-          return { ...ev, bulletinUpdates: updates };
-        }
-        return ev;
+      const res = await fetch(`/api/events/${eventId}/bulletins`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, content }),
       });
-      localStorage.setItem("hosted_events", JSON.stringify(updatedHosted));
+
+      if (!res.ok) throw new Error("Failed to add announcement");
 
       // Reset inputs
       setAnnouncementTitles((prev) => ({ ...prev, [eventId]: "" }));
       setAnnouncementContents((prev) => ({ ...prev, [eventId]: "" }));
 
-      loadDashboardData();
+      await loadDashboardData();
     } catch (err) {
       console.error(err);
+      alert("Failed to post announcement. Please check logs.");
     }
   };
 
   // Check if logged in
+  if (isLoading) {
+    return (
+      <div className="min-h-[80vh] bg-black flex items-center justify-center py-12 px-4">
+        <div className="w-8 h-8 border-4 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-[80vh] bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -482,16 +346,12 @@ export default function DashboardPage() {
   );
 
   const getGuestList = (eventId) => {
-    if (typeof window !== "undefined") {
-      try {
-        const storedRegs = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        return storedRegs.filter((reg) => reg.eventId === eventId);
-      } catch {
-        return [];
-      }
-    }
+    // Note: getGuestList logic moved to API. But to keep the synchronous render working,
+    // we should ideally fetch guest lists for hosted events and store them.
+    // For now, it will be empty in this view until they open the organizer console.
+    // Let's rely on registrations state if it had all registrations. But registrations state only has user's regs.
+    // Better to fetch guest lists for all hosted events if we want them here, or redirect to organizer dashboard.
+    // We will just return [] here and let them use the Organizer Console for accurate lists.
     return [];
   };
 
@@ -507,7 +367,107 @@ export default function DashboardPage() {
     }
   };
 
-  const username = user.split("@")[0];
+  const username = session?.user?.name || (user ? user.split("@")[0] : "Guest");
+
+  const now = new Date().getTime();
+  const upcomingEvents = attendingEvents.filter(ev => ev.ts > now + 86400000); // More than 24 hours in future
+  const ongoingEvents = attendingEvents.filter(ev => Math.abs(ev.ts - now) <= 86400000); // Within 24 hours
+  const completedEvents = attendingEvents.filter(ev => ev.ts < now - 86400000); // More than 24 hours in past
+
+  const renderEventGroup = (groupTitle, events, emptyMessage) => {
+    if (events.length === 0) return null;
+    return (
+      <div className="space-y-4 mb-8">
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{groupTitle} ({events.length})</h3>
+        <div className="space-y-4">
+          {events.map((ev) => {
+            const regDetails = registrations.find((r) => r.eventId === ev.id);
+            return (
+              <div
+                key={ev.id}
+                className="bg-dark-card border border-dark-border hover:border-neon-purple/30 rounded-xl p-5 shadow-sm transition-all duration-300 flex flex-col justify-between min-h-[180px] group cursor-pointer hover:border-neon-purple/50 hover:shadow-neon hover:scale-[1.01]"
+                onClick={() => router.push(`/event?id=${ev.id}`)}
+              >
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-neon-purple/10 text-neon-lavender border border-neon-purple/20 rounded-full">
+                      {ev.type}
+                    </span>
+                    <span
+                      className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${getStatusStyle(regDetails?.status)}`}
+                    >
+                      {regDetails?.status || "Confirmed"}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-white leading-snug group-hover:text-neon-lavender transition-colors">
+                    {ev.title}
+                  </h3>
+                  <div className="flex flex-col gap-1 text-[10px] text-gray-400 font-mono">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                      <span>{ev.date}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                      <span className="truncate">{ev.location}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Users className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                      <span className="truncate">Organizer: {ev.organizer?.name || ev.organizer?.email.split('@')[0] || ev.organizerId}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div
+                  className="flex items-center gap-3 pt-3 border-t border-dark-border/40 mt-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Link
+                    href="/opportunities"
+                    className="flex-1 py-2 bg-neutral-900 border border-dark-border hover:border-neon-purple/40 text-white hover:text-neon-purple text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Briefcase className="h-3.5 w-3.5 hidden sm:block" />
+                    <span>
+                      Opportunit
+                      <span className="hidden sm:inline">ies</span>
+                    </span>
+                  </Link>
+
+                  {(regDetails?.status === "Confirmed" ||
+                    regDetails?.status === "Checked In") &&
+                    regDetails?.id && (
+                      <button
+                        onClick={() => {
+                          setSelectedTicket(regDetails);
+                          setSelectedEventForTicket(ev);
+                          setTicketModalOpen(true);
+                        }}
+                        className="flex-1 py-2 bg-neon-purple text-white hover:bg-neon-purple/90 text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-neon"
+                      >
+                        <span>View Ticket</span>
+                      </button>
+                    )}
+
+                  <button
+                    onClick={() => handleCancelRegistration(ev.id)}
+                    className="px-3 py-2 border border-red-950/60 bg-red-950/10 hover:bg-red-950/20 text-red-400 hover:text-red-300 text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center transition-all hover:border-red-500/40"
+                    title={
+                      regDetails?.status === "Waitlisted"
+                        ? "Leave Waitlist"
+                        : "Cancel"
+                    }
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="relative isolate overflow-hidden bg-black w-full min-h-[85vh] py-12 sm:py-16">
@@ -572,89 +532,10 @@ export default function DashboardPage() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
-                {attendingEvents.map((ev) => {
-                  const regDetails = registrations.find(
-                    (r) => r.eventId === ev.id,
-                  );
-                  return (
-                    <div
-                      key={ev.id}
-                      className="bg-dark-card border border-dark-border hover:border-neon-purple/30 rounded-xl p-5 shadow-sm transition-all duration-300 flex flex-col justify-between min-h-[180px] group cursor-pointer hover:border-neon-purple/50 hover:shadow-neon hover:scale-[1.01]"
-                      onClick={() => router.push(`/event?id=${ev.id}`)}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-start gap-4">
-                          <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-neon-purple/10 text-neon-lavender border border-neon-purple/20 rounded-full">
-                            {ev.type}
-                          </span>
-                          <span
-                            className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${getStatusStyle(regDetails?.status)}`}
-                          >
-                            {regDetails?.status || "Confirmed"}
-                          </span>
-                        </div>
-                        <h3 className="text-sm font-bold text-white leading-snug group-hover:text-neon-lavender transition-colors">
-                          {ev.title}
-                        </h3>
-                        <div className="flex flex-col gap-1 text-[10px] text-gray-400 font-mono">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5 text-neon-purple shrink-0" />
-                            <span>{ev.date}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 text-neon-purple shrink-0" />
-                            <span className="truncate">{ev.location}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div
-                        className="flex items-center gap-3 pt-3 border-t border-dark-border/40 mt-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Link
-                          href="/opportunities"
-                          className="flex-1 py-2 bg-neutral-900 border border-dark-border hover:border-neon-purple/40 text-white hover:text-neon-purple text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all"
-                        >
-                          <Briefcase className="h-3.5 w-3.5 hidden sm:block" />
-                          <span>
-                            Opportunit
-                            <span className="hidden sm:inline">ies</span>
-                          </span>
-                        </Link>
-
-                        {(regDetails?.status === "Confirmed" ||
-                          regDetails?.status === "Checked In") &&
-                          regDetails?.ticketId && (
-                            <button
-                              onClick={() => {
-                                setSelectedTicket(regDetails);
-                                setSelectedEventForTicket(ev);
-                                setTicketModalOpen(true);
-                              }}
-                              className="flex-1 py-2 bg-neon-purple text-white hover:bg-neon-purple/90 text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-neon"
-                            >
-                              <span>View Ticket</span>
-                            </button>
-                          )}
-
-                        <button
-                          onClick={() => handleCancelRegistration(ev.id)}
-                          className="px-3 py-2 border border-red-950/60 bg-red-950/10 hover:bg-red-950/20 text-red-400 hover:text-red-300 text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center transition-all hover:border-red-500/40"
-                          title={
-                            regDetails?.status === "Waitlisted"
-                              ? "Leave Waitlist"
-                              : "Cancel"
-                          }
-                        >
-                          <XCircle className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div>
+                {renderEventGroup("Ongoing Events", ongoingEvents, "")}
+                {renderEventGroup("Upcoming Events", upcomingEvents, "")}
+                {renderEventGroup("Completed Events", completedEvents, "")}
               </div>
             )}
           </div>
@@ -779,28 +660,6 @@ export default function DashboardPage() {
                         >
                           <button
                             onClick={() =>
-                              setExpandedGuestLists((prev) => ({
-                                ...prev,
-                                [hev.id]: !prev[hev.id],
-                              }))
-                            }
-                            className={`flex-1 py-1.5 px-2.5 rounded-lg border text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
-                              isGuestListExpanded
-                                ? "bg-neon-purple/10 border-neon-purple text-neon-lavender"
-                                : "bg-neutral-900 border-dark-border text-gray-400 hover:text-white"
-                            }`}
-                          >
-                            <Users className="h-3.5 w-3.5" />
-                            <span>Guest List ({guestList.length})</span>
-                            {isGuestListExpanded ? (
-                              <ChevronUp className="h-3 w-3" />
-                            ) : (
-                              <ChevronDown className="h-3 w-3" />
-                            )}
-                          </button>
-
-                          <button
-                            onClick={() =>
                               setExpandedAnnouncements((prev) => ({
                                 ...prev,
                                 [hev.id]: !prev[hev.id],
@@ -822,45 +681,6 @@ export default function DashboardPage() {
                           </button>
                         </div>
 
-                        {/* Expandable Guest List */}
-                        {isGuestListExpanded && (
-                          <div
-                            className="bg-black/30 rounded-lg p-3.5 border border-dark-border/50 animate-fadeIn space-y-3"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <h4 className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1.5 font-mono">
-                              <span>👥</span> Event Guest List
-                            </h4>
-                            {guestList.length === 0 ? (
-                              <p className="text-[10px] text-gray-600 italic">
-                                No registrations for this event yet.
-                              </p>
-                            ) : (
-                              <div className="divide-y divide-dark-border/30 max-h-40 overflow-y-auto no-scrollbar">
-                                {guestList.map((r, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="py-2 flex items-center justify-between text-[11px] font-mono"
-                                  >
-                                    <div>
-                                      <div className="text-white font-bold">
-                                        {r.name}
-                                      </div>
-                                      <div className="text-[9px] text-gray-500">
-                                        {r.email}
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <span className="text-[8px] bg-zinc-800 text-zinc-300 border border-dark-border px-1.5 py-0.5 rounded">
-                                        {r.track || "Attendee"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
 
                         {/* Expandable Announcements / Bulletins Area */}
                         {isAnnounceExpanded && (

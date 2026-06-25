@@ -141,7 +141,6 @@ async function main() {
       email: 'demo@campus.edu',
       passwordHash: 'dummyhash',
       fullName: 'Demo Student',
-      role: 'attendee',
       interests: JSON.stringify(['AI & Machine Learning', 'Programming']),
       onboardingCompleted: true
     }

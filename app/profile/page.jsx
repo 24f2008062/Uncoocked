@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user, role } = useUser();
+  const { user } = useUser();
   // Profile form state
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
@@ -35,42 +35,56 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && user) {
+    let isMounted = true;
+    const fetchProfileData = async () => {
       try {
+        if (!user) {
+          if (isMounted) setLoading(false);
+          return;
+        }
+
         // Load custom profile details
         const storedProfileStr = localStorage.getItem(`profile_${user}`);
         if (storedProfileStr) {
           const profile = JSON.parse(storedProfileStr);
-          setFullName(profile.fullName || "");
-          setBio(profile.bio || "");
-          setGithub(profile.github || "");
-          setTrack(profile.track || "Fullstack Developer");
-          setTeam(profile.team || "");
+          if (isMounted) {
+            setFullName(profile.fullName || "");
+            setBio(profile.bio || "");
+            setGithub(profile.github || "");
+            setTrack(profile.track || "Fullstack Developer");
+            setTeam(profile.team || "");
+          }
         } else {
           // Pre-populate with username
-          setFullName(user.split("@")[0]);
+          if (isMounted) setFullName(user.split("@")[0]);
         }
 
-        // Calculate counts
-        const storedRegs = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        const userRegs = storedRegs.filter((reg) => reg.email === user);
-        setAttendingCount(userRegs.length);
+        // Calculate attending count via API
+        const resReg = await fetch(`/api/registrations?email=${user}`);
+        const regData = await resReg.json();
+        if (regData.success && isMounted) {
+          setAttendingCount(regData.registrations.length);
+        }
 
-        const storedHosted = JSON.parse(
-          localStorage.getItem("hosted_events") || "[]",
-        );
-        const userHosted = storedHosted.filter((ev) => ev.hostEmail === user);
-        setHostedCount(userHosted.length);
+        // Fetch hosted events count from DB
+        const res = await fetch("/api/events");
+        const data = await res.json();
+        if (data.success && isMounted) {
+          const userHosted = data.events.filter((ev) => ev.organizer?.email === user || ev.organizerId === user);
+          setHostedCount(userHosted.length);
+        }
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
-    } else {
-      setLoading(false);
+    };
+
+    if (typeof window !== "undefined") {
+      fetchProfileData();
     }
+    
+    return () => { isMounted = false; };
   }, [user]);
 
   const handleSaveProfile = (e) => {
@@ -210,9 +224,7 @@ export default function ProfilePage() {
 
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-900 border border-dark-border rounded-full text-[10px] text-gray-300 font-bold uppercase tracking-wider font-mono">
                   <Shield className="h-3.5 w-3.5 text-neon-purple" />
-                  <span>
-                    {role === "organizer" ? "Coordinator" : "Attendee"}
-                  </span>
+                  <span>Campus Member</span>
                 </div>
               </div>
 

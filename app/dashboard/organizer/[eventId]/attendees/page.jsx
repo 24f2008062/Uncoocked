@@ -3,9 +3,12 @@
 import { useState, useEffect, use } from "react";
 import { Search, Download, Filter, CheckCircle2, XCircle, MoreVertical } from "lucide-react";
 
+import { useUser } from "@/app/context/UserContext";
+
 export default function AttendeesPage({ params }) {
   const unwrappedParams = use(params);
   const eventId = unwrappedParams.eventId;
+  const { user } = useUser();
   
   const [attendees, setAttendees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,18 +16,37 @@ export default function AttendeesPage({ params }) {
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
-    // In a real app, fetch from `/api/events/${eventId}/registrations`
-    // Mocking for now
-    setTimeout(() => {
-      setAttendees([
-        { id: "reg-1", name: "Alice Smith", email: "alice@campus.edu", date: "2026-06-20", ticketType: "General Admission", paymentStatus: "Paid", status: "Confirmed", checkedIn: true },
-        { id: "reg-2", name: "Bob Johnson", email: "bob@campus.edu", date: "2026-06-21", ticketType: "VIP", paymentStatus: "Paid", status: "Confirmed", checkedIn: false },
-        { id: "reg-3", name: "Charlie Davis", email: "charlie@campus.edu", date: "2026-06-22", ticketType: "General Admission", paymentStatus: "Unpaid", status: "Pending", checkedIn: false },
-        { id: "reg-4", name: "Diana Prince", email: "diana@campus.edu", date: "2026-06-23", ticketType: "General Admission", paymentStatus: "Paid", status: "Waitlisted", checkedIn: false },
-      ]);
-      setLoading(false);
-    }, 600);
-  }, [eventId]);
+    let isMounted = true;
+    const fetchAttendees = async () => {
+      try {
+        if (!user) return;
+        const res = await fetch(`/api/registrations?eventId=${eventId}&requesterEmail=${user}`);
+        const data = await res.json();
+        if (data.success && isMounted) {
+          const formatted = data.registrations.map(r => ({
+            id: r.id,
+            name: r.user.name || r.user.email.split('@')[0],
+            email: r.user.email,
+            date: new Date(r.registeredAt).toISOString().split('T')[0],
+            ticketType: r.ticketTier?.name || "General Admission",
+            paymentStatus: r.coupon ? "Discounted" : "Paid",
+            coupon: r.coupon?.code || "-",
+            teamName: r.teamName || "-",
+            track: r.track || "-",
+            status: r.status,
+            checkedIn: r.checkInStatus
+          }));
+          setAttendees(formatted);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchAttendees();
+    return () => { isMounted = false; };
+  }, [eventId, user]);
 
   const filteredAttendees = attendees.filter(a => {
     const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase()) || a.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -33,9 +55,9 @@ export default function AttendeesPage({ params }) {
   });
 
   const handleExportCSV = () => {
-    const headers = "Name,Email,Date,Ticket Type,Payment Status,Status,Checked In\n";
+    const headers = "Name,Email,Date,Ticket Type,Payment Status,Coupon,Team,Track,Status,Checked In\n";
     const csvContent = filteredAttendees.map(a => 
-      `"${a.name}","${a.email}","${a.date}","${a.ticketType}","${a.paymentStatus}","${a.status}","${a.checkedIn ? 'Yes' : 'No'}"`
+      `"${a.name}","${a.email}","${a.date}","${a.ticketType}","${a.paymentStatus}","${a.coupon}","${a.teamName}","${a.track}","${a.status}","${a.checkedIn ? 'Yes' : 'No'}"`
     ).join("\n");
     
     const blob = new Blob([headers + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -46,6 +68,33 @@ export default function AttendeesPage({ params }) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleCheckIn = async (id) => {
+    try {
+      const res = await fetch(`/api/registrations/${id}/checkin`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ checkedIn: true })
+      });
+      if (res.ok) {
+        setAttendees(prev => prev.map(a => a.id === id ? { ...a, checkedIn: true } : a));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancelRegistration = async (id) => {
+    if (!confirm("Are you sure you want to cancel this registration?")) return;
+    try {
+      const res = await fetch(`/api/registrations/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setAttendees(prev => prev.filter(a => a.id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const getStatusBadge = (status, checkedIn) => {
@@ -108,6 +157,7 @@ export default function AttendeesPage({ params }) {
                 <th className="px-6 py-4">Attendee</th>
                 <th className="px-6 py-4">Registration Date</th>
                 <th className="px-6 py-4">Ticket Type</th>
+                <th className="px-6 py-4">Details</th>
                 <th className="px-6 py-4">Payment</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
@@ -128,6 +178,11 @@ export default function AttendeesPage({ params }) {
                     <td className="px-6 py-4 font-mono">{attendee.date}</td>
                     <td className="px-6 py-4">{attendee.ticketType}</td>
                     <td className="px-6 py-4">
+                      <div className="text-[10px] text-gray-400">Team: {attendee.teamName}</div>
+                      <div className="text-[10px] text-gray-400">Track: {attendee.track}</div>
+                      {attendee.coupon !== "-" && <div className="text-[10px] text-neon-purple mt-1">🏷️ {attendee.coupon}</div>}
+                    </td>
+                    <td className="px-6 py-4">
                       <span className={attendee.paymentStatus === 'Paid' ? 'text-emerald-400 font-bold' : 'text-yellow-400 font-bold'}>
                         {attendee.paymentStatus}
                       </span>
@@ -137,11 +192,11 @@ export default function AttendeesPage({ params }) {
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       {!attendee.checkedIn && attendee.status === "Confirmed" && (
-                        <button title="Check In" className="p-1.5 bg-emerald-950/30 text-emerald-400 hover:bg-emerald-900/50 rounded transition-colors inline-block">
+                        <button onClick={() => handleCheckIn(attendee.id)} title="Check In" className="p-1.5 bg-emerald-950/30 text-emerald-400 hover:bg-emerald-900/50 rounded transition-colors inline-block">
                           <CheckCircle2 className="w-4 h-4" />
                         </button>
                       )}
-                      <button title="Cancel Registration" className="p-1.5 bg-red-950/30 text-red-400 hover:bg-red-900/50 rounded transition-colors inline-block">
+                      <button onClick={() => handleCancelRegistration(attendee.id)} title="Cancel Registration" className="p-1.5 bg-red-950/30 text-red-400 hover:bg-red-900/50 rounded transition-colors inline-block">
                         <XCircle className="w-4 h-4" />
                       </button>
                     </td>

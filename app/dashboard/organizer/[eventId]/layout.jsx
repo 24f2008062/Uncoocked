@@ -16,20 +16,20 @@ import {
 } from "lucide-react";
 
 export default function OrganizerLayout({ children, params }) {
-  const { user, role } = useUser();
+  const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const unwrappedParams = use(params);
   const eventId = unwrappedParams.eventId;
 
   // Protect the route
-  if (!user || role !== "organizer") {
+  if (!user) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="bg-dark-card border border-dark-border p-8 rounded-2xl text-center shadow-neon max-w-md w-full">
           <span className="text-4xl block mb-4">🛡️</span>
           <h2 className="text-xl font-bold text-white mb-2">Organizer Access Only</h2>
-          <p className="text-xs text-gray-400 mb-6">You must be logged in as an organizer to access this dashboard.</p>
+          <p className="text-xs text-gray-400 mb-6">You must be logged in to access this dashboard.</p>
           <button onClick={() => router.push("/dashboard")} className="w-full py-2 bg-neon-purple text-white text-xs font-bold rounded hover:bg-neon-purple/90 transition-all">
             Back to Dashboard
           </button>

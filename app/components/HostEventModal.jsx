@@ -74,7 +74,7 @@ export default function HostEventModal({
 
   if (!open) return null;
 
-  const handleHostNewEvent = (e) => {
+  const handleHostNewEvent = async (e) => {
     e.preventDefault();
     if (!user) {
       alert("You must be logged in to host an event.");
@@ -82,86 +82,45 @@ export default function HostEventModal({
     }
 
     try {
-      const storedHosted = JSON.parse(
-        localStorage.getItem("hosted_events") || "[]",
-      );
+      const eventPayload = {
+        id: isEditing && editingEvent ? editingEvent.id : `hosted-ev-${Date.now()}`,
+        title: newTitle,
+        type: newType,
+        date: newDate,
+        location: newLocation,
+        description: newDescription,
+        bannerUrl: newBannerUrl,
+        ticketType: newTicketType,
+        price: newPrice,
+        capacity: newCapacity,
+        waitlistEnabled: newWaitlistEnabled,
+        organizerId: user,
+      };
 
+      let res;
       if (isEditing && editingEvent) {
-        // Edit Mode
-        const updated = storedHosted.map((hev) => {
-          if (hev.id === editingEvent.id) {
-            return {
-              ...hev,
-              title: newTitle,
-              type: newType,
-              date: newDate,
-              location: newLocation,
-              description: newDescription,
-              bannerUrl: newBannerUrl,
-              ticketType: newTicketType,
-              price: newPrice,
-              capacity: newCapacity,
-              waitlistEnabled: newWaitlistEnabled,
-            };
-          }
-          return hev;
+        res = await fetch(`/api/events/${editingEvent.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(eventPayload),
         });
-        localStorage.setItem("hosted_events", JSON.stringify(updated));
-        alert(`Successfully updated event: ${newTitle}`);
       } else {
-        // Create Mode
-        const newEv = {
-          id: `hosted-ev-${Date.now()}`,
-          title: newTitle,
-          type: newType,
-          date: newDate,
-          location: newLocation,
-          description: newDescription,
-          hostEmail: user,
-          bulletinUpdates: [],
-          bannerUrl: newBannerUrl,
-          ticketType: newTicketType,
-          price: newPrice,
-          capacity: newCapacity,
-          waitlistEnabled: newWaitlistEnabled,
-        };
-
-        storedHosted.push(newEv);
-        localStorage.setItem("hosted_events", JSON.stringify(storedHosted));
-
-        // Auto-seed 2 mock registrations for the new hosted event
-        const storedRegs = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        storedRegs.push(
-          {
-            name: "Alice Smith",
-            email: "alice@campus.edu",
-            eventId: newEv.id,
-            ts: Date.now(),
-            status: "Confirmed",
-            track: "Computer Science & Tech",
-            team: "Individual",
-          },
-          {
-            name: "Bob Johnson",
-            email: "bob@campus.edu",
-            eventId: newEv.id,
-            ts: Date.now(),
-            status: "Pending",
-            track: "Engineering & Applied Sciences",
-            team: "Tech Club",
-          },
-        );
-        localStorage.setItem("registrations", JSON.stringify(storedRegs));
-        alert(`Successfully launched event: ${newTitle}`);
+        res = await fetch("/api/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(eventPayload),
+        });
       }
+
+      if (!res.ok) throw new Error("Failed to save event to database");
+      
+      alert(`Successfully ${isEditing ? 'updated' : 'launched'} event: ${newTitle}`);
 
       onSaved();
       onClose();
-      window.dispatchEvent(new Event("storage"));
     } catch (err) {
       console.error(err);
+      alert("Failed to save event. Please check the logs.");
     }
   };
 

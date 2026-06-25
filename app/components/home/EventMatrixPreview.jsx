@@ -96,23 +96,23 @@ export default function EventMatrixPreview() {
   ];
 
   useEffect(() => {
-    // Read current user registrations on load
-    if (typeof window !== "undefined") {
-      try {
-        const stored = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        const userEmail = localStorage.getItem("user_session");
-        if (userEmail) {
-          const matchingIds = stored
-            .filter((r) => r.email === userEmail)
-            .map((r) => r.eventId);
-          setRegisteredEventIds(matchingIds);
+    let isMounted = true;
+    const fetchUserRegistrations = async () => {
+      const userEmail = localStorage.getItem("user_session") || "";
+      if (userEmail) {
+        try {
+          const res = await fetch(`/api/registrations?email=${userEmail}`);
+          const data = await res.json();
+          if (data.success && isMounted) {
+            setRegisteredEventIds(data.registrations.map(r => r.eventId));
+          }
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
       }
-    }
+    };
+    fetchUserRegistrations();
+    return () => { isMounted = false; };
   }, [modalOpen]);
 
   const handleOpenRegister = (ev) => {
@@ -123,37 +123,26 @@ export default function EventMatrixPreview() {
   const handleRegisterSubmit = async (payload) => {
     if (!selectedEvent) return;
     try {
-      // Simulate network request
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const storedRegs = JSON.parse(
-        localStorage.getItem("registrations") || "[]",
-      );
-      // Check duplicate
-      const alreadyRegistered = storedRegs.some(
-        (reg) =>
-          reg.email === payload.email && reg.eventId === selectedEvent.id,
-      );
-
-      if (alreadyRegistered) {
+      if (registeredEventIds.includes(selectedEvent.id)) {
         alert("You are already registered for this event!");
         setModalOpen(false);
         return;
       }
 
-      // Add registration
-      const newReg = {
-        name: payload.name,
-        email: payload.email,
-        team: payload.team || "",
-        eventId: selectedEvent.id,
-        eventName: selectedEvent.title,
-        ts: Date.now(),
-      };
+      const userEmail = payload.email || localStorage.getItem("user_session");
+      const res = await fetch(`/api/registrations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          email: userEmail,
+          eventId: selectedEvent.id,
+          status: "Confirmed",
+        }),
+      });
 
-      storedRegs.push(newReg);
-      localStorage.setItem("registrations", JSON.stringify(storedRegs));
-      // Increment count local state
+      if (!res.ok) throw new Error("Failed to register");
+
       setEvents((prev) =>
         prev.map((e) =>
           e.id === selectedEvent.id
@@ -162,10 +151,8 @@ export default function EventMatrixPreview() {
         ),
       );
 
-      // Save user session if not set to simplify testing
       if (!localStorage.getItem("user_session")) {
-        localStorage.setItem("user_session", payload.email);
-        localStorage.setItem("user_role", "attendee");
+        localStorage.setItem("user_session", userEmail);
         window.dispatchEvent(new Event("storage"));
       }
 
@@ -177,6 +164,7 @@ export default function EventMatrixPreview() {
       setModalOpen(false);
     } catch (err) {
       console.error(err);
+      alert("Registration failed. Please check logs.");
     }
   };
 

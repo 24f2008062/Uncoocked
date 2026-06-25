@@ -72,7 +72,7 @@ export default function EventPage() {
         `,
         bulletinUpdates: selectedEvent.bulletinUpdates || [],
         bannerUrl: selectedEvent.bannerUrl || "",
-        hostEmail: selectedEvent.hostEmail,
+        organizerId: selectedEvent.organizerId || selectedEvent.organizer?.email,
       };
       return (
         <div className="bg-black w-full min-h-screen">

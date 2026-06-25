@@ -2,78 +2,65 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 
 const UserContext = createContext(undefined);
 
 export function UserProvider({ children }) {
-  const [role, setRoleState] = useState("organizer");
   const [user, setUserState] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { data: session, status } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Synchronize NextAuth session with UserContext state
   useEffect(() => {
+    // If NextAuth is still checking the session, do not proceed with auth redirects
+    if (status === "loading") {
+      setIsLoading(true);
+      return;
+    }
+
     if (session?.user) {
       setUserState(session.user.email);
-      setRoleState(session.user.role || "attendee");
-    }
-  }, [session]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const savedRole = localStorage.getItem("user_role");
-        const savedUser = localStorage.getItem("user_session");
-        const loadState = () => {
-          if (savedRole === "attendee" || savedRole === "organizer") {
-            setRoleState(savedRole);
-          } else {
-            setRoleState("organizer");
-          }
-          if (savedUser) {
-            setUserState(savedUser);
-          }
-        };
-
-        const timer = setTimeout(loadState, 0);
-        return () => clearTimeout(timer);
-      } catch {
-        // ignore
+      setIsLoading(false);
+      
+      // Auto-redirect new users to onboarding
+      if (session.user.onboardingCompleted === false && pathname !== "/onboarding") {
+        router.push("/onboarding");
       }
+    } else {
+      // NextAuth finished loading but no session found
+      // We check if there's a local storage mock session fallback
+      if (typeof window !== "undefined") {
+        const savedUser = localStorage.getItem("user_session");
+        if (savedUser) {
+          setUserState(savedUser);
+        }
+      }
+      setIsLoading(false);
     }
-  }, []);
+  }, [session, status, pathname, router]);
 
-  const setRole = (newRole) => {
-    setRoleState(newRole);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("user_role", newRole);
-    }
-  };
-
-  const login = (email, targetRole = "organizer") => {
+  const login = (email) => {
     setUserState(email);
-    setRoleState(targetRole);
     if (typeof window !== "undefined") {
       localStorage.setItem("user_session", email);
-      localStorage.setItem("user_role", targetRole);
     }
   };
 
-  const signup = (email, targetRole = "organizer") => {
+  const signup = (email) => {
     // In a real app, you would create the user here
     setUserState(email);
-    setRoleState(targetRole);
     if (typeof window !== "undefined") {
       localStorage.setItem("user_session", email);
-      localStorage.setItem("user_role", targetRole);
     }
   };
 
   const logout = async () => {
     setUserState(null);
-    setRoleState("organizer");
     if (typeof window !== "undefined") {
       localStorage.removeItem("user_session");
-      localStorage.removeItem("user_role");
     }
     // Also sign out of NextAuth
     await nextAuthSignOut({ redirect: false });
@@ -81,7 +68,7 @@ export function UserProvider({ children }) {
 
   return (
     <UserContext.Provider
-      value={{ role, user, login, signup, logout, setRole }}
+      value={{ user, isLoading, login, signup, logout }}
     >
       {children}
     </UserContext.Provider>

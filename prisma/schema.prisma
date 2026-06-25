@@ -14,13 +14,13 @@ datasource db {
 
 model User {
   id              String         @id @default(cuid())
+  role            String         @default("User")
   name            String?
   fullName        String?
   email           String?        @unique
   emailVerified   DateTime?
   image           String?
   passwordHash    String?
-  role            String         @default("attendee") // attendee, organizer
   department      String?
   clubAssociation String?
   portfolioUrl    String?
@@ -58,7 +58,6 @@ model Event {
   
   organizerId     String?
   organizer       User?            @relation("OrganizedEvents", fields: [organizerId], references: [id])
-  hostEmail       String?          // For quick lookup of the host
 
   registrations   Registration[]
   bulletinUpdates BulletinUpdate[]
@@ -72,7 +71,7 @@ model Event {
 
 model TicketTier {
   id          String   @id @default(uuid())
-  event       Event    @relation(fields: [eventId], references: [id])
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId     String
   name        String
   price       Float    @default(0)
@@ -80,24 +79,28 @@ model TicketTier {
   soldCount   Int      @default(0)
   description String?
   registrations Registration[]
+
+  @@index([eventId])
 }
 
 model Coupon {
   id          String   @id @default(uuid())
-  event       Event    @relation(fields: [eventId], references: [id])
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId     String
   code        String
   discountPct Float
   maxUses     Int?
   currentUses Int      @default(0)
   registrations Registration[]
+
+  @@index([eventId])
 }
 
 model Registration {
   id           String   @id @default(uuid())
-  user         User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
-  event        Event    @relation(fields: [eventId], references: [id])
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId      String
   
   ticketTier   TicketTier? @relation(fields: [ticketTierId], references: [id])
@@ -112,22 +115,28 @@ model Registration {
   track        String?
   registeredAt DateTime @default(now())
   logs         RegistrationLog[]
+
+  @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
 }
 
 model BulletinUpdate {
   id       String   @id @default(uuid())
-  event    Event    @relation(fields: [eventId], references: [id])
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId  String
   title    String
   content  String
   postedAt DateTime @default(now())
+
+  @@index([eventId])
 }
 
 model UserActivity {
   id              String   @id @default(uuid())
-  user            User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
-  event           Event    @relation(fields: [eventId], references: [id])
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         String
   interactionType String   // VIEW, SAVE, REGISTER
   timestamp       DateTime @default(now())
@@ -138,7 +147,7 @@ model UserActivity {
 
 model EventAnalytic {
   id              String   @id @default(uuid())
-  event           Event    @relation(fields: [eventId], references: [id])
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         String
   date            DateTime @default(now()) // Can be used to track daily stats
   views           Int      @default(0)
@@ -146,37 +155,46 @@ model EventAnalytic {
   registrations   Int      @default(0)
   attendance      Int      @default(0)
   revenue         Float    @default(0)
+
+  @@index([eventId])
 }
 
 model EventManager {
   id              String   @id @default(uuid())
-  event           Event    @relation(fields: [eventId], references: [id])
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         String
-  user            User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
   role            String   @default("Admin") // Owner, Admin, Moderator
   addedAt         DateTime @default(now())
+
+  @@unique([eventId, userId])
+  @@index([userId])
 }
 
 model RegistrationLog {
   id              String   @id @default(uuid())
-  registration    Registration @relation(fields: [registrationId], references: [id])
+  registration    Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   registrationId  String
   action          String   // Status Change, Check In
   oldStatus       String?
   newStatus       String?
   timestamp       DateTime @default(now())
   performedBy     String?  // User ID who performed the action
+
+  @@index([registrationId])
 }
 
 model EventActivityLog {
   id              String   @id @default(uuid())
-  event           Event    @relation(fields: [eventId], references: [id])
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         String
   action          String   // e.g., "Updated Content", "Changed Settings"
   details         String?
   performedBy     String   // User ID
   timestamp       DateTime @default(now())
+
+  @@index([eventId])
 }
 
 // NextAuth Models

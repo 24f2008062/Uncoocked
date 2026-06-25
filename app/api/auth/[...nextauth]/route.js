@@ -11,14 +11,15 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "mock-client-secret",
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: true,
   session: {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        token.sub = user.id;
         token.onboardingCompleted = user.onboardingCompleted;
       }
       // Allow updating the token
@@ -29,8 +30,7 @@ export const authOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role || "attendee";
+        session.user.id = token.sub;
         session.user.onboardingCompleted = token.onboardingCompleted;
       }
       return session;
