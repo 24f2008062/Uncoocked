@@ -203,6 +203,7 @@ export default function EventMatrixPreview() {
               placeholder="Filter by keyword..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              suppressHydrationWarning={true}
               className="block w-full pl-10 pr-4 py-2.5 rounded-full border border-white/10 bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
             />
           </div>
