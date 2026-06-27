@@ -215,6 +215,7 @@ export default function EventMatrixPreview() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
+              suppressHydrationWarning={true}
               className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                 activeCategory === cat
                   ? "bg-neon-purple text-white shadow-neon"
