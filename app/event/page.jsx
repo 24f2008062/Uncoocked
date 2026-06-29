@@ -159,7 +159,7 @@ export default function EventPage() {
 
   return (
     <div className="bg-black w-full min-h-screen pt-8 pb-16 px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-12">
+      <div className="max-w-7xl mx-auto space-y-4">
         {user && (
           <RecommendedEvents 
             userEmail={typeof user === "string" ? user : user?.email} 

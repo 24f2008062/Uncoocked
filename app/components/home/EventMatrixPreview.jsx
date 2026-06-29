@@ -178,7 +178,7 @@ export default function EventMatrixPreview() {
   });
 
   return (
-    <section className="py-16 relative w-full border-t border-white/5 bg-zinc-950/20">
+    <section className="pt-6 pb-16 relative w-full border-t border-white/5 bg-zinc-950/20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-10">
         {/* Header Block */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -257,8 +257,10 @@ export default function EventMatrixPreview() {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-neon-purple/20 via-zinc-900 to-zinc-950 flex items-center justify-center font-mono text-[9px] text-neon-lavender">
-                        CAMPUS EVENT PREVIEW
+                      <div className="w-full h-full bg-gradient-to-tr from-neon-purple/20 via-zinc-900 to-zinc-950 flex items-center justify-center p-4 text-center">
+                        <span className="font-black text-lg text-white/90 neon-text-glow leading-snug line-clamp-2 tracking-wide">
+                          {ev.title}
+                        </span>
                       </div>
                     )}
                     {/* Category Tag overlaid on the banner */}
@@ -279,29 +281,29 @@ export default function EventMatrixPreview() {
                         </span>
                       </div>
 
-                      <h3 className="text-sm font-extrabold text-white leading-snug group-hover:text-neon-lavender transition-colors truncate">
+                      <h3 className="text-base font-extrabold text-white leading-snug group-hover:text-neon-lavender transition-colors truncate">
                         {ev.title}
                       </h3>
 
-                      <p className="text-[11px] text-gray-400 leading-normal line-clamp-3">
+                      <p className="text-xs text-gray-300 leading-relaxed line-clamp-3">
                         {ev.desc}
                       </p>
 
                       {/* Metadata tags grid */}
-                      <div className="grid grid-cols-2 gap-2 pt-2 text-[10px] font-mono border-t border-white/5 text-gray-500">
+                      <div className="grid grid-cols-2 gap-2 pt-3 text-xs font-mono border-t border-white/10 text-gray-400">
                         <div>
-                          <span className="block text-[8px] uppercase tracking-wider text-gray-600">
+                          <span className="block text-[10px] uppercase tracking-wider text-gray-400 pb-1">
                             Prize Pool
                           </span>
-                          <span className="text-white font-bold">
+                          <span className="text-white font-bold text-sm">
                             {ev.prizePool}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-[8px] uppercase tracking-wider text-gray-600">
+                          <span className="block text-[10px] uppercase tracking-wider text-gray-400 pb-1">
                             Registrations
                           </span>
-                          <span className="text-white font-bold">
+                          <span className="text-white font-bold text-sm">
                             {ev.registrations} secured
                           </span>
                         </div>

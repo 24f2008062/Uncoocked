@@ -114,8 +114,10 @@ export default function RecommendedEvents({ userEmail, onSelectEvent }) {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-tr from-neon-purple/20 via-zinc-900 to-zinc-950 flex items-center justify-center font-mono text-[9px] text-neon-lavender">
-                  EVENT
+                <div className="w-full h-full bg-gradient-to-tr from-neon-purple/20 via-zinc-900 to-zinc-950 flex items-center justify-center p-4 text-center">
+                  <span className="font-black text-sm text-white/90 neon-text-glow leading-snug line-clamp-2 tracking-wide">
+                    {ev.title}
+                  </span>
                 </div>
               )}
               {/* Badge */}

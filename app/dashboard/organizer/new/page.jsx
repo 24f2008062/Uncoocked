@@ -6,6 +6,7 @@ import { useUser } from "@/app/context/UserContext";
 import { CITY_ZONES } from "@/app/config/cities";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import ImageCropper from "@/app/components/ImageCropper";
 
 const BANNER_PRESETS = [
   {
@@ -303,32 +304,32 @@ export default function HostEventPage() {
 
             <div className="space-y-3">
               <label className="block text-xs uppercase font-bold text-gray-500">
-                Banner Image URL
+                Event Banner
               </label>
-              <input
-                type="url"
-                placeholder="e.g. https://images.unsplash.com/... (optional)"
-                value={newBannerUrl}
-                onChange={(e) => setNewBannerUrl(e.target.value)}
-                className="w-full px-4 py-3 bg-black border border-dark-border rounded-lg text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple"
+              
+              <ImageCropper 
+                currentImageUrl={newBannerUrl} 
+                onCropCompleteCallback={(croppedBase64) => setNewBannerUrl(croppedBase64)} 
               />
-
-              {/* Presets */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                {BANNER_PRESETS.map((preset) => (
-                  <button
-                    key={preset.name}
-                    type="button"
-                    onClick={() => setNewBannerUrl(preset.url)}
-                    className={`px-3 py-1.5 rounded text-xs border transition-all ${
-                      newBannerUrl === preset.url
-                        ? "bg-neon-purple/20 border-neon-purple text-neon-lavender font-bold"
-                        : "bg-zinc-900 border-zinc-800 text-gray-400 hover:text-white hover:border-zinc-700"
-                    }`}
-                  >
-                    {preset.name}
-                  </button>
-                ))}
+              
+              <div className="pt-2">
+                <span className="block text-[10px] uppercase font-bold text-gray-600 mb-2">Or choose a preset URL:</span>
+                <div className="flex flex-wrap gap-2">
+                  {BANNER_PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => setNewBannerUrl(preset.url)}
+                      className={`px-3 py-1.5 rounded text-[10px] font-bold border transition-all ${
+                        newBannerUrl === preset.url
+                          ? "bg-neon-purple/20 border-neon-purple text-neon-lavender font-bold"
+                          : "bg-zinc-900 border-zinc-800 text-gray-400 hover:text-white hover:border-zinc-700"
+                      }`}
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

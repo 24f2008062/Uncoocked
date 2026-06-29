@@ -42,7 +42,7 @@ export default function Metrics() {
   ];
 
   return (
-    <section className="py-10 relative">
+    <section className="pt-10 pb-2 relative">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         {/* Animated staggered layout */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

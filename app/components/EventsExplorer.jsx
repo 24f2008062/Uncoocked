@@ -347,47 +347,45 @@ export default function EventsExplorer({
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-        {categories.map((category) => (
-          <button
-            key={category}
-            onClick={() => setActiveCategory(category)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full font-bold text-xs transition-all whitespace-nowrap ${
-              activeCategory === category
-                ? "bg-neon-purple text-white shadow-neon"
-                : "bg-zinc-900/50 text-gray-400 hover:text-white hover:bg-zinc-800 border border-dark-border"
-            }`}
+      {/* Filter Row: Categories and Zone Dropdown */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full font-bold text-xs transition-all whitespace-nowrap ${
+                activeCategory === category
+                  ? "bg-neon-purple text-white shadow-neon"
+                  : "bg-zinc-900/50 text-gray-400 hover:text-white hover:bg-zinc-800 border border-dark-border"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+        
+        {/* Zone Dropdown */}
+        <div className="flex-shrink-0 self-start sm:self-auto relative">
+          <select
+            value={activeZone}
+            onChange={(e) => setActiveZone(e.target.value)}
+            className="appearance-none bg-zinc-900/50 text-gray-300 text-xs font-bold pl-4 pr-8 py-2 rounded-full border border-dark-border focus:outline-none focus:border-neon-purple hover:bg-zinc-800 transition-all cursor-pointer"
           >
-            {category}
-          </button>
-        ))}
-      </div>
-      
-      {/* Zone Filters */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-        <button
-          onClick={() => setActiveZone("All")}
-          className={`flex-shrink-0 px-4 py-1.5 rounded-full font-bold text-xs transition-all whitespace-nowrap ${
-            activeZone === "All"
-              ? "bg-gray-100 text-black shadow-sm"
-              : "bg-zinc-900/50 text-gray-400 hover:text-white hover:bg-zinc-800 border border-dark-border"
-          }`}
-        >
-          All Zones
-        </button>
-        {LUCKNOW_ZONES.map((zone) => (
-          <button
-            key={zone}
-            onClick={() => setActiveZone(zone)}
-            className={`flex-shrink-0 px-4 py-1.5 rounded-full font-bold text-xs transition-all whitespace-nowrap ${
-              activeZone === zone
-                ? "bg-gray-100 text-black shadow-sm"
-                : "bg-zinc-900/50 text-gray-400 hover:text-white hover:bg-zinc-800 border border-dark-border"
-            }`}
-          >
-            {zone}
-          </button>
-        ))}
+            <option value="All">All Zones</option>
+            {LUCKNOW_ZONES.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
+              </option>
+            ))}
+          </select>
+          {/* Custom Dropdown Arrow */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Dynamic Grid of Cards */}
@@ -421,8 +419,10 @@ export default function EventsExplorer({
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-neon-purple/20 via-zinc-900 to-zinc-950 flex items-center justify-center font-mono text-[9px] text-neon-lavender">
-                    CAMPUS EVENT PREVIEW
+                  <div className="w-full h-full bg-gradient-to-tr from-neon-purple/20 via-zinc-900 to-zinc-950 flex items-center justify-center p-4 text-center">
+                    <span className="font-black text-lg text-white/90 neon-text-glow leading-snug line-clamp-2 tracking-wide">
+                      {ev.title}
+                    </span>
                   </div>
                 )}
                 {/* Category Tag overlaid on the banner */}

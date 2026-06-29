@@ -26,10 +26,10 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full subpixel-antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-black text-gray-100 transition-colors duration-300">
+      <body className="min-h-full flex flex-col bg-black text-white transition-colors duration-300">
         <SplashScreen />
         <NextAuthProvider>
           <UserProvider>

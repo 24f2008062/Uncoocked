@@ -206,19 +206,7 @@ export default function Hero() {
                   </div>
                 </div>
 
-                {/* Sub log printout terminal window */}
-                <div className="bg-black/60 border border-white/5 rounded-xl p-3.5 h-24 overflow-hidden flex flex-col justify-end space-y-1 text-gray-400">
-                  <div className="text-neon-lavender">
-                    &gt;&gt; Loading campus sync pipeline...
-                  </div>
-                  <div>
-                    &gt;&gt; 👤 student_mikey registered for Dandiya Night
-                  </div>
-                  <div>&gt;&gt; 🚀 Cultural Club registered Annual Fest</div>
-                  <div className="text-green-400">
-                    &gt;&gt; ✓ Synchronization successful. State persisted.
-                  </div>
-                </div>
+
               </motion.div>
             </motion.div>
           </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { Save, Image as ImageIcon, History, Eye, Layout } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import ImageCropper from "@/app/components/ImageCropper";
 
 export default function ContentEditorPage({ params }) {
   const unwrappedParams = use(params);
@@ -89,24 +90,11 @@ export default function ContentEditorPage({ params }) {
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Media & Meta</h2>
             
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-1.5">Banner Image URL</label>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  value={formData.bannerUrl}
-                  onChange={e => setFormData({...formData, bannerUrl: e.target.value})}
-                  className="flex-1 bg-black border border-dark-border rounded-lg p-2.5 text-xs text-white focus:border-neon-purple outline-none" 
-                  placeholder="https://..."
-                />
-                <button className="p-2.5 bg-zinc-900 border border-dark-border rounded-lg text-gray-400 hover:text-white transition-colors">
-                  <ImageIcon className="w-4 h-4" />
-                </button>
-              </div>
-              {formData.bannerUrl && (
-                <div className="mt-3 h-24 w-full rounded-lg overflow-hidden border border-dark-border">
-                  <img src={formData.bannerUrl} alt="Banner Preview" className="w-full h-full object-cover" />
-                </div>
-              )}
+              <label className="block text-xs font-bold text-gray-400 mb-1.5">Event Banner</label>
+              <ImageCropper 
+                currentImageUrl={formData.bannerUrl} 
+                onCropCompleteCallback={(croppedBase64) => setFormData({...formData, bannerUrl: croppedBase64})} 
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
