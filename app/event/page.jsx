@@ -5,7 +5,6 @@ import TwinLayout from "@/app/components/TwinLayout";
 import EventsExplorer from "@/app/components/EventsExplorer";
 import RecommendedEvents from "@/app/components/RecommendedEvents";
 import { useUser } from "@/app/context/UserContext";
-import EventChat from "@/app/components/EventChat";
 
 export default function EventPage() {
   const { user } = useUser();
@@ -15,7 +14,7 @@ export default function EventPage() {
 
   const loadEvents = async () => {
     try {
-      const res = await fetch("/api/events");
+      const res = await fetch("/api/events", { cache: "no-store" });
       const data = await res.json();
       if (data.success) {
         setAllEvents(data.events);
@@ -80,7 +79,7 @@ export default function EventPage() {
     }
   };
 
-  // If an event is selected, render TwinLayout details page view along with the Chatroom
+  // If an event is selected, render TwinLayout details page view
   if (selectedEventId) {
     const selectedEvent = allEvents.find((e) => e.id === selectedEventId);
     if (selectedEvent) {
@@ -113,44 +112,15 @@ export default function EventPage() {
 
       return (
         <div className="bg-black w-full min-h-screen text-white">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-8 py-6 max-w-[1600px] mx-auto items-start">
-            
-            <div className="lg:col-span-2 w-full min-w-0">
-              <TwinLayout
-                event={eventData}
-                onBack={() => {
-                  // Simply call browser's native back history navigation sequence
-                  // This triggers our 'popstate' listener above, maintaining absolute consistency!
-                  window.history.back();
-                }}
-              />
-            </div>
-            
-            <div className="lg:col-span-1 w-full flex justify-center lg:justify-end sticky top-24 z-10">
-              {user ? (
-                <EventChat 
-                  eventId={selectedEventId} 
-                  currentUser={chatUserData} 
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-[480px] w-full max-w-md border border-zinc-800 rounded-xl bg-zinc-900/60 p-6 text-center backdrop-blur-md shadow-xl">
-                  <div className="w-12 h-12 rounded-full bg-purple-600/10 flex items-center justify-center mb-4 border border-purple-500/20 text-purple-400 text-xl font-bold">
-                    🔒
-                  </div>
-                  <h3 className="text-zinc-200 font-semibold text-base mb-2">Discussion Locked</h3>
-                  <p className="text-zinc-400 text-xs max-w-[240px] mb-6 leading-relaxed">
-                    Have questions about this event? Sign in to join the conversation room and connect with other students!
-                  </p>
-                  <a 
-                    href="/login" 
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white text-center text-sm font-medium py-2.5 rounded-lg transition-all active:scale-[0.98] shadow-lg shadow-purple-600/20"
-                  >
-                    Sign In to Access Chat
-                  </a>
-                </div>
-              )}
-            </div>
-
+          <div className="px-4 sm:px-6 lg:px-8 pt-2 pb-6 max-w-[1600px] mx-auto">
+            <TwinLayout
+              event={eventData}
+              chatUserData={chatUserData}
+              selectedEventId={selectedEventId}
+              onBack={() => {
+                window.history.back();
+              }}
+            />
           </div>
         </div>
       );

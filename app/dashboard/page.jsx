@@ -21,6 +21,8 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  CheckCircle,
+  History,
 } from "lucide-react";
 import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
 
@@ -69,6 +71,10 @@ export default function DashboardPage() {
   const [announcementTitles, setAnnouncementTitles] = useState({});
   const [announcementContents, setAnnouncementContents] = useState({});
   const [expandedAnnouncements, setExpandedAnnouncements] = useState({});
+
+  // History Modal State
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyTab, setHistoryTab] = useState("attended");
 
   const loadDashboardData = async () => {
     if (typeof window !== "undefined" && user) {
@@ -147,6 +153,19 @@ export default function DashboardPage() {
 
   const handleOpenHostModal = () => {
     router.push("/dashboard/organizer/new");
+  };
+
+  const handleCompleteEvent = async (eventId) => {
+    if (typeof window !== "undefined" && user) {
+      if (!confirm("Mark this event as successfully completed? It will be moved to your history.")) return;
+      try {
+        const res = await fetch(`/api/events/${eventId}/complete`, { method: "POST" });
+        if (!res.ok) throw new Error("Failed to complete event");
+        await loadDashboardData();
+      } catch (err) {
+        console.error(err);
+      }
+    }
   };
 
   const handleEditHostedEventClick = (e, hev) => {
@@ -273,9 +292,16 @@ export default function DashboardPage() {
   const username = session?.user?.name || (user ? user.split("@")[0] : "Guest");
 
   const now = new Date().getTime();
-  const upcomingEvents = attendingEvents.filter(ev => ev.ts > now + 86400000); // More than 24 hours in future
-  const ongoingEvents = attendingEvents.filter(ev => Math.abs(ev.ts - now) <= 86400000); // Within 24 hours
-  const completedEvents = attendingEvents.filter(ev => ev.ts < now - 86400000); // More than 24 hours in past
+  
+  const activeAttendingEvents = attendingEvents.filter(ev => ev.status !== "Completed");
+  const historyAttendingEvents = attendingEvents.filter(ev => ev.status === "Completed");
+  
+  const activeHostedEvents = hostedEvents.filter(ev => ev.status !== "Completed");
+  const historyHostedEvents = hostedEvents.filter(ev => ev.status === "Completed");
+
+  const upcomingEvents = activeAttendingEvents.filter(ev => ev.ts > now + 86400000); // More than 24 hours in future
+  const ongoingEvents = activeAttendingEvents.filter(ev => Math.abs(ev.ts - now) <= 86400000); // Within 24 hours
+  const pastActiveEvents = activeAttendingEvents.filter(ev => ev.ts < now - 86400000); // More than 24 hours in past
 
   const renderEventGroup = (groupTitle, events, emptyMessage) => {
     if (events.length === 0) return null;
@@ -438,7 +464,7 @@ export default function DashboardPage() {
               <div>
                 {renderEventGroup("Ongoing Events", ongoingEvents, "")}
                 {renderEventGroup("Upcoming Events", upcomingEvents, "")}
-                {renderEventGroup("Completed Events", completedEvents, "")}
+                {renderEventGroup("Past Events", pastActiveEvents, "")}
               </div>
             )}
           </div>
@@ -466,11 +492,11 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {hostedEvents.length === 0 ? (
+            {activeHostedEvents.length === 0 ? (
               <div className="bg-dark-card/40 border border-dark-border border-dashed rounded-xl p-10 text-center space-y-4">
                 <span className="text-3xl block">📣</span>
                 <p className="text-xs text-gray-400 leading-normal">
-                  You aren't hosting any events yet.
+                  You aren't hosting any active events yet.
                 </p>
                 <button
                   onClick={handleOpenHostModal}
@@ -481,7 +507,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {hostedEvents.map((hev) => {
+                {activeHostedEvents.map((hev) => {
                   const guestList = getGuestList(hev.id);
                   const isGuestListExpanded = !!expandedGuestLists[hev.id];
                   const isAnnounceExpanded = !!expandedAnnouncements[hev.id];
@@ -526,6 +552,13 @@ export default function DashboardPage() {
                             className="flex items-center gap-1 shrink-0"
                             onClick={(e) => e.stopPropagation()}
                           >
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleCompleteEvent(hev.id); }}
+                              className="text-gray-500 hover:text-emerald-400 p-1.5 hover:bg-emerald-950/20 border border-transparent hover:border-emerald-900/30 rounded-lg transition-all"
+                              title="Mark Completed"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </button>
                             <button
                               onClick={(e) =>
                                 handleEditHostedEventClick(e, hev)
@@ -670,6 +703,17 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* View History Button */}
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => setHistoryModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-dark-border rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:border-neon-purple hover:shadow-neon transition-all hover:scale-[1.02]"
+          >
+            <History className="h-4 w-4" />
+            View Event History
+          </button>
+        </div>
       </div>
 
       {selectedTicket && selectedEventForTicket && (
@@ -683,6 +727,91 @@ export default function DashboardPage() {
           ticketId={selectedTicket.ticketId || "TKT-000000"}
           ticketType={selectedEventForTicket.ticketType || "Free"}
         />
+      )}
+
+      {/* History Modal */}
+      {historyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-dark-card border border-dark-border w-full max-w-2xl rounded-2xl p-6 shadow-neon relative my-8">
+            <button
+              onClick={() => setHistoryModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1"
+            >
+              <XCircle className="h-5 w-5" />
+            </button>
+            <h2 className="text-xl font-black text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+              <History className="h-5 w-5 text-neon-purple" />
+              Event History
+            </h2>
+
+            <div className="flex border-b border-dark-border mb-6">
+              <button
+                onClick={() => setHistoryTab("attended")}
+                className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors ${
+                  historyTab === "attended"
+                    ? "border-neon-purple text-neon-lavender"
+                    : "border-transparent text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                Attended ({historyAttendingEvents.length})
+              </button>
+              <button
+                onClick={() => setHistoryTab("hosted")}
+                className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors ${
+                  historyTab === "hosted"
+                    ? "border-neon-purple text-neon-lavender"
+                    : "border-transparent text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                Hosted ({historyHostedEvents.length})
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              {historyTab === "attended" && (
+                historyAttendingEvents.length === 0 ? (
+                  <p className="text-xs text-gray-500 italic text-center py-8">No attended events in history yet.</p>
+                ) : (
+                  historyAttendingEvents.map(ev => (
+                    <div key={ev.id} className="bg-black border border-dark-border rounded-xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 transition-all hover:border-neon-purple/40">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{ev.title}</h4>
+                        <div className="text-[10px] text-gray-400 font-mono flex items-center gap-2 mt-1">
+                          <span>{ev.date}</span>
+                          <span>•</span>
+                          <span>{ev.location}</span>
+                        </div>
+                      </div>
+                      <span className="px-2 py-1 bg-zinc-900 text-gray-500 border border-dark-border rounded text-[10px] uppercase font-bold self-start sm:self-auto">Completed</span>
+                    </div>
+                  ))
+                )
+              )}
+
+              {historyTab === "hosted" && (
+                historyHostedEvents.length === 0 ? (
+                  <p className="text-xs text-gray-500 italic text-center py-8">No hosted events in history yet.</p>
+                ) : (
+                  historyHostedEvents.map(ev => (
+                    <div key={ev.id} className="bg-black border border-dark-border rounded-xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 transition-all hover:border-neon-purple/40">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{ev.title}</h4>
+                        <div className="text-[10px] text-gray-400 font-mono flex items-center gap-2 mt-1">
+                          <span>{ev.date}</span>
+                          <span>•</span>
+                          <span>{ev.type}</span>
+                        </div>
+                      </div>
+                      <span className="px-2 py-1 bg-emerald-950/30 text-emerald-500 border border-emerald-900/40 rounded text-[10px] uppercase font-bold self-start sm:self-auto flex items-center gap-1.5">
+                        <CheckCircle className="h-3 w-3" /> Successfully Hosted
+                      </span>
+                    </div>
+                  ))
+                )
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

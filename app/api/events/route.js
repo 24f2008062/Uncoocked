@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '../../config/cities';
@@ -15,6 +16,7 @@ export async function GET(request) {
 
     if (!includeArchived) {
       whereClause.archived = false;
+      whereClause.status = 'Active';
     }
 
     const events = await prisma.event.findMany({
@@ -71,7 +73,7 @@ export async function POST(request) {
         id: data.id,
         title: data.title,
         type: data.type,
-        date: new Date(data.date),
+        date: data.date && !isNaN(new Date(data.date).getTime()) ? new Date(data.date) : new Date(),
         location: data.location,
         zone: data.zone || null,
         city: data.city || DEFAULT_CITY,
@@ -79,6 +81,7 @@ export async function POST(request) {
         country: data.country || DEFAULT_COUNTRY,
         description: data.description,
         bannerUrl: data.bannerUrl,
+        googleMapsUrl: data.googleMapsUrl,
         ticketType: data.ticketType || "Free",
         price: data.price ? parseFloat(data.price) : 0,
         capacity: data.capacity ? parseInt(data.capacity) : 100,

@@ -132,9 +132,6 @@ export default function Navbar() {
                           >
                             {session?.user?.name || user}
                           </span>
-                          <span className="inline-block mt-1.5 text-[8px] bg-neon-purple/15 text-neon-lavender border border-neon-purple/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider font-mono">
-                            Campus Member
-                          </span>
                         </div>
 
                         {/* Links */}

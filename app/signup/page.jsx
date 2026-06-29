@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [dob, setDob] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,6 +36,11 @@ export default function SignupPage() {
 
     if (password.length < 4) {
       setError("Password must contain at least 4 characters.");
+      return;
+    }
+
+    if (!dob) {
+      setError("Please provide your Date of Birth.");
       return;
     }
 
@@ -154,6 +160,25 @@ export default function SignupPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading || success}
+                className="block w-full rounded-md border border-dark-border bg-black px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple disabled:opacity-50"
+              />
+            </div>
+
+            {/* DOB Field */}
+            <div className="space-y-1">
+              <label
+                htmlFor="signup-dob"
+                className="block text-xs font-semibold text-gray-400"
+              >
+                Date of Birth
+              </label>
+              <input
+                id="signup-dob"
+                required
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
                 disabled={loading || success}
                 className="block w-full rounded-md border border-dark-border bg-black px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple disabled:opacity-50"
               />

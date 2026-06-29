@@ -21,6 +21,7 @@ model User {
   emailVerified   DateTime?
   image           String?
   passwordHash    String?
+  dob             String?
   department      String?
   clubAssociation String?
   portfolioUrl    String?
@@ -54,11 +55,13 @@ model Event {
   schedule        String? // Markdown
   prizePool       String? // Markdown
   bannerUrl       String?
+  googleMapsUrl   String?
   ticketType      String           @default("Free") // Free, Paid
   price           Float?
   capacity        Int
   waitlistEnabled Boolean          @default(false)
   archived        Boolean          @default(false)
+  status          String           @default("Active") // Active or Completed
   createdAt       DateTime         @default(now())
   
   organizerId     String?

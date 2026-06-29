@@ -10,15 +10,12 @@ export default function ContentEditorPage({ params }) {
   const eventId = unwrappedParams.eventId;
 
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("description"); // description, schedule, faqs
   const [showPreview, setShowPreview] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
 
   // Form State
   const [formData, setFormData] = useState({
     description: "",
-    schedule: "",
-    faqs: "",
     bannerUrl: "",
     venue: "",
     tags: ""
@@ -28,9 +25,7 @@ export default function ContentEditorPage({ params }) {
     // Mock Fetch
     setTimeout(() => {
       setFormData({
-        description: "## Welcome to the Event\nJoin us for an amazing experience...",
-        schedule: "## Day 1\n- 9:00 AM: Registration\n- 10:00 AM: Keynote",
-        faqs: "### Will there be food?\nYes, lunch is provided.",
+        description: "## Welcome to the Event\nJoin us for an amazing experience...\n\n## Agenda\n- 9:00 AM: Registration\n- 10:00 AM: Keynote\n\n## FAQs\n**Will there be food?**\nYes, lunch is provided.",
         bannerUrl: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&auto=format&fit=crop&q=60",
         venue: "Main Campus Auditorium",
         tags: "technology, networking, workshop"
@@ -119,28 +114,18 @@ export default function ContentEditorPage({ params }) {
             </div>
           </div>
 
-          {/* Markdown Content Tabs */}
+          {/* Markdown Content Editor */}
           <div className="bg-dark-card border border-dark-border rounded-2xl overflow-hidden flex flex-col h-[500px]">
             <div className="flex border-b border-dark-border bg-black/20">
-              {['description', 'schedule', 'faqs'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-3 text-[11px] font-black uppercase tracking-wider transition-all ${
-                    activeTab === tab 
-                      ? "text-neon-purple border-b-2 border-neon-purple bg-neon-purple/5" 
-                      : "text-gray-500 hover:text-white"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+              <div className="px-5 py-3 text-[11px] font-black uppercase tracking-wider text-neon-purple bg-neon-purple/5 w-full">
+                Full Event Description (Markdown)
+              </div>
             </div>
             <textarea
-              value={formData[activeTab]}
-              onChange={e => setFormData({...formData, [activeTab]: e.target.value})}
+              value={formData.description}
+              onChange={e => setFormData({...formData, description: e.target.value})}
               className="flex-1 w-full bg-transparent p-5 text-sm text-gray-300 font-mono focus:outline-none resize-none"
-              placeholder={`Write your ${activeTab} in Markdown format...`}
+              placeholder="Write your full event description here. You can include your agenda, FAQs, and more using Markdown formatting..."
             />
           </div>
         </div>
@@ -161,7 +146,7 @@ export default function ContentEditorPage({ params }) {
                 )}
                 
                 <div className="prose prose-invert prose-p:text-sm prose-h1:text-3xl prose-h2:text-2xl prose-a:text-neon-lavender max-w-none">
-                  <ReactMarkdown>{formData[activeTab] || "*Empty content*"}</ReactMarkdown>
+                  <ReactMarkdown>{formData.description || "*Empty content*"}</ReactMarkdown>
                 </div>
               </div>
             </div>

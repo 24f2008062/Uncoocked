@@ -17,7 +17,17 @@ import {
   Save,
   Edit2,
   X,
+  Info,
+  Trophy,
 } from "lucide-react";
+
+const SUGGESTED_CATEGORIES = [
+  "Technology", "Startups", "AI & Machine Learning", "Programming", 
+  "Gaming & Esports", "Music", "Business", "Finance", "Education", 
+  "Workshops", "Networking", "Sports", "Art & Design", "Photography", 
+  "Health & Fitness", "Food & Drinks", "Entertainment", "Cultural Events", 
+  "Career & Jobs", "Community Events"
+];
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -27,12 +37,34 @@ export default function ProfilePage() {
   const [github, setGithub] = useState("");
   const [track, setTrack] = useState("Fullstack Developer");
   const [team, setTeam] = useState("");
+  const [dob, setDob] = useState("");
   // UI States
   const [loading, setLoading] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [attendingCount, setAttendingCount] = useState(0);
   const [hostedCount, setHostedCount] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const [showRankModal, setShowRankModal] = useState(false);
+  const [selectedInterests, setSelectedInterests] = useState([]);
+
+  // 1. Calculate XP
+  const xp = (attendingCount * 10) + (hostedCount * 50);
+
+  // 2. Determine Rank & Progress
+  const getRankDetails = (currentXp) => {
+    if (currentXp < 50) return { name: "Freshman", icon: "🥉", color: "text-amber-600", bg: "bg-amber-600/10", border: "border-amber-600/30", next: 50 };
+    if (currentXp < 100) return { name: "Sophomore", icon: "🥈", color: "text-zinc-300", bg: "bg-zinc-400/10", border: "border-zinc-400/30", next: 100 };
+    if (currentXp < 250) return { name: "Junior", icon: "🥇", color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/30", next: 250 };
+    if (currentXp < 500) return { name: "Senior", icon: "🌟", color: "text-purple-400", bg: "bg-purple-400/10", border: "border-purple-400/30", next: 500 };
+    return { name: "Campus Legend", icon: "👑", color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/30", next: null };
+  };
+
+  const rank = getRankDetails(xp);
+  
+  let progressPercentage = 100;
+  if (rank.next) {
+    progressPercentage = Math.min(100, Math.max(0, (xp / rank.next) * 100));
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -57,6 +89,16 @@ export default function ProfilePage() {
         } else {
           // Pre-populate with username
           if (isMounted) setFullName(user.split("@")[0]);
+        }
+
+        // Fetch interests from database
+        const profileRes = await fetch(`/api/users/profile?email=${user}`);
+        const profileData = await profileRes.json();
+        if (profileData.success && profileData.user) {
+          if (profileData.user.interests && isMounted) {
+            setSelectedInterests(JSON.parse(profileData.user.interests));
+          }
+          if (profileData.user.dob && isMounted) setDob(profileData.user.dob);
         }
 
         // Calculate attending count via API
@@ -87,16 +129,27 @@ export default function ProfilePage() {
     return () => { isMounted = false; };
   }, [user]);
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     if (typeof window !== "undefined" && user) {
       try {
+        await fetch("/api/users/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user,
+            interests: selectedInterests,
+            dob: dob,
+          })
+        });
+
         const payload = {
           fullName,
           bio,
           github,
           track,
           team,
+          dob,
         };
         localStorage.setItem(`profile_${user}`, JSON.stringify(payload));
         // Enrich registrations in localStorage matching this email with the updated fullName/track/team
@@ -222,9 +275,8 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-900 border border-dark-border rounded-full text-[10px] text-gray-300 font-bold uppercase tracking-wider font-mono">
-                  <Shield className="h-3.5 w-3.5 text-neon-purple" />
-                  <span>Campus Member</span>
+                <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${rank.bg} ${rank.color} border ${rank.border}`}>
+                  <span>{rank.icon}</span> {rank.name}
                 </div>
               </div>
 
@@ -259,6 +311,32 @@ export default function ProfilePage() {
                       {hostedCount}
                     </div>
                   </Link>
+                </div>
+
+                <div className="pt-4 border-t border-dark-border/40">
+                  <div className="flex justify-between items-end mb-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                      <Activity className="w-3 h-3 text-neon-purple"/> Rank Progress
+                      <button 
+                        onClick={() => setShowRankModal(true)} 
+                        className="ml-1 text-gray-500 hover:text-neon-lavender transition-colors rounded-full p-0.5 hover:bg-neon-purple/10"
+                        title="View Rank Guide"
+                      >
+                        <Info className="w-3 h-3" />
+                      </button>
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-neon-purple">
+                      {xp} <span className="text-gray-600">/ {rank.next || 'MAX'} XP</span>
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-dark-border">
+                    <div 
+                      className="h-full bg-neon-purple shadow-[0_0_10px_rgba(191,64,255,0.5)] transition-all duration-1000 ease-out relative overflow-hidden" 
+                      style={{ width: `${progressPercentage}%` }}
+                    >
+                      <div className="absolute inset-0 bg-white/20 w-full animate-[shimmer_2s_infinite]" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}></div>
+                    </div>
+                  </div>
                 </div>
 
                 <Link
@@ -337,13 +415,33 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
+                    {/* DOB Profile */}
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="profile-dob"
+                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
+                      >
+                        Date of Birth
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
+                        <input
+                          id="profile-dob"
+                          type="date"
+                          value={dob}
+                          onChange={(e) => setDob(e.target.value)}
+                          className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                        />
+                      </div>
+                    </div>
+
                     {/* Builder Track Dropdown */}
                     <div className="space-y-1.5">
                       <label
                         htmlFor="profile-track"
                         className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
                       >
-                        Department / Branch
+                        Institute
                       </label>
                       <div className="relative">
                         <Briefcase className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
@@ -376,23 +474,33 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Team Association */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 sm:col-span-2">
                       <label
-                        htmlFor="profile-team"
                         className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
                       >
-                        Club / Society
+                        Interests
                       </label>
-                      <div className="relative">
-                        <Users className="absolute left-3.5 top-3 h-4 w-4 text-gray-500" />
-                        <input
-                          id="profile-team"
-                          type="text"
-                          placeholder="e.g. Cultural Dance Club"
-                          value={team}
-                          onChange={(e) => setTeam(e.target.value)}
-                          className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
-                        />
+                      <div className="flex flex-wrap gap-2">
+                        {SUGGESTED_CATEGORIES.map(category => (
+                          <button
+                            key={category}
+                            type="button"
+                            onClick={() => {
+                              setSelectedInterests(prev => 
+                                prev.includes(category) 
+                                  ? prev.filter(c => c !== category)
+                                  : [...prev, category]
+                              )
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${
+                              selectedInterests.includes(category)
+                                ? "bg-neon-purple text-white border-neon-purple shadow-[0_0_10px_rgba(191,64,255,0.4)] scale-[1.02]"
+                                : "bg-zinc-900/50 text-gray-400 border border-dark-border hover:bg-zinc-800 hover:text-white"
+                            }`}
+                          >
+                            {category}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -457,16 +565,29 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
-                        <Briefcase className="h-3.5 w-3.5 text-neon-purple" /> Department / Branch
+                        <Briefcase className="h-3.5 w-3.5 text-neon-purple" /> Institute
                       </p>
                       <p className="text-sm text-white font-medium">{track || <span className="text-gray-600 italic text-xs">Not specified</span>}</p>
                     </div>
 
                     <div className="space-y-2">
                       <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-neon-purple" /> Club / Society
+                        <User className="h-3.5 w-3.5 text-neon-purple" /> Date of Birth
                       </p>
-                      <p className="text-sm text-white font-medium">{team || <span className="text-gray-600 italic text-xs">Not specified</span>}</p>
+                      <p className="text-sm text-white font-medium">{dob || <span className="text-gray-600 italic text-xs">Not specified</span>}</p>
+                    </div>
+
+                    <div className="space-y-2 sm:col-span-2">
+                      <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-neon-purple" /> Interests
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedInterests.length > 0 ? selectedInterests.map(interest => (
+                          <span key={interest} className="px-2.5 py-1 bg-neon-purple/10 border border-neon-purple/30 text-neon-lavender rounded-lg text-[11px] font-bold tracking-wide">
+                            {interest}
+                          </span>
+                        )) : <span className="text-gray-600 italic text-xs">No interests selected</span>}
+                      </div>
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
@@ -501,6 +622,43 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Rank Guide Modal */}
+      {showRankModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-dark-card border border-dark-border rounded-2xl w-full max-w-md p-6 shadow-neon relative animate-fadeIn">
+            <button 
+              onClick={() => setShowRankModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-black text-white mb-1 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-neon-purple" /> Rank System Guide
+            </h3>
+            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+              Earn XP by participating in the community! Attending events grants <span className="text-neon-purple font-bold">10 XP</span>, while hosting grants <span className="text-neon-purple font-bold">50 XP</span>.
+            </p>
+            
+            <div className="space-y-3">
+              {[
+                { name: "Freshman", icon: "🥉", range: "0 - 49 XP", color: "text-amber-600", bg: "bg-amber-600/10", border: "border-amber-600/30" },
+                { name: "Sophomore", icon: "🥈", range: "50 - 99 XP", color: "text-zinc-300", bg: "bg-zinc-400/10", border: "border-zinc-400/30" },
+                { name: "Junior", icon: "🥇", range: "100 - 249 XP", color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/30" },
+                { name: "Senior", icon: "🌟", range: "250 - 499 XP", color: "text-purple-400", bg: "bg-purple-400/10", border: "border-purple-400/30" },
+                { name: "Campus Legend", icon: "👑", range: "500+ XP", color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/30" },
+              ].map(r => (
+                <div key={r.name} className={`flex items-center justify-between p-3 rounded-xl border ${r.bg} ${r.border}`}>
+                  <div className={`flex items-center gap-2 text-sm font-black uppercase tracking-wider ${r.color}`}>
+                    <span className="text-lg">{r.icon}</span> {r.name}
+                  </div>
+                  <span className="text-xs font-mono font-bold text-gray-300">{r.range}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

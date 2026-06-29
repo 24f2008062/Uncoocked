@@ -45,6 +45,7 @@ export default function HostEventPage() {
   const [newType, setNewType] = useState("Hackathon");
   const [newDate, setNewDate] = useState("");
   const [newLocation, setNewLocation] = useState("");
+  const [newGoogleMapsUrl, setNewGoogleMapsUrl] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newBannerUrl, setNewBannerUrl] = useState("");
   const [newTicketType, setNewTicketType] = useState("Free");
@@ -73,6 +74,7 @@ export default function HostEventPage() {
               setNewType(event.type);
               setNewDate(event.date);
               setNewLocation(event.location);
+              setNewGoogleMapsUrl(event.googleMapsUrl || "");
               setNewDescription(event.description);
               setNewBannerUrl(event.bannerUrl || "");
               setNewTicketType(event.ticketType || "Free");
@@ -121,6 +123,7 @@ export default function HostEventPage() {
         type: newType,
         date: newDate,
         location: newLocation,
+        googleMapsUrl: newGoogleMapsUrl,
         description: newDescription,
         bannerUrl: newBannerUrl,
         ticketType: newTicketType,
@@ -298,6 +301,20 @@ export default function HostEventPage() {
                 placeholder="e.g. IIIT Lucknow, Chak Ganjaria"
                 value={newLocation}
                 onChange={(e) => setNewLocation(e.target.value)}
+                className="w-full px-4 py-3 bg-black border border-dark-border rounded-lg text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs uppercase font-bold text-gray-500">
+                Google Maps URL
+              </label>
+              <input
+                required
+                type="url"
+                placeholder="e.g. https://maps.app.goo.gl/..."
+                value={newGoogleMapsUrl}
+                onChange={(e) => setNewGoogleMapsUrl(e.target.value)}
                 className="w-full px-4 py-3 bg-black border border-dark-border rounded-lg text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple"
               />
             </div>

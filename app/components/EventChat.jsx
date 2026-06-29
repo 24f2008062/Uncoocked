@@ -146,7 +146,7 @@ export default function EventChat({ eventId, currentUser }) {
   if (loading) return <div className="text-zinc-400 text-sm p-4">Loading chat room...</div>;
 
   return (
-    <div className="flex flex-col h-[480px] w-full max-w-md border border-zinc-800 rounded-xl bg-zinc-900 shadow-xl overflow-hidden backdrop-blur-md relative">
+    <div className="flex flex-col h-full w-full border border-zinc-800 rounded-xl bg-zinc-900 shadow-xl overflow-hidden backdrop-blur-md relative">
       {/* Header section */}
       <div className="bg-zinc-950/80 border-b border-zinc-800 p-4 font-semibold text-sm flex items-center justify-between text-zinc-100">
         <div className="flex items-center gap-2">
@@ -221,7 +221,7 @@ export default function EventChat({ eventId, currentUser }) {
         <button
           type="button"
           onClick={() => setShowEmojiPicker((prev) => !prev)}
-          className={`p-1.5 border rounded-lg transition-colors text-sm ${
+          className={`shrink-0 p-1.5 border rounded-lg transition-colors text-sm ${
             showEmojiPicker 
               ? "bg-purple-600 border-purple-500 text-white" 
               : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-purple-400"
@@ -235,11 +235,11 @@ export default function EventChat({ eventId, currentUser }) {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Ask something about this event..."
-          className="flex-1 text-sm px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+          className="flex-1 min-w-0 text-sm px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-purple-500"
         />
         <button 
           type="submit" 
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 text-sm font-medium rounded-lg transition-all active:scale-95"
+          className="shrink-0 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 text-sm font-medium rounded-lg transition-all active:scale-95"
         >
           Send
         </button>

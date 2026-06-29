@@ -2,7 +2,8 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { Save, AlertTriangle, Shield, Bell, Users, Globe } from "lucide-react";
+import Link from "next/link";
+import { Save, AlertTriangle, Shield, Bell, Users, Globe, Edit3, CheckCircle } from "lucide-react";
 
 export default function SettingsPage({ params }) {
   const unwrappedParams = use(params);
@@ -75,6 +76,24 @@ export default function SettingsPage({ params }) {
     }
   };
 
+  const handleCompleteEvent = async () => {
+    if(!confirm("Are you sure you want to mark this event as completed? It will be moved to your and your attendees' history.")) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}/complete`, { method: 'POST' });
+      if(res.ok) {
+        alert("Event marked as completed.");
+        router.push("/dashboard");
+      } else {
+        alert("Failed to mark event as completed.");
+      }
+    } catch (e) {
+      alert("Error completing event.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleDeleteEvent = async () => {
     if(!confirm("DANGER: Are you sure you want to permanently delete this event and all its data? This cannot be undone.")) return;
     setActionLoading(true);
@@ -102,9 +121,14 @@ export default function SettingsPage({ params }) {
           <h1 className="text-2xl font-black text-white">Event Settings</h1>
           <p className="text-xs text-gray-400 mt-1">Configure visibility, team access, and dangerous actions.</p>
         </div>
-        <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2 bg-neon-purple text-white text-xs font-bold rounded-lg hover:bg-neon-purple/90 transition-all shadow-neon">
-          <Save className="w-4 h-4" /> Save Changes
-        </button>
+        <div className="flex gap-3">
+          <Link href={`/dashboard/organizer/new?edit=${eventId}`} className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-dark-border text-white text-xs font-bold rounded-lg hover:border-neon-purple/50 transition-all">
+            <Edit3 className="w-4 h-4 text-neon-purple" /> Edit Details
+          </Link>
+          <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2 bg-neon-purple text-white text-xs font-bold rounded-lg hover:bg-neon-purple/90 transition-all shadow-neon">
+            <Save className="w-4 h-4" /> Save Changes
+          </button>
+        </div>
       </div>
 
       {/* General Settings */}
@@ -138,23 +162,7 @@ export default function SettingsPage({ params }) {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-6 pt-4 border-t border-dark-border/40">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className={`w-10 h-5 rounded-full transition-colors relative ${settings.approvalRequired ? 'bg-neon-purple' : 'bg-zinc-800'}`}>
-                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${settings.approvalRequired ? 'translate-x-5' : 'translate-x-0'}`} />
-              </div>
-              <input type="checkbox" className="sr-only" checked={settings.approvalRequired} onChange={e => setSettings({...settings, approvalRequired: e.target.checked})} />
-              <span className="text-sm text-gray-300 font-bold group-hover:text-white transition-colors">Require Approval for Registrations</span>
-            </label>
-            
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className={`w-10 h-5 rounded-full transition-colors relative ${settings.waitlist ? 'bg-emerald-500' : 'bg-zinc-800'}`}>
-                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${settings.waitlist ? 'translate-x-5' : 'translate-x-0'}`} />
-              </div>
-              <input type="checkbox" className="sr-only" checked={settings.waitlist} onChange={e => setSettings({...settings, waitlist: e.target.checked})} />
-              <span className="text-sm text-gray-300 font-bold group-hover:text-white transition-colors">Enable Automatic Waitlist</span>
-            </label>
-          </div>
+
         </div>
       </div>
 
@@ -203,6 +211,25 @@ export default function SettingsPage({ params }) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Event Lifecycle */}
+      <div className="bg-dark-card border border-dark-border rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-dark-border bg-black/20 flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider">Event Lifecycle</h2>
+        </div>
+        <div className="p-6">
+          <div className="flex sm:flex-row flex-col justify-between items-start sm:items-center gap-4 p-4 border border-emerald-900/20 rounded-xl bg-black/40">
+            <div>
+              <h3 className="text-sm font-bold text-white">Mark Event as Completed</h3>
+              <p className="text-[10px] text-gray-400 mt-0.5">Officially conclude this event. It will be moved to the Event History of you and your attendees.</p>
+            </div>
+            <button disabled={actionLoading} onClick={handleCompleteEvent} className="px-4 py-2 border border-emerald-900/50 text-emerald-400 bg-emerald-950/20 hover:bg-emerald-950/40 text-xs font-bold rounded-lg transition-all whitespace-nowrap disabled:opacity-50 shadow-[0_0_10px_rgba(16,185,129,0.1)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+              {actionLoading ? 'Processing...' : 'Mark Completed'}
+            </button>
           </div>
         </div>
       </div>
