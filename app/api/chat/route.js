@@ -56,3 +56,42 @@ export async function GET(req) {
     return NextResponse.json({ error: "Internal Server error" }, { status: 500 });
   }
 }
+
+// 3. DELETE route to unsend a specific chat message
+export async function DELETE(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const messageId = searchParams.get("messageId");
+    const userEmail = searchParams.get("userEmail"); // Security check
+
+    if (!messageId || !userEmail) {
+      return NextResponse.json({ error: "Missing required tracking parameters" }, { status: 400 });
+    }
+
+    // Find the message first to ensure it exists and belongs to this user
+    const existingMessage = await prisma.chatMessage.findUnique({
+      where: { id: messageId }
+    });
+
+    if (!existingMessage) {
+      return NextResponse.json({ error: "Message not found" }, { status: 404 });
+    }
+
+    if (existingMessage.userEmail !== userEmail) {
+      return NextResponse.json({ error: "Unauthorized to unsend this message" }, { status: 403 });
+    }
+
+    // Delete from local SQLite database
+    await prisma.chatMessage.delete({
+      where: { id: messageId }
+    });
+
+    // Broadcast the removal event immediately to all listeners
+    await pusher.trigger(`event-chat-${existingMessage.eventId}`, "message-deleted", { id: messageId });
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Delete Chat Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
