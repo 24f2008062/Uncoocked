@@ -238,3 +238,14 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  eventId   String   // Links the chat message to a specific event page
+  userName  String   // Name of the student who sent it
+  userEmail String   // To identify them uniquely
+  message   String
+  createdAt DateTime @default(now())
+
+  // If you have an Event model in your schema, you can optionally link them here
+}
