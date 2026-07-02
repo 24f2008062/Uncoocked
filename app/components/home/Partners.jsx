@@ -4,62 +4,35 @@ import { motion } from "framer-motion";
 
 export default function Partners() {
   const partners = [
-    {
-      name: "University Innovation Cell",
-      short: "UIC",
-      glowColor: "hover:text-blue-400 hover:border-blue-400/30",
-    },
-    {
-      name: "Startup Club",
-      short: "SC",
-      glowColor: "hover:text-green-400 hover:border-green-400/30",
-    },
-    {
-      name: "Developer Society",
-      short: "DEV_SOC",
-      glowColor: "hover:text-neon-purple hover:border-neon-purple/30",
-    },
-    {
-      name: "Maker Community",
-      short: "MKR_COMM",
-      glowColor: "hover:text-yellow-400 hover:border-yellow-400/30",
-    },
-    {
-      name: "Entrepreneurship Hub",
-      short: "E_HUB",
-      glowColor: "hover:text-cyan-400 hover:border-cyan-400/30",
-    },
-    {
-      name: "Tech Council",
-      short: "TECH_CO",
-      glowColor: "hover:text-pink-400 hover:border-pink-400/30",
-    },
+    { name: "University Innovation Cell", short: "UIC" },
+    { name: "Startup Club",               short: "SC" },
+    { name: "Developer Society",           short: "DEV" },
+    { name: "Maker Community",             short: "MKR" },
+    { name: "Entrepreneurship Hub",        short: "E_HUB" },
+    { name: "Tech Council",               short: "TECH" },
   ];
 
   return (
-    <section className="py-16 relative w-full border-t border-white/5 bg-zinc-950/20">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-10 text-center">
-        {/* Title */}
-        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest font-mono">
-          BUILT FOR STUDENTS ACROSS THE ECOSYSTEM
+    <section className="py-10 relative w-full border-t border-white/6">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-6 text-center">
+        <h3 className="text-[11px] font-semibold text-white/30 uppercase tracking-widest">
+          Built for students across the ecosystem
         </h3>
 
-        {/* Logo Wall */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 items-center justify-center max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 items-center justify-center max-w-5xl mx-auto">
           {partners.map((partner, index) => (
             <motion.div
               key={partner.name}
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.08 }}
-              whileHover={{ y: -2 }}
-              className={`bg-zinc-900/30 border border-white/5 rounded-xl px-5 py-6 flex flex-col items-center justify-center gap-1 cursor-default grayscale hover:grayscale-0 opacity-40 hover:opacity-100 transition-all duration-300 font-mono ${partner.glowColor}`}
+              transition={{ duration: 0.3, delay: index * 0.06, ease: [0, 0, 0.2, 1] }}
+              className="bg-[#111111] border border-white/6 rounded-xl px-3 py-4 flex flex-col items-center justify-center gap-1 grayscale hover:grayscale-0 opacity-35 hover:opacity-100 hover:border-white/16 hover:-translate-y-0.5 transition-all duration-150 cursor-default"
             >
-              <span className="text-sm font-black tracking-widest">
+              <span className="text-[12px] font-bold tracking-widest text-white">
                 {partner.short}
               </span>
-              <span className="text-[7.5px] uppercase font-bold text-gray-500 tracking-wider text-center group-hover:text-inherit">
+              <span className="text-[9px] uppercase font-medium text-white/40 tracking-wider text-center">
                 {partner.name}
               </span>
             </motion.div>

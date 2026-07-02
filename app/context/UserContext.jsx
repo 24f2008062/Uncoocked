@@ -29,14 +29,13 @@ export function UserProvider({ children }) {
       if (session.user.onboardingCompleted === false && pathname !== "/onboarding") {
         router.push("/onboarding");
       }
-    } else {
-      // NextAuth finished loading but no session found
-      // We check if there's a local storage mock session fallback
+    } else if (status === "unauthenticated") {
+      // NextAuth finished loading and confirmed no session
+      // Strictly clear any local fallback sessions to prevent stale access
+      setUserState(null);
       if (typeof window !== "undefined") {
-        const savedUser = localStorage.getItem("user_session");
-        if (savedUser) {
-          setUserState(savedUser);
-        }
+        localStorage.removeItem("user_session");
+        localStorage.removeItem("uncooked_user_cache");
       }
       setIsLoading(false);
     }

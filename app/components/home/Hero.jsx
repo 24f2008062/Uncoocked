@@ -7,78 +7,71 @@ import CountUp from "../CountUp";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden w-full py-16 sm:py-24">
-      {/* Visual background grids & lights */}
-      <motion.div 
-        animate={{ backgroundPosition: ["0px 0px", "64px 64px"] }}
-        transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-        className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#0f0f15_1px,transparent_1px),linear-gradient(to_bottom,#0f0f15_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-70" 
-      />
+    <section className="relative overflow-hidden w-full py-14 sm:py-20">
+      {/* Static subtle grid background */}
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#141414_1px,transparent_1px),linear-gradient(to_bottom,#141414_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-60" />
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Text / Actions Column */}
-          <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          {/* Left Text Column */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-4"
+              transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
+              className="space-y-5"
             >
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-neon-purple/10 text-neon-lavender border border-neon-purple/30 shadow-neon">
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold bg-white/5 text-white/60 border border-white/10">
                 ⚡ The Event Discovery Platform for Lucknow
               </span>
 
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-none">
+              <style>{`
+                @keyframes gradient-shift {
+                  0%, 100% { background-position: 0% 50%; }
+                  50% { background-position: 100% 50%; }
+                }
+                .animated-gradient {
+                  background-size: 200% auto;
+                  animation: gradient-shift 4s ease-in-out infinite;
+                }
+              `}</style>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-[1.05]">
                 Discover{" "}
-                <span className="bg-gradient-to-r from-neon-purple via-neon-lavender to-neon-purple bg-clip-text text-transparent neon-text-glow">
+                <span className="animated-gradient bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-[#A855F7] bg-clip-text text-transparent">
                   Fests
                 </span>
                 . Attend{" "}
-                <span className="bg-gradient-to-r from-neon-purple via-neon-lavender to-neon-purple bg-clip-text text-transparent neon-text-glow">
+                <span className="animated-gradient bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-[#A855F7] bg-clip-text text-transparent">
                   Parties
                 </span>
                 . Host{" "}
-                <span className="bg-gradient-to-r from-neon-purple via-neon-lavender to-neon-purple bg-clip-text text-transparent neon-text-glow">
+                <span className="animated-gradient bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-[#A855F7] bg-clip-text text-transparent">
                   Workshops
                 </span>
                 .
               </h1>
 
-              <p className="text-base sm:text-lg leading-relaxed text-gray-400 max-w-2xl mx-auto lg:mx-0">
+              <p className="text-base sm:text-lg leading-relaxed text-white/55 max-w-2xl mx-auto lg:mx-0">
                 Join campus fests, hackathons, startup meetups, and cultural events exclusively in Lucknow. Coordinate in noise-free channels and book tickets instantly.
               </p>
             </motion.div>
 
             {/* CTA Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+              transition={{ duration: 0.5, delay: 0.12, ease: [0, 0, 0.2, 1] }}
+              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
             >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                animate={{
-                  boxShadow: [
-                    "0px 0px 0px 0px rgba(191,64,255,0.7)",
-                    "0px 0px 30px 15px rgba(191,64,255,0)",
-                  ]
-                }}
-                transition={{ boxShadow: { repeat: Infinity, duration: 2 }, scale: { duration: 0.2 } }}
-                className="w-full sm:w-auto rounded-full"
+              <Link
+                href="/event"
+                className="btn-primary w-full sm:w-auto text-center text-[13px] hover:shadow-[0_0_24px_rgba(168,85,247,0.45)]"
               >
-                <Link
-                  href="/event"
-                  className="block w-full text-center rounded-full bg-neon-purple text-white px-8 py-4 text-xs font-extrabold tracking-wider uppercase transition-colors"
-                >
-                  Explore Events
-                </Link>
-              </motion.div>
+                Explore Events
+              </Link>
               <Link
                 href="/dashboard"
-                className="w-full sm:w-auto text-center rounded-full border border-white/10 bg-zinc-900/40 hover:bg-white/5 text-white px-8 py-4 text-xs font-extrabold tracking-wider uppercase transition-all"
+                className="btn-secondary w-full sm:w-auto text-center text-[13px]"
               >
                 Launch Event
               </Link>
@@ -88,25 +81,25 @@ export default function Hero() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="pt-6 border-t border-white/5 flex flex-wrap justify-center lg:justify-start gap-8 text-xs font-mono text-gray-500"
+              transition={{ duration: 0.6, delay: 0.24, ease: [0, 0, 0.2, 1] }}
+              className="pt-6 border-t border-white/6 flex flex-wrap justify-center lg:justify-start gap-8 text-[12px] font-mono text-white/40"
             >
               <div>
-                <span className="block text-white font-extrabold text-lg">
+                <span className="block text-white font-bold text-lg tracking-tight">
                   <CountUp end={8900} suffix="+" />
                 </span>
                 Registrations
               </div>
-              <div className="w-[1px] bg-white/10 self-stretch" />
+              <div className="w-px bg-white/8 self-stretch" />
               <div>
-                <span className="block text-white font-extrabold text-lg">
+                <span className="block text-white font-bold text-lg tracking-tight">
                   <CountUp end={1200} suffix="+" />
                 </span>
                 Students Active
               </div>
-              <div className="w-[1px] bg-white/10 self-stretch" />
+              <div className="w-px bg-white/8 self-stretch" />
               <div>
-                <span className="block text-white font-extrabold text-lg">
+                <span className="block text-white font-bold text-lg tracking-tight">
                   <CountUp end={50} suffix="+" />
                 </span>
                 Campus Events
@@ -114,99 +107,62 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right Floating Dashboard Column */}
+          {/* Right Dashboard Card Column */}
           <div className="lg:col-span-5 flex justify-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0, 0, 0.2, 1] }}
               className="relative w-full max-w-sm"
             >
-              {/* Decorative background glows */}
-              <div className="absolute inset-0 bg-neon-purple/10 rounded-3xl filter blur-3xl opacity-50 -z-10" />
-
-              {/* Main glass frame wrapper */}
+              {/* Gentle float */}
               <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="w-full bg-zinc-950/80 border border-white/10 rounded-3xl p-5 shadow-[0_0_40px_rgba(191,64,255,0.08)] backdrop-blur-xl font-mono text-[10px] space-y-4 text-left"
+                animate={{ y: [0, -7, 0] }}
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
               >
+              {/* Subtle background glow — significantly reduced */}
+              <div className="absolute inset-0 bg-[#A855F7]/6 rounded-3xl filter blur-2xl -z-10" />
+
+              {/* Main card — solid, no glass */}
+              <div className="w-full bg-[#111111] border border-white/8 rounded-2xl p-5 shadow-lg font-mono text-[10px] space-y-4 text-left">
                 {/* Header controls bar */}
-                <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                <div className="flex justify-between items-center pb-3 border-b border-white/6">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-white/8" />
                   </div>
-                  <span className="text-gray-500 font-bold uppercase tracking-widest text-[8px]">
+                  <span className="text-white/30 font-medium uppercase tracking-widest text-[8px]">
                     CAMPUS_CONSOLE_v1.0
                   </span>
                 </div>
 
                 {/* Grid values */}
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Card: Active Students */}
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 space-y-1 hover:border-neon-purple/30 transition-colors">
-                    <div className="flex items-center justify-between text-gray-500">
-                      <span>ACTIVE_STUDENTS</span>
-                      <Users className="h-3.5 w-3.5 text-neon-purple" />
+                  {[
+                    { label: "ACTIVE_STUDENTS", value: 482, suffix: "", badge: "● LIVE", badgeColor: "text-emerald-400", Icon: Users },
+                    { label: "UPCOMING_EVENTS", value: 12, suffix: "", badge: "RUNNING", badgeColor: "text-white/40", Icon: Zap },
+                    { label: "CLUBS_ACTIVE", value: 34, suffix: "", badge: "ACTIVE", badgeColor: "text-[#C084FC]", Icon: Play },
+                    { label: "REGISTRATIONS", value: 2842, suffix: "", badge: "TOTAL", badgeColor: "text-white/40", Icon: Terminal },
+                  ].map(({ label, value, suffix, badge, badgeColor, Icon }) => (
+                    <div
+                      key={label}
+                      className="bg-white/4 border border-white/6 rounded-xl p-3.5 space-y-1 hover:border-white/12 transition-colors duration-150"
+                    >
+                      <div className="flex items-center justify-between text-white/35">
+                        <span className="truncate">{label}</span>
+                        <Icon className="h-3.5 w-3.5 shrink-0 text-white/25" />
+                      </div>
+                      <div className="text-base font-bold text-white">
+                        <CountUp end={value} />{suffix}{" "}
+                        <span className={`text-[8px] font-normal ${badgeColor}`}>
+                          {badge}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-base font-black text-white">
-                      <CountUp end={482} />{" "}
-                      <span className="text-[8px] text-green-400 font-normal">
-                        ● LIVE
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card: Upcoming Events */}
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 space-y-1 hover:border-neon-purple/30 transition-colors">
-                    <div className="flex items-center justify-between text-gray-500">
-                      <span>UPCOMING_EVENTS</span>
-                      <Zap className="h-3.5 w-3.5 text-neon-purple" />
-                    </div>
-                    <div className="text-base font-black text-white">
-                      <CountUp end={12} />{" "}
-                      <span className="text-[8px] text-gray-400 font-normal">
-                        RUNNING
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card: Clubs Active */}
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 space-y-1 hover:border-neon-purple/30 transition-colors">
-                    <div className="flex items-center justify-between text-gray-500">
-                      <span>CLUBS_ACTIVE</span>
-                      <Play className="h-3.5 w-3.5 text-neon-purple" />
-                    </div>
-                    <div className="text-base font-black text-white">
-                      <CountUp end={34} />{" "}
-                      <span className="text-[8px] text-neon-lavender font-normal">
-                        ACTIVE
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card: Live Registrations */}
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 space-y-1 hover:border-neon-purple/30 transition-colors">
-                    <div className="flex items-center justify-between text-gray-500">
-                      <span>REGISTRATIONS</span>
-                      <Terminal className="h-3.5 w-3.5 text-neon-purple" />
-                    </div>
-                    <div className="text-base font-black text-white">
-                      <CountUp end={2842} />{" "}
-                      <span className="text-[8px] text-neon-purple font-normal">
-                        TOTAL
-                      </span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-
-
+              </div>
               </motion.div>
             </motion.div>
           </div>

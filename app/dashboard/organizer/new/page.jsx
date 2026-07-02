@@ -31,7 +31,7 @@ const BANNER_PRESETS = [
   },
 ];
 
-export default function HostEventPage() {
+function HostEventForm() {
   const { user } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -444,5 +444,19 @@ export default function HostEventPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function HostEventPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center py-12 px-4">
+          <div className="w-8 h-8 border-4 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <HostEventForm />
+    </React.Suspense>
   );
 }

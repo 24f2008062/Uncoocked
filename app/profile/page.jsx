@@ -108,8 +108,8 @@ export default function ProfilePage() {
           setAttendingCount(regData.registrations.length);
         }
 
-        // Fetch hosted events count from DB
-        const res = await fetch("/api/events");
+        // Fetch hosted events count from DB (includeArchived=true to match Dashboard XP)
+        const res = await fetch("/api/events?includeArchived=true");
         const data = await res.json();
         if (data.success && isMounted) {
           const userHosted = data.events.filter((ev) => ev.organizer?.email === user || ev.organizerId === user);

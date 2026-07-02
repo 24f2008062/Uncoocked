@@ -15,6 +15,7 @@ export const authOptions = {
   debug: true,
   session: {
     strategy: "jwt",
+    maxAge: 2 * 60 * 60, // 2 hours
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {

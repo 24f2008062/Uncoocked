@@ -12,93 +12,72 @@ export default function Footer() {
   if (pathname === "/opportunities") return null;
 
   return (
-    <footer className="w-full bg-black border-t border-dark-border py-12 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand Info */}
-          <div className="md:col-span-1 space-y-4">
-            <span className="text-xl font-black tracking-tight bg-gradient-to-r from-neon-purple to-neon-lavender bg-clip-text text-transparent neon-text-glow">
+    <footer className="w-full bg-[#0A0A0A] border-t border-white/6 py-14">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          {/* Brand */}
+          <div className="md:col-span-1 space-y-3">
+            <span className="text-[15px] font-bold tracking-tight text-white">
               UNCOOKED
             </span>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-[13px] text-white/40 leading-relaxed">
               Empowering campus students and event organizers with zero-noise
               event coordination and ticketing tools.
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Navigation */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">
+            <h4 className="text-[11px] font-semibold text-white/40 uppercase tracking-wider mb-4">
               Navigation
             </h4>
-            <ul className="space-y-2 text-xs">
-              <li>
-                <Link
-                  href={user ? "/dashboard" : "/"}
-                  className="text-gray-400 hover:text-neon-purple transition-colors"
-                >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/event"
-                  className="text-gray-400 hover:text-neon-purple transition-colors"
-                >
-                  Browse Events
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/opportunities"
-                  className="text-gray-400 hover:text-neon-purple transition-colors"
-                >
-                  Opportunities
-                </Link>
-              </li>
+            <ul className="space-y-2.5 text-[13px]">
+              {[
+                { href: user ? "/dashboard" : "/", label: "Home" },
+                { href: "/event", label: "Browse Events" },
+                { href: "/opportunities", label: "Opportunities" },
+              ].map(({ href, label }) => (
+                <li key={label}>
+                  <Link href={href} className="text-white/40 hover:text-white/80 transition-colors duration-150">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Resource Links */}
+          {/* Resources */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">
+            <h4 className="text-[11px] font-semibold text-white/40 uppercase tracking-wider mb-4">
               Resources
             </h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2.5 text-[13px]">
               <li>
-                <Link
-                  href="/contact"
-                  className="text-gray-400 hover:text-neon-purple transition-colors"
-                >
+                <Link href="/contact" className="text-white/40 hover:text-white/80 transition-colors duration-150">
                   Contact Support
                 </Link>
               </li>
-
             </ul>
           </div>
 
-          {/* Updates Newsletter */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+          {/* Newsletter */}
+          <div className="space-y-3">
+            <h4 className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">
               Stay in the Loop
             </h4>
-            <p className="text-xs text-gray-400">
+            <p className="text-[13px] text-white/40">
               Get notified when new fests, parties, or workshops open.
             </p>
-            <form
-              onSubmit={(e) => e.preventDefault()}
-              className="flex gap-2 max-w-sm"
-            >
+            <form onSubmit={(e) => e.preventDefault()} className="flex gap-2 max-w-sm">
               <input
                 type="email"
                 placeholder="student@campus.edu"
-                className="flex-1 min-w-0 rounded-md border border-dark-border bg-dark-card px-3 py-2 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple"
+                className="flex-1 min-w-0 rounded-lg border border-white/8 bg-[#111111] px-3 py-2 text-[13px] text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#A855F7]/30 focus:border-[#A855F7]/50 transition-all duration-150"
                 required
               />
-
               <button
                 type="submit"
-                className="px-3 py-2 rounded-md bg-neon-purple text-white text-xs font-bold hover:bg-neon-purple/90 transition-all shadow-neon"
+                className="px-4 py-2 rounded-lg bg-[#A855F7] text-white text-[12px] font-semibold hover:bg-[#C084FC] transition-colors duration-150"
               >
                 Join
               </button>
@@ -106,19 +85,15 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Footer Base */}
-        <div className="mt-12 pt-8 border-t border-dark-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+        {/* Bottom bar */}
+        <div className="mt-12 pt-8 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12px] text-white/30">
           <p>© {currentYear} Uncooked. All rights reserved.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-neon-purple transition-colors">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-neon-purple transition-colors">
-              Terms
-            </a>
-            <a href="#" className="hover:text-neon-purple transition-colors">
-              Sitemap
-            </a>
+            {["Privacy", "Terms", "Sitemap"].map((label) => (
+              <a key={label} href="#" className="hover:text-white/60 transition-colors duration-150">
+                {label}
+              </a>
+            ))}
           </div>
         </div>
       </div>

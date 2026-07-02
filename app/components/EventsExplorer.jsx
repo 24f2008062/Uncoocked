@@ -237,6 +237,7 @@ export default function EventsExplorer({
   searchQuery,
   onSearchChange,
   onSelectEvent,
+  recommendedSection,
 }) {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("All");
@@ -293,134 +294,136 @@ export default function EventsExplorer({
   const getTypeStyle = (type) => {
     switch (type.toLowerCase()) {
       case "hackathon":
-        return "bg-neon-purple/10 text-neon-lavender border border-neon-purple/30 shadow-neon";
+        return "bg-[#A855F7]/10 text-[#C084FC] border border-[#A855F7]/20";
       case "fest":
-        return "bg-pink-950/40 text-pink-400 border border-pink-800/40";
+        return "bg-pink-500/10 text-pink-400 border border-pink-500/20";
       case "party":
-        return "bg-purple-950/40 text-purple-400 border border-purple-800/40";
+        return "bg-purple-500/10 text-purple-400 border border-purple-500/20";
       case "festive night":
-        return "bg-yellow-950/40 text-yellow-400 border border-yellow-800/40";
+        return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
       case "meetup":
-        return "bg-blue-950/40 text-blue-400 border border-blue-800/40";
+        return "bg-blue-500/10 text-blue-400 border border-blue-500/20";
       case "workshop":
-        return "bg-emerald-950/40 text-emerald-400 border border-emerald-800/40";
+        return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
       default:
-        return "bg-zinc-800/60 text-zinc-300 border border-dark-border";
+        return "bg-white/5 text-white/50 border border-white/10";
     }
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header with search */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-dark-border pb-8">
-        <div className="space-y-2 text-center md:text-left">
-          <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl neon-text-glow">
-            Event Matrix
-          </h1>
-          <p className="text-xs text-gray-400 max-w-xl leading-relaxed">
-            Discover active coding hackathons, security CTF challenges, business
-            ideathons, and legislative debates.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-          {/* Create Event Button */}
-          <button
-              onClick={() => router.push("/dashboard/organizer/new")}
-              className="px-6 py-2 bg-neon-purple text-white text-xs font-bold rounded-lg hover:bg-neon-purple/90 transition-all shadow-neon whitespace-nowrap"
-          >
-            <span className="text-base leading-none mb-[2px]">+</span> Host
-            Event
-          </button>
-
-          {/* Integrated Search Bar */}
-          <div className="w-full sm:w-80 relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+    <div className="space-y-6">
+      {/* Unified Control Strip */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#111111] border border-white/8 rounded-xl p-3 shadow-sm">
+        
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-1">
+          {/* Search Bar */}
+          <div className="w-full sm:w-80 relative shrink-0">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
             <input
               type="text"
               placeholder="Search events, types, keywords..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-zinc-950/50 border border-dark-border rounded-xl text-xs text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple backdrop-blur-md transition-all"
+              className="w-full bg-[#0A0A0A] border border-white/10 rounded-md text-[12px] font-medium text-white placeholder-white/30 focus:outline-none focus:border-white/20 pl-8 pr-3 py-1.5 transition-all shadow-inner"
             />
           </div>
+
+          {/* Category Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto sm:border-l sm:border-white/6 sm:pl-3 pt-2 sm:pt-0">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full font-semibold text-[12px] transition-all whitespace-nowrap cursor-pointer ${
+                  activeCategory === category
+                    ? "bg-white text-black shadow-sm"
+                    : "bg-transparent text-white/50 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 w-full lg:w-auto border-t lg:border-t-0 border-white/6 pt-3 lg:pt-0">
+          {/* Zone Dropdown */}
+          <div className="relative shrink-0">
+            <select
+              value={activeZone}
+              onChange={(e) => setActiveZone(e.target.value)}
+              className="appearance-none bg-[#0A0A0A] text-white/60 text-[12px] font-semibold pl-3 pr-8 py-1.5 rounded-md border border-white/10 focus:outline-none focus:border-white/20 hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <option value="All">All Zones</option>
+              {LUCKNOW_ZONES.map((zone) => (
+                <option key={zone} value={zone} className="bg-[#111111]">
+                  {zone}
+                </option>
+              ))}
+            </select>
+            {/* Custom Dropdown Arrow */}
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white/30">
+              <svg className="fill-current h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+              </svg>
+            </div>
+          </div>
+          
+          {/* Host Event Button (Secondary) */}
+          <button
+              onClick={() => router.push("/dashboard/organizer/new")}
+              className="btn-secondary whitespace-nowrap text-[12px] shrink-0"
+          >
+            Host Event
+          </button>
         </div>
       </div>
 
-      {/* Filter Row: Categories and Zone Dropdown */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full font-bold text-xs transition-all whitespace-nowrap ${
-                activeCategory === category
-                  ? "bg-neon-purple text-white shadow-neon"
-                  : "bg-zinc-900/50 text-gray-400 hover:text-white hover:bg-zinc-800 border border-dark-border"
-              }`}
-            >
-              {category}
-            </button>
-          ))}
+      {/* Recommended Section (Injected dynamically below controls) */}
+      {recommendedSection && !searchQuery.trim() && (
+        <div className="pt-2 pb-4">
+          {recommendedSection}
         </div>
-        
-        {/* Zone Dropdown */}
-        <div className="flex-shrink-0 self-start sm:self-auto relative">
-          <select
-            value={activeZone}
-            onChange={(e) => setActiveZone(e.target.value)}
-            className="appearance-none bg-zinc-900/50 text-gray-300 text-xs font-bold pl-4 pr-8 py-2 rounded-full border border-dark-border focus:outline-none focus:border-neon-purple hover:bg-zinc-800 transition-all cursor-pointer"
-          >
-            <option value="All">All Zones</option>
-            {LUCKNOW_ZONES.map((zone) => (
-              <option key={zone} value={zone}>
-                {zone}
-              </option>
-            ))}
-          </select>
-          {/* Custom Dropdown Arrow */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-            </svg>
-          </div>
+      )}
+
+      {/* Browse Events Section */}
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <h2 className="text-lg font-bold text-white tracking-tight">Browse Events</h2>
+          <p className="text-[12px] text-white/50">Explore all upcoming campus events.</p>
         </div>
-      </div>
 
       {/* Dynamic Grid of Cards */}
       {filteredEvents.length === 0 ? (
-        <div className="text-center py-16 text-gray-500 bg-zinc-950/20 border border-dark-border rounded-2xl">
-          <p className="text-sm">No campus events match your query.</p>
+        <div className="text-center py-12 text-white/50 bg-[#111111] border border-white/8 rounded-2xl">
+          <p className="text-[13px]">No campus events match your query.</p>
         </div>
       ) : (
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           {filteredEvents.map((ev) => (
             <motion.div
               key={ev.id}
               variants={cardVariants}
-              whileHover={{
-                scale: 1.02,
-                y: -4,
-              }}
-              className="group flex flex-col overflow-hidden bg-zinc-950/50 backdrop-blur-md border border-dark-border hover:border-neon-purple hover:shadow-[0_0_20px_rgba(191,64,255,0.3)] rounded-2xl transition-all duration-300 min-h-[340px] shadow-sm"
+              whileHover={{ y: -2 }}
+              className="group flex flex-col overflow-hidden bg-[#111111] border border-white/8 hover:border-white/16 rounded-xl transition-all duration-150 min-h-[300px] shadow-sm cursor-pointer"
+              onClick={() => onSelectEvent(ev.id)}
             >
               {/* Event Card Banner Preview */}
-              <div className="relative h-32 w-full overflow-hidden bg-zinc-900 border-b border-dark-border/40">
+              <div className="relative h-28 w-full overflow-hidden bg-[#0A0A0A] border-b border-white/6">
                 {ev.bannerUrl ? (
                   <img
                     src={ev.bannerUrl}
                     alt={ev.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 opacity-80 group-hover:opacity-100"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-neon-purple/20 via-zinc-900 to-zinc-950 flex items-center justify-center p-4 text-center">
-                    <span className="font-black text-lg text-white/90 neon-text-glow leading-snug line-clamp-2 tracking-wide">
+                  <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center p-4 text-center">
+                    <span className="font-bold text-sm text-white/50 leading-snug line-clamp-2">
                       {ev.title}
                     </span>
                   </div>
@@ -428,7 +431,7 @@ export default function EventsExplorer({
                 {/* Category Tag overlaid on the banner */}
                 <div className="absolute top-3 left-3">
                   <span
-                    className={`text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full ${getTypeStyle(ev.type)}`}
+                    className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${getTypeStyle(ev.type)}`}
                   >
                     {ev.type}
                   </span>
@@ -436,47 +439,40 @@ export default function EventsExplorer({
               </div>
 
               {/* Card Content Details */}
-              <div className="p-5 flex flex-col justify-between flex-1 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center gap-4 text-[10px] text-gray-500 font-mono">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-neon-purple shrink-0" />
-                      <span className="truncate max-w-[140px]">
-                        {ev.zone ? ev.zone : ev.location.split(",")[0]}
-                      </span>
-                    </div>
+              <div className="p-4 flex flex-col justify-between flex-1 space-y-3">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] text-white/40 font-mono">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate max-w-[140px]">
+                      {ev.zone ? ev.zone : ev.location.split(",")[0]}
+                    </span>
                   </div>
 
-                  <h3 className="text-sm font-extrabold text-white group-hover:text-neon-lavender transition-colors duration-200 leading-snug line-clamp-1">
+                  <h3 className="text-[15px] font-bold text-white group-hover:text-white/80 transition-colors duration-150 leading-snug line-clamp-1">
                     {ev.title}
                   </h3>
 
-                  <p className="text-[11px] text-gray-400 leading-relaxed line-clamp-2">
+                  <p className="text-[12px] text-white/45 leading-relaxed line-clamp-2">
                     {ev.description}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-dark-border/40 pt-4 mt-auto">
-                  <div className="flex items-center gap-1.5 text-gray-500 font-mono text-[10px]">
-                    <Calendar className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                <div className="flex items-center justify-between border-t border-white/6 pt-3 mt-auto">
+                  <div className="flex items-center gap-1.5 text-white/40 font-mono text-[10px]">
+                    <Calendar className="h-3 w-3 shrink-0" />
                     <span>{ev.date}</span>
                   </div>
-
-                  <button
-                    onClick={() => {
-                      onSelectEvent(ev.id);
-                    }}
-                    className="inline-flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-lg bg-neon-purple text-white hover:bg-neon-purple/90 font-bold transition-all shadow-neon hover:scale-[1.03] active:scale-[0.97]"
-                  >
-                    View Details
-                    <ArrowRight className="h-3 w-3 shrink-0" />
-                  </button>
+                  
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-white/60 group-hover:text-white transition-colors">
+                    Details <ArrowRight className="h-3 w-3" />
+                  </span>
                 </div>
               </div>
             </motion.div>
           ))}
         </motion.div>
       )}
+      </div>
     </div>
   );
 }

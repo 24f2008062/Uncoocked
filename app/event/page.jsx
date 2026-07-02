@@ -111,8 +111,8 @@ export default function EventPage() {
       };
 
       return (
-        <div className="bg-black w-full min-h-screen text-white">
-          <div className="px-4 sm:px-6 lg:px-8 pt-2 pb-6 max-w-[1600px] mx-auto">
+        <div className="bg-[#000000] w-full min-h-screen text-white">
+          <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-12 max-w-7xl mx-auto">
             <TwinLayout
               event={eventData}
               chatUserData={chatUserData}
@@ -128,22 +128,34 @@ export default function EventPage() {
   }
 
   return (
-    <div className="bg-black w-full min-h-screen pt-8 pb-16 px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-4">
-        {user && (
-          <RecommendedEvents 
-            userEmail={typeof user === "string" ? user : user?.email} 
-            onSelectEvent={handleSelectEvent} // Swapped to our new route history action
-          />
-        )}
+    <div className="bg-[#000000] w-full min-h-screen pt-6 pb-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
+        
+        {/* Page Header */}
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Events
+          </h1>
+          <p className="text-[12px] font-medium text-white/45 max-w-xl leading-relaxed">
+            Discover workshops, hackathons, fests, competitions and campus events happening around you.
+          </p>
+        </div>
 
-        <div id="events-explorer-anchor" className="pt-2" />
+        <div id="events-explorer-anchor" className="pt-0" />
 
         <EventsExplorer
           events={allEvents}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onSelectEvent={handleSelectEvent} // Swapped to our new route history action
+          recommendedSection={
+            user && (
+              <RecommendedEvents 
+                userEmail={typeof user === "string" ? user : user?.email} 
+                onSelectEvent={handleSelectEvent} 
+              />
+            )
+          }
         />
       </div>
     </div>

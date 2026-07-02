@@ -1,107 +1,81 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Briefcase, MapPin, DollarSign, ExternalLink } from "lucide-react";
 
 export default function OpportunitiesPreview() {
-  return (
-    <section className="py-24 relative w-full overflow-hidden flex flex-col items-center border-t border-white/5 bg-zinc-950/40">
-      {/* Background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-purple/5 to-transparent pointer-events-none" />
+  const items = [
+    {
+      badge: "Internship",
+      badgeClass: "bg-[#A855F7]/10 text-[#C084FC] border-[#A855F7]/20",
+      rate: "$20/hr",
+      title: "Frontend Developer Intern",
+      company: "NeonTech Labs",
+      location: "Remote",
+    },
+    {
+      badge: "Bounty",
+      badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+      rate: "$500 - $2000",
+      title: "Smart Contract Auditing Bounty",
+      company: "DeFi Protocols",
+      location: "Remote",
+    },
+  ];
 
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 w-full">
-        {/* Header Section */}
-        <div className="text-center space-y-4 mb-16">
-          <span className="text-xs font-extrabold text-neon-purple tracking-widest uppercase block neon-text-glow">
-            Career Catalyst
-          </span>
-          <h2 className="text-3xl font-black text-white tracking-tight sm:text-4xl">
+  return (
+    <section className="py-12 relative w-full border-t border-white/6">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center space-y-2 max-w-lg mx-auto mb-8">
+          <span className="section-label">Career Catalyst</span>
+          <h2 className="text-2xl font-bold text-white tracking-tight sm:text-3xl">
             Exclusive Work Opportunities
           </h2>
-          <p className="text-xs text-gray-400 max-w-lg mx-auto leading-relaxed">
+          <p className="text-[13px] text-white/45 leading-relaxed">
             Access curated internships, high-paying freelance gigs, and project
             bounties directly from top tech partners.
           </p>
         </div>
 
-        {/* Opportunities Mockup */}
-        <div className="max-w-4xl mx-auto bg-black border border-dark-border rounded-2xl shadow-[0_0_40px_rgba(191,64,255,0.1)] overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 bg-zinc-950 border-b border-dark-border">
-            <div className="flex gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
-            </div>
-            <div className="ml-4 flex items-center gap-2 text-[10px] font-mono text-gray-400 font-bold tracking-wider">
-              <Briefcase className="h-3 w-3 text-neon-purple" />
-              <span>OPPORTUNITIES_BOARD.EXE</span>
-            </div>
+        {/* Opportunities Board Mockup */}
+        <div className="max-w-4xl mx-auto bg-[#111111] border border-white/8 rounded-xl shadow-sm overflow-hidden">
+          {/* Top bar */}
+          <div className="flex items-center gap-2 px-4 py-3 bg-[#0A0A0A] border-b border-white/6">
+            <Briefcase className="h-3.5 w-3.5 text-white/30" />
+            <span className="text-[11px] font-mono font-semibold text-white/40 tracking-wider">
+              OPPORTUNITIES_BOARD
+            </span>
           </div>
 
-          <div className="p-6 grid gap-4 bg-zinc-950/50">
-            {/* Mock Item 1 */}
-            <motion.div
-              whileHover={{ scale: 1.01 }}
-              className="bg-black border border-dark-border hover:border-neon-purple/50 p-5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-neon-purple/10 text-neon-lavender border border-neon-purple/30">
-                    Internship
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" /> $20/hr
-                  </span>
+          <div className="p-4 grid gap-3">
+            {items.map((item) => (
+              <div
+                key={item.title}
+                className="bg-[#0A0A0A] border border-white/6 hover:border-white/14 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-150 hover:-translate-y-px hover:shadow-md"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${item.badgeClass}`}>
+                      {item.badge}
+                    </span>
+                    <span className="text-[11px] font-mono text-emerald-400/80 flex items-center gap-0.5">
+                      <DollarSign className="h-3 w-3" /> {item.rate}
+                    </span>
+                  </div>
+                  <h3 className="text-[15px] font-semibold text-white">{item.title}</h3>
+                  <p className="text-[12px] text-white/40 font-medium">{item.company}</p>
                 </div>
-                <h3 className="text-sm font-black text-white">
-                  Frontend Developer Intern
-                </h3>
-                <p className="text-xs text-neon-purple font-bold">
-                  NeonTech Labs
-                </p>
-              </div>
-              <div className="flex flex-col items-start md:items-end gap-3">
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-mono">
-                  <MapPin className="h-3 w-3 shrink-0" />
-                  <span>Remote</span>
+                <div className="flex flex-col items-start md:items-end gap-3">
+                  <div className="flex items-center gap-1.5 text-[11px] text-white/35">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span>{item.location}</span>
+                  </div>
+                  <button className="px-4 py-1.5 bg-[#1a1a1a] hover:bg-[#A855F7] border border-white/10 hover:border-[#A855F7] text-white/70 hover:text-white text-[11px] font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-150">
+                    Apply <ExternalLink className="h-3 w-3" />
+                  </button>
                 </div>
-                <button className="px-4 py-1.5 bg-dark-hover hover:bg-neon-purple border border-dark-border hover:border-neon-purple text-white text-[10px] font-bold rounded flex items-center gap-1.5 transition-all">
-                  Apply <ExternalLink className="h-3 w-3" />
-                </button>
               </div>
-            </motion.div>
-
-            {/* Mock Item 2 */}
-            <motion.div
-              whileHover={{ scale: 1.01 }}
-              className="bg-black border border-dark-border hover:border-neon-purple/50 p-5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-yellow-950/40 text-yellow-400 border border-yellow-800/40">
-                    Bounty
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" /> $500 - $2000
-                  </span>
-                </div>
-                <h3 className="text-sm font-black text-white">
-                  Smart Contract Auditing Bounty
-                </h3>
-                <p className="text-xs text-neon-purple font-bold">
-                  DeFi Protocols
-                </p>
-              </div>
-              <div className="flex flex-col items-start md:items-end gap-3">
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-mono">
-                  <MapPin className="h-3 w-3 shrink-0" />
-                  <span>Remote</span>
-                </div>
-                <button className="px-4 py-1.5 bg-dark-hover hover:bg-neon-purple border border-dark-border hover:border-neon-purple text-white text-[10px] font-bold rounded flex items-center gap-1.5 transition-all">
-                  Apply <ExternalLink className="h-3 w-3" />
-                </button>
-              </div>
-            </motion.div>
+            ))}
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import { UserProvider } from "@/app/context/UserContext";
 import { NextAuthProvider } from "@/app/context/NextAuthProvider";
 import SplashScreen from "./components/SplashScreen";
+import SessionMonitor from "./components/SessionMonitor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
         <SplashScreen />
         <NextAuthProvider>
           <UserProvider>
+            <SessionMonitor />
             <Navbar />
             <main className="flex-1 w-full flex flex-col pt-20">{children}</main>
             <Footer />

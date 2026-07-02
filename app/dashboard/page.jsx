@@ -227,7 +227,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="min-h-[80vh] bg-black flex items-center justify-center py-12 px-4">
-        <div className="w-8 h-8 border-4 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-7 h-7 border-2 border-[#A855F7] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -235,24 +235,24 @@ export default function DashboardPage() {
   if (!user) {
     return (
       <div className="min-h-[80vh] bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-6 bg-dark-card border border-dark-border p-8 rounded-2xl text-center shadow-neon">
+        <div className="max-w-md w-full space-y-6 bg-[#111111] border border-white/8 p-8 rounded-2xl text-center shadow-sm">
           <span className="text-4xl block">🚫</span>
-          <h2 className="text-2xl font-black text-white tracking-tight">
+          <h2 className="text-2xl font-bold text-white tracking-tight">
             Access Denied
           </h2>
-          <p className="text-xs text-gray-400 leading-relaxed">
+          <p className="text-[13px] text-white/45 leading-relaxed">
             Please sign in to your campus account to access this dashboard.
           </p>
           <div className="flex flex-col gap-3">
             <Link
               href="/login"
-              className="w-full py-2 bg-neon-purple text-white text-xs font-bold rounded hover:bg-neon-purple/95 transition-all shadow-neon"
+              className="w-full py-2 bg-[#A855F7] text-white text-[13px] font-semibold rounded-lg hover:bg-[#C084FC] transition-colors duration-150"
             >
               Sign In to Campus Account
             </Link>
             <Link
               href="/"
-              className="text-xs text-gray-500 hover:text-white transition-colors"
+              className="text-[13px] text-white/35 hover:text-white/70 transition-colors duration-150"
             >
               Back to Home
             </Link>
@@ -280,12 +280,12 @@ export default function DashboardPage() {
   const getStatusStyle = (status) => {
     switch (status) {
       case "Checked In":
-        return "bg-emerald-950/40 text-emerald-400 border border-emerald-800/40";
+        return "bg-emerald-500/8 text-emerald-400 border border-emerald-500/20";
       case "Confirmed":
-        return "bg-neon-purple/10 text-neon-lavender border border-neon-purple/30 shadow-neon";
+        return "bg-[#A855F7]/10 text-[#C084FC] border border-[#A855F7]/20";
       case "Pending":
       default:
-        return "bg-amber-950/40 text-amber-400 border border-amber-800/40";
+        return "bg-amber-500/8 text-amber-400 border border-amber-500/20";
     }
   };
 
@@ -306,42 +306,42 @@ export default function DashboardPage() {
   const renderEventGroup = (groupTitle, events, emptyMessage) => {
     if (events.length === 0) return null;
     return (
-      <div className="space-y-4 mb-8">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{groupTitle} ({events.length})</h3>
-        <div className="space-y-4">
+      <div className="space-y-3 mb-8">
+        <h3 className="text-[11px] font-semibold text-white/35 uppercase tracking-wider">{groupTitle} ({events.length})</h3>
+        <div className="space-y-3">
           {events.map((ev) => {
             const regDetails = registrations.find((r) => r.eventId === ev.id);
             return (
               <div
                 key={ev.id}
-                className="bg-dark-card border border-dark-border hover:border-neon-purple/30 rounded-xl p-5 shadow-sm transition-all duration-300 flex flex-col justify-between min-h-[180px] group cursor-pointer hover:border-neon-purple/50 hover:shadow-neon hover:scale-[1.01]"
+                className="bg-[#111111] border border-white/8 hover:border-white/16 rounded-xl p-4 shadow-sm transition-all duration-150 flex flex-col justify-between min-h-[160px] group cursor-pointer hover:-translate-y-px hover:shadow-md"
                 onClick={() => router.push(`/event?id=${ev.id}`)}
               >
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <div className="flex justify-between items-start gap-4">
-                    <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-neon-purple/10 text-neon-lavender border border-neon-purple/20 rounded-full">
+                    <span className="text-[10px] font-semibold px-2.5 py-0.5 bg-[#A855F7]/10 text-[#C084FC] border border-[#A855F7]/20 rounded-full">
                       {ev.type}
                     </span>
                     <span
-                      className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${getStatusStyle(regDetails?.status)}`}
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${getStatusStyle(regDetails?.status)}`}
                     >
                       {regDetails?.status || "Confirmed"}
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-white leading-snug group-hover:text-neon-lavender transition-colors">
+                  <h3 className="text-[14px] font-semibold text-white leading-snug group-hover:text-white/70 transition-colors duration-150">
                     {ev.title}
                   </h3>
-                  <div className="flex flex-col gap-1 text-[10px] text-gray-400 font-mono">
+                  <div className="flex flex-col gap-1.5 text-[11px] text-white/35 font-mono">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                      <Calendar className="h-3 w-3 text-white/25 shrink-0" />
                       <span>{ev.date}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                      <MapPin className="h-3 w-3 text-white/25 shrink-0" />
                       <span className="truncate">{ev.location}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Users className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                    <div className="flex items-center gap-1.5">
+                      <Users className="h-3 w-3 text-white/25 shrink-0" />
                       <span className="truncate">Organizer: {ev.organizer?.name || ev.organizer?.email.split('@')[0] || ev.organizerId}</span>
                     </div>
                   </div>
@@ -349,12 +349,12 @@ export default function DashboardPage() {
 
                 {/* Actions */}
                 <div
-                  className="flex items-center gap-3 pt-3 border-t border-dark-border/40 mt-3"
+                  className="flex items-center gap-2.5 pt-3 border-t border-white/6 mt-3"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Link
                     href="/opportunities"
-                    className="flex-1 py-2 bg-neutral-900 border border-dark-border hover:border-neon-purple/40 text-white hover:text-neon-purple text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all"
+                    className="flex-1 py-2 bg-[#1a1a1a] border border-white/8 hover:border-white/16 text-white/50 hover:text-white/80 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-150"
                   >
                     <Briefcase className="h-3.5 w-3.5 hidden sm:block" />
                     <span>
@@ -372,7 +372,7 @@ export default function DashboardPage() {
                           setSelectedEventForTicket(ev);
                           setTicketModalOpen(true);
                         }}
-                        className="flex-1 py-2 bg-neon-purple text-white hover:bg-neon-purple/90 text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-neon"
+                        className="flex-1 py-2 bg-[#A855F7] text-white hover:bg-[#C084FC] text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors duration-150"
                       >
                         <span>View Ticket</span>
                       </button>
@@ -380,7 +380,7 @@ export default function DashboardPage() {
 
                   <button
                     onClick={() => handleCancelRegistration(ev.id)}
-                    className="px-3 py-2 border border-red-950/60 bg-red-950/10 hover:bg-red-950/20 text-red-400 hover:text-red-300 text-[10px] sm:text-xs font-bold rounded-lg flex items-center justify-center transition-all hover:border-red-500/40"
+                    className="px-3 py-2 border border-red-500/15 bg-red-500/8 hover:bg-red-500/15 text-red-400 hover:text-red-300 text-[11px] font-semibold rounded-lg flex items-center justify-center transition-all duration-150"
                     title={
                       regDetails?.status === "Waitlisted"
                         ? "Leave Waitlist"
@@ -399,22 +399,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="relative isolate overflow-hidden bg-black w-full min-h-[85vh] py-12 sm:py-16">
-      {/* Background decorations */}
-      <div
-        className="absolute inset-0 -z-10 transform-gpu overflow-hidden blur-3xl opacity-20"
-        aria-hidden="true"
-      >
-        <div
-          className="relative left-[50%] top-[10%] aspect-1155/678 w-[45rem] -translate-x-1/2 bg-gradient-to-tr from-neon-purple to-neon-lavender"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        />
-      </div>
+    <div className="relative bg-black w-full min-h-[85vh] py-8 sm:py-12">
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Header Block */}
         <DashboardHeader 
           username={username}
@@ -424,38 +411,37 @@ export default function DashboardPage() {
         />
 
         {/* Side-by-Side Panels Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
           {/* LEFT COLUMN: ATTENDING EVENTS */}
-          <div className="space-y-6">
-            <div className="bg-dark-card border border-dark-border rounded-xl p-5 shadow-neon">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-1 flex items-center gap-2 font-mono">
-                <span className="text-neon-purple">🎫</span> Events You Are
-                Attending
+          <div className="space-y-4">
+            <div className="bg-[#111111] border border-white/8 rounded-xl p-4">
+              <h2 className="text-[13px] font-semibold text-white mb-1 flex items-center gap-2">
+                🎫 Events You Are Attending
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-[12px] text-white/40">
                 Official bookings and timelines for your registered fests,
                 parties, and workshops.
               </p>
             </div>
 
             {loading ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[1, 2].map((n) => (
                   <div
                     key={n}
-                    className="bg-dark-card border border-dark-border rounded-xl p-6 animate-pulse h-36"
+                    className="bg-[#111111] border border-white/6 rounded-xl p-6 animate-pulse h-36"
                   />
                 ))}
               </div>
             ) : attendingEvents.length === 0 ? (
-              <div className="bg-dark-card/40 border border-dark-border border-dashed rounded-xl p-10 text-center space-y-4">
+              <div className="bg-[#111111]/40 border border-white/6 border-dashed rounded-xl p-10 text-center space-y-4">
                 <span className="text-3xl block">🎟️</span>
-                <p className="text-xs text-gray-400 leading-normal">
+                <p className="text-[13px] text-white/40 leading-normal">
                   You aren't registered for any campus events yet.
                 </p>
                 <Link
                   href="/event"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-neon-purple text-white text-xs font-bold rounded-lg hover:bg-neon-purple/90 transition-all shadow-neon"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#A855F7] text-white text-[12px] font-semibold rounded-lg hover:bg-[#C084FC] transition-colors duration-150"
                 >
                   Browse Event Matrix <ExternalLink className="h-3 w-3" />
                 </Link>
@@ -470,21 +456,20 @@ export default function DashboardPage() {
           </div>
 
           {/* RIGHT COLUMN: HOSTED EVENTS */}
-          <div className="space-y-6">
-            <div className="bg-dark-card border border-dark-border rounded-xl p-5 shadow-neon flex items-center justify-between">
+          <div className="space-y-4">
+            <div className="bg-[#111111] border border-white/8 rounded-xl p-5 flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-1 flex items-center gap-2 font-mono">
-                  <span className="text-neon-purple">📢</span> Events You Are
-                  Hosting
+                <h2 className="text-[13px] font-semibold text-white mb-1 flex items-center gap-2">
+                  📢 Events You Are Hosting
                 </h2>
-                <p className="text-xs text-gray-400">
+                <p className="text-[12px] text-white/40">
                   Manage guest lists, edit descriptions, and publish event
                   announcements.
                 </p>
               </div>
               <button
                 onClick={handleOpenHostModal}
-                className="p-2 bg-neon-purple hover:bg-neon-purple/90 text-white rounded-lg shadow-neon flex items-center justify-center gap-1 text-xs font-bold shrink-0 transition-all hover:scale-105"
+                className="px-3 py-2 bg-[#A855F7] hover:bg-[#C084FC] text-white rounded-lg flex items-center justify-center gap-1.5 text-[12px] font-semibold shrink-0 transition-colors duration-150"
                 title="Host New Event"
               >
                 <Plus className="h-4 w-4" />{" "}
@@ -493,14 +478,14 @@ export default function DashboardPage() {
             </div>
 
             {activeHostedEvents.length === 0 ? (
-              <div className="bg-dark-card/40 border border-dark-border border-dashed rounded-xl p-10 text-center space-y-4">
+              <div className="bg-[#111111]/40 border border-white/6 border-dashed rounded-xl p-10 text-center space-y-4">
                 <span className="text-3xl block">📣</span>
-                <p className="text-xs text-gray-400 leading-normal">
+                <p className="text-[13px] text-white/40 leading-normal">
                   You aren't hosting any active events yet.
                 </p>
                 <button
                   onClick={handleOpenHostModal}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-neon-purple text-white text-xs font-bold rounded-lg hover:bg-neon-purple/90 transition-all shadow-neon"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#A855F7] text-white text-[12px] font-semibold rounded-lg hover:bg-[#C084FC] transition-colors duration-150"
                 >
                   Create First Event <Plus className="h-3.5 w-3.5" />
                 </button>
@@ -515,46 +500,46 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={hev.id}
-                      className="bg-dark-card border border-dark-border hover:border-neon-purple/20 rounded-xl p-0 overflow-hidden shadow-sm transition-all duration-300 cursor-pointer hover:border-neon-purple/50 hover:shadow-neon hover:scale-[1.01] flex flex-col group"
+                      className="bg-[#111111] border border-white/8 hover:border-white/16 rounded-xl overflow-hidden shadow-sm transition-all duration-150 cursor-pointer hover:-translate-y-px hover:shadow-md flex flex-col group"
                       onClick={() => router.push(`/dashboard/organizer/${hev.id}`)}
                     >
                       {/* Event Card Banner Preview */}
-                      <div className="relative h-28 w-full overflow-hidden bg-zinc-900 border-b border-dark-border/40">
+                      <div className="relative h-28 w-full overflow-hidden bg-[#0A0A0A]">
                         {hev.bannerUrl ? (
                           <img
                             src={hev.bannerUrl}
                             alt={hev.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-tr from-neon-purple/20 via-zinc-900 to-zinc-950 flex items-center justify-center font-mono text-[9px] text-neon-lavender">
+                          <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-[10px] text-white/30">
                             CAMPUS EVENT PREVIEW
                           </div>
                         )}
                         {/* Category Tag overlaid on the banner */}
                         <div className="absolute top-3 left-3">
-                          <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 bg-zinc-950/90 border border-dark-border/40 text-neon-lavender rounded-full shadow-md">
+                          <span className="text-[10px] font-semibold px-2.5 py-1 bg-black/70 border border-white/10 text-white/70 rounded-full">
                             {hev.type}
                           </span>
                         </div>
                       </div>
 
-                      {/* Card Content with original padding and space-y-4 */}
+                      {/* Card Content */}
                       <div className="p-5 space-y-4">
                         {/* Event Header details */}
                         <div className="flex justify-between items-start gap-4">
                           <div className="space-y-1">
-                            <h3 className="text-sm font-black text-white group-hover:text-neon-lavender transition-colors pt-1">
+                            <h3 className="text-[14px] font-semibold text-white group-hover:text-white/70 transition-colors duration-150 pt-0.5">
                               {hev.title}
                             </h3>
                           </div>
                           <div
-                            className="flex items-center gap-1 shrink-0"
+                            className="flex items-center gap-0.5 shrink-0"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
                               onClick={(e) => { e.stopPropagation(); handleCompleteEvent(hev.id); }}
-                              className="text-gray-500 hover:text-emerald-400 p-1.5 hover:bg-emerald-950/20 border border-transparent hover:border-emerald-900/30 rounded-lg transition-all"
+                              className="text-white/25 hover:text-emerald-400 p-1.5 hover:bg-emerald-500/8 rounded-lg transition-all duration-150"
                               title="Mark Completed"
                             >
                               <CheckCircle className="h-4 w-4" />
@@ -563,14 +548,14 @@ export default function DashboardPage() {
                               onClick={(e) =>
                                 handleEditHostedEventClick(e, hev)
                               }
-                              className="text-gray-500 hover:text-neon-lavender p-1.5 hover:bg-neon-purple/10 border border-transparent hover:border-neon-purple/30 rounded-lg transition-all"
+                              className="text-white/25 hover:text-white/70 p-1.5 hover:bg-white/5 rounded-lg transition-all duration-150"
                               title="Edit Event"
                             >
                               <Edit3 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={(e) => handleCancelHostedEvent(hev.id)}
-                              className="text-gray-500 hover:text-red-400 p-1.5 hover:bg-red-950/20 border border-transparent hover:border-red-900/30 rounded-lg transition-all"
+                              className="text-white/25 hover:text-red-400 p-1.5 hover:bg-red-500/8 rounded-lg transition-all duration-150"
                               title="Cancel Event"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -578,20 +563,20 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-[10px] text-gray-400 font-mono">
+                        <div className="grid grid-cols-2 gap-2 text-[11px] text-white/35 font-mono">
                           <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                            <Calendar className="h-3 w-3 text-white/25 shrink-0" />
                             <span>{hev.date}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                            <MapPin className="h-3 w-3 text-white/25 shrink-0" />
                             <span className="truncate">{hev.location}</span>
                           </div>
                         </div>
 
                         {/* Row of Action Toggles */}
                         <div
-                          className="flex items-center gap-2 pt-2 border-t border-dark-border/40"
+                          className="flex items-center gap-2 pt-3 border-t border-white/6"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
@@ -601,10 +586,10 @@ export default function DashboardPage() {
                                 [hev.id]: !prev[hev.id],
                               }))
                             }
-                            className={`flex-1 py-1.5 px-2.5 rounded-lg border text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+                            className={`flex-1 py-1.5 px-2.5 rounded-lg border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                               isAnnounceExpanded
-                                ? "bg-neon-purple/10 border-neon-purple text-neon-lavender"
-                                : "bg-neutral-900 border-dark-border text-gray-400 hover:text-white"
+                                ? "bg-[#A855F7]/10 border-[#A855F7]/30 text-[#C084FC]"
+                                : "bg-[#1a1a1a] border-white/8 text-white/40 hover:text-white/70 hover:border-white/16"
                             }`}
                           >
                             <Megaphone className="h-3.5 w-3.5" />
@@ -621,11 +606,11 @@ export default function DashboardPage() {
                         {/* Expandable Announcements / Bulletins Area */}
                         {isAnnounceExpanded && (
                           <div
-                            className="bg-black/30 rounded-lg p-3.5 border border-dark-border/50 animate-fadeIn space-y-4"
+                            className="bg-[#0A0A0A] rounded-xl p-4 border border-white/6 animate-fadeIn space-y-4"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <h4 className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1.5 font-mono">
-                              <span>📢</span> Post Event Bulletin Update
+                            <h4 className="text-[11px] font-semibold text-white/50 flex items-center gap-1.5">
+                              📢 Post Event Bulletin Update
                             </h4>
 
                             {/* Create Form */}
@@ -640,7 +625,7 @@ export default function DashboardPage() {
                                     [hev.id]: e.target.value,
                                   }))
                                 }
-                                className="w-full px-3 py-1.5 bg-zinc-950 border border-dark-border rounded text-[11px] text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono"
+                                className="w-full px-3 py-2 bg-[#111111] border border-white/8 rounded-lg text-[11px] text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#A855F7]/25 focus:border-[#A855F7]/40 transition-all duration-150"
                               />
 
                               <textarea
@@ -653,25 +638,25 @@ export default function DashboardPage() {
                                     [hev.id]: e.target.value,
                                   }))
                                 }
-                                className="w-full px-3 py-1.5 bg-zinc-950 border border-dark-border rounded text-[11px] text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono resize-none"
+                                className="w-full px-3 py-2 bg-[#111111] border border-white/8 rounded-lg text-[11px] text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#A855F7]/25 focus:border-[#A855F7]/40 transition-all duration-150 resize-none"
                               />
 
                               <button
                                 onClick={() => handleAddAnnouncement(hev.id)}
-                                className="w-full py-1.5 bg-neon-purple hover:bg-neon-purple/95 text-white text-[10px] font-bold rounded shadow-neon transition-all"
+                                className="w-full py-2 bg-[#A855F7] hover:bg-[#C084FC] text-white text-[11px] font-semibold rounded-lg transition-colors duration-150"
                               >
                                 Publish Bulletin announcement
                               </button>
                             </div>
 
                             {/* Existing Updates List */}
-                            <div className="space-y-2 pt-2 border-t border-dark-border/30">
-                              <span className="text-[9px] uppercase font-bold text-gray-500 block">
+                            <div className="space-y-2 pt-3 border-t border-white/6">
+                              <span className="text-[10px] uppercase font-semibold text-white/30 block tracking-wider">
                                 Announcement History
                               </span>
                               {!hev.bulletinUpdates ||
                               hev.bulletinUpdates.length === 0 ? (
-                                <p className="text-[10px] text-gray-600 italic">
+                                <p className="text-[11px] text-white/30 italic">
                                   No announcements published yet.
                                 </p>
                               ) : (
@@ -679,13 +664,13 @@ export default function DashboardPage() {
                                   {hev.bulletinUpdates.map((up) => (
                                     <div
                                       key={up.id}
-                                      className="bg-dark-card/50 border border-dark-border/30 p-2.5 rounded text-[10px]"
+                                      className="bg-[#111111] border border-white/6 p-3 rounded-lg text-[11px]"
                                     >
-                                      <div className="flex justify-between items-center text-[8.5px] text-neon-lavender font-mono font-bold mb-1">
+                                      <div className="flex justify-between items-center text-[10px] text-[#C084FC] font-medium mb-1">
                                         <span>{up.title}</span>
-                                        <span>{up.date}</span>
+                                        <span className="text-white/30">{up.date}</span>
                                       </div>
-                                      <p className="text-gray-400 font-mono leading-normal">
+                                      <p className="text-white/45 leading-relaxed">
                                         {up.content}
                                       </p>
                                     </div>
@@ -708,7 +693,7 @@ export default function DashboardPage() {
         <div className="mt-8 flex justify-center">
           <button
             onClick={() => setHistoryModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-dark-border rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:border-neon-purple hover:shadow-neon transition-all hover:scale-[1.02]"
+            className="flex items-center gap-2 px-6 py-3 bg-[#111111] border border-white/8 rounded-xl text-[12px] font-semibold text-white/40 hover:text-white/80 hover:border-white/20 transition-all duration-150 hover:-translate-y-px"
           >
             <History className="h-4 w-4" />
             View Event History
@@ -731,58 +716,58 @@ export default function DashboardPage() {
 
       {/* History Modal */}
       {historyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-dark-card border border-dark-border w-full max-w-2xl rounded-2xl p-6 shadow-neon relative my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-[#111111] border border-white/10 w-full max-w-2xl rounded-2xl p-6 shadow-xl relative my-8 animate-slideUp">
             <button
               onClick={() => setHistoryModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1"
+              className="absolute top-4 right-4 text-white/30 hover:text-white/70 transition-colors duration-150 p-1"
             >
               <XCircle className="h-5 w-5" />
             </button>
-            <h2 className="text-xl font-black text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-              <History className="h-5 w-5 text-neon-purple" />
+            <h2 className="text-[18px] font-bold text-white mb-6 flex items-center gap-2">
+              <History className="h-5 w-5 text-white/40" />
               Event History
             </h2>
 
-            <div className="flex border-b border-dark-border mb-6">
+            <div className="flex border-b border-white/8 mb-5">
               <button
                 onClick={() => setHistoryTab("attended")}
-                className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors ${
+                className={`pb-3 px-4 text-[12px] font-semibold border-b-2 transition-colors duration-150 ${
                   historyTab === "attended"
-                    ? "border-neon-purple text-neon-lavender"
-                    : "border-transparent text-gray-500 hover:text-gray-300"
+                    ? "border-[#A855F7] text-white"
+                    : "border-transparent text-white/35 hover:text-white/60"
                 }`}
               >
                 Attended ({historyAttendingEvents.length})
               </button>
               <button
                 onClick={() => setHistoryTab("hosted")}
-                className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors ${
+                className={`pb-3 px-4 text-[12px] font-semibold border-b-2 transition-colors duration-150 ${
                   historyTab === "hosted"
-                    ? "border-neon-purple text-neon-lavender"
-                    : "border-transparent text-gray-500 hover:text-gray-300"
+                    ? "border-[#A855F7] text-white"
+                    : "border-transparent text-white/35 hover:text-white/60"
                 }`}
               >
                 Hosted ({historyHostedEvents.length})
               </button>
             </div>
 
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 no-scrollbar">
               {historyTab === "attended" && (
                 historyAttendingEvents.length === 0 ? (
-                  <p className="text-xs text-gray-500 italic text-center py-8">No attended events in history yet.</p>
+                  <p className="text-[13px] text-white/30 italic text-center py-8">No attended events in history yet.</p>
                 ) : (
                   historyAttendingEvents.map(ev => (
-                    <div key={ev.id} className="bg-black border border-dark-border rounded-xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 transition-all hover:border-neon-purple/40">
+                    <div key={ev.id} className="bg-[#0A0A0A] border border-white/6 rounded-xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 hover:border-white/12 transition-colors duration-150">
                       <div>
-                        <h4 className="text-sm font-bold text-white">{ev.title}</h4>
-                        <div className="text-[10px] text-gray-400 font-mono flex items-center gap-2 mt-1">
+                        <h4 className="text-[14px] font-semibold text-white">{ev.title}</h4>
+                        <div className="text-[11px] text-white/35 flex items-center gap-2 mt-1">
                           <span>{ev.date}</span>
-                          <span>•</span>
+                          <span>·</span>
                           <span>{ev.location}</span>
                         </div>
                       </div>
-                      <span className="px-2 py-1 bg-zinc-900 text-gray-500 border border-dark-border rounded text-[10px] uppercase font-bold self-start sm:self-auto">Completed</span>
+                      <span className="px-2.5 py-1 bg-white/5 text-white/35 border border-white/8 rounded-full text-[10px] font-semibold self-start sm:self-auto">Completed</span>
                     </div>
                   ))
                 )
@@ -790,19 +775,19 @@ export default function DashboardPage() {
 
               {historyTab === "hosted" && (
                 historyHostedEvents.length === 0 ? (
-                  <p className="text-xs text-gray-500 italic text-center py-8">No hosted events in history yet.</p>
+                  <p className="text-[13px] text-white/30 italic text-center py-8">No hosted events in history yet.</p>
                 ) : (
                   historyHostedEvents.map(ev => (
-                    <div key={ev.id} className="bg-black border border-dark-border rounded-xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 transition-all hover:border-neon-purple/40">
+                    <div key={ev.id} className="bg-[#0A0A0A] border border-white/6 rounded-xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 hover:border-white/12 transition-colors duration-150">
                       <div>
-                        <h4 className="text-sm font-bold text-white">{ev.title}</h4>
-                        <div className="text-[10px] text-gray-400 font-mono flex items-center gap-2 mt-1">
+                        <h4 className="text-[14px] font-semibold text-white">{ev.title}</h4>
+                        <div className="text-[11px] text-white/35 flex items-center gap-2 mt-1">
                           <span>{ev.date}</span>
-                          <span>•</span>
+                          <span>·</span>
                           <span>{ev.type}</span>
                         </div>
                       </div>
-                      <span className="px-2 py-1 bg-emerald-950/30 text-emerald-500 border border-emerald-900/40 rounded text-[10px] uppercase font-bold self-start sm:self-auto flex items-center gap-1.5">
+                      <span className="px-2.5 py-1 bg-emerald-500/8 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-semibold self-start sm:self-auto flex items-center gap-1.5">
                         <CheckCircle className="h-3 w-3" /> Successfully Hosted
                       </span>
                     </div>

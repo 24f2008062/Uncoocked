@@ -172,21 +172,21 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           <div className="lg:col-span-6 xl:col-span-7 w-full order-2 lg:order-1 flex flex-col gap-8">
             {/* Hero Section */}
             <div className="w-full">
-              <div className="w-full h-56 md:h-72 rounded-3xl overflow-hidden border border-dark-border/50 relative mb-6">
+              <div className="w-full h-56 md:h-64 rounded-2xl overflow-hidden border border-white/6 relative mb-6">
                 {event.bannerUrl ? (
                   <img src={event.bannerUrl} alt={event.title} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-zinc-900 to-black" />
+                  <div className="w-full h-full bg-[#1a1a1a]" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                 
-                <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10 z-10 max-w-3xl">
+                <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 z-10 max-w-2xl">
                   {event.category && (
-                    <span className="text-[10px] font-extrabold text-white tracking-widest uppercase bg-neon-purple/80 backdrop-blur-md border border-neon-purple px-3 py-1 rounded-full mb-4 inline-block shadow-lg shadow-black/50">
+                    <span className="text-[10px] font-bold text-white tracking-widest uppercase bg-[#A855F7]/20 border border-[#A855F7]/30 px-2 py-0.5 rounded mb-3 inline-block">
                       {event.category}
                     </span>
                   )}
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)]">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight drop-shadow-md">
                     {event.title}
                   </h1>
                 </div>
@@ -201,23 +201,23 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           <div className="lg:col-span-4 xl:col-span-3 w-full order-1 lg:order-2 space-y-6 lg:sticky lg:top-24">
             
             {/* Toggle Switch */}
-            <div className="bg-zinc-950 p-1.5 rounded-xl border border-dark-border/50 flex w-full">
+            <div className="bg-[#111111] p-1 rounded-lg border border-white/8 flex w-full">
               <button
                 onClick={() => setActiveSidebarTab("amenities")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                className={`flex-1 py-1.5 text-[12px] font-semibold rounded-md transition-all ${
                   activeSidebarTab === "amenities"
-                    ? "bg-neon-purple text-white shadow-sm"
-                    : "text-gray-500 hover:text-white hover:bg-zinc-900"
+                    ? "bg-white/10 text-white"
+                    : "text-white/50 hover:text-white hover:bg-white/5"
                 }`}
               >
                 Amenities
               </button>
               <button
                 onClick={() => setActiveSidebarTab("discussion")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                className={`flex-1 py-1.5 text-[12px] font-semibold rounded-md transition-all ${
                   activeSidebarTab === "discussion"
-                    ? "bg-neon-purple text-white shadow-sm"
-                    : "text-gray-500 hover:text-white hover:bg-zinc-900"
+                    ? "bg-white/10 text-white"
+                    : "text-white/50 hover:text-white hover:bg-white/5"
                 }`}
               >
                 Discussion
@@ -241,22 +241,22 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
                 {/* Organizer Broadcast Tool */}
                 {user && (event.organizer?.email === user || event.organizerId === user) && (
-                  <div className="bg-dark-card border border-dark-border rounded-2xl p-5 space-y-4 shadow-sm">
-                    <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-dark-border pb-3">
-                      <span className="text-neon-purple">⚡</span> Broadcast Update
+                  <div className="bg-[#111111] border border-white/8 rounded-xl p-4 space-y-3 shadow-sm">
+                    <h3 className="text-[12px] font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-white/6 pb-2">
+                      <span className="text-[#A855F7]">⚡</span> Broadcast Update
                     </h3>
-                    <form onSubmit={handleAddUpdate} className="space-y-3">
+                    <form onSubmit={handleAddUpdate} className="space-y-2">
                       <input
                         required type="text" placeholder="Update Title"
                         value={broadcastTitle} onChange={(e) => setBroadcastTitle(e.target.value)}
-                        className="block w-full rounded border border-dark-border bg-black px-3 py-2 text-xs text-white focus:outline-none focus:border-neon-purple font-mono"
+                        className="input"
                       />
                       <textarea
                         required rows={3} placeholder="Message content..."
                         value={broadcastContent} onChange={(e) => setBroadcastContent(e.target.value)}
-                        className="block w-full rounded border border-dark-border bg-black px-3 py-2 text-xs text-white focus:outline-none focus:border-neon-purple resize-none font-mono"
+                        className="input resize-none"
                       />
-                      <button type="submit" className="w-full py-2 bg-neon-purple text-white text-xs font-bold rounded-lg hover:bg-neon-purple/90 transition-all">
+                      <button type="submit" className="btn-primary w-full text-[12px]">
                         Publish Live
                       </button>
                     </form>
@@ -265,13 +265,13 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
                 {/* Announcement Board - Only for Registered Users or Organizers */}
                 {(isRegistered || (user && (event.organizer?.email === user || event.organizerId === user))) && (
-                  <div className="bg-dark-card rounded-2xl border border-dark-border p-1">
+                  <div className="bg-[#111111] rounded-xl border border-white/8 p-1 shadow-sm">
                     <BulletinBoard updates={bulletins} />
                   </div>
                 )}
               </div>
             ) : (
-              <div className="h-[600px]">
+              <div className="h-[400px]">
                 {user ? (
                   <EventChat 
                     eventId={selectedEventId || event.id} 
@@ -281,19 +281,19 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                     }} 
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full w-full max-w-md border border-zinc-800 rounded-xl bg-zinc-900/60 p-6 text-center backdrop-blur-md shadow-xl">
-                    <div className="w-12 h-12 rounded-full bg-purple-600/10 flex items-center justify-center mb-4 border border-purple-500/20 text-purple-400 text-xl font-bold">
-                      🔒
+                  <div className="flex flex-col items-center justify-center h-full w-full max-w-md border border-white/8 rounded-xl bg-[#111111] p-6 text-center shadow-sm">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-3 text-white/50">
+                      <Flag className="w-5 h-5" />
                     </div>
-                    <h3 className="text-zinc-200 font-semibold text-base mb-2">Discussion Locked</h3>
-                    <p className="text-zinc-400 text-xs max-w-[240px] mb-6 leading-relaxed">
-                      Have questions about this event? Sign in to join the conversation room and connect with other students!
+                    <h3 className="text-white font-semibold text-[14px] mb-1">Discussion Locked</h3>
+                    <p className="text-white/40 text-[12px] max-w-[200px] mb-4 leading-relaxed">
+                      Sign in to join the conversation and connect with others.
                     </p>
                     <a 
                       href="/login" 
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white text-center text-sm font-medium py-2.5 rounded-lg transition-all active:scale-[0.98] shadow-lg shadow-purple-600/20"
+                      className="btn-primary text-[12px] px-6"
                     >
-                      Sign In to Access Chat
+                      Sign In
                     </a>
                   </div>
                 )}
