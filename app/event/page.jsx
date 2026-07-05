@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import TwinLayout from "@/app/components/TwinLayout";
-import EventsExplorer from "@/app/components/EventsExplorer";
+import EventsExplorer, { mockEvents } from "@/app/components/EventsExplorer";
 import RecommendedEvents from "@/app/components/RecommendedEvents";
 import { useUser } from "@/app/context/UserContext";
 
@@ -17,10 +17,17 @@ export default function EventPage() {
       const res = await fetch("/api/events", { cache: "no-store" });
       const data = await res.json();
       if (data.success) {
-        setAllEvents(data.events);
+        if (data.events && data.events.length > 0) {
+          setAllEvents(data.events);
+        } else {
+          setAllEvents(mockEvents);
+        }
+      } else {
+        setAllEvents(mockEvents);
       }
     } catch (err) {
       console.error("Failed to load events", err);
+      setAllEvents(mockEvents);
     }
   };
 
