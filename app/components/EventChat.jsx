@@ -8,22 +8,27 @@ export default function EventChat({ eventId, currentUser }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isRegistered, setIsRegistered] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   const chatEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const pickerRef = useRef(null);
 
-  // 1. Fetch Chat History & Connect to Live Pusher Channel
+  // 1. Fetch Chat History & Verify Attendance Status
   useEffect(() => {
-    if (!eventId) return;
+    if (!eventId || !currentUser?.email) return;
 
-    async function fetchChatHistory() {
+    async function fetchChatHistoryAndVerify() {
       try {
-        const res = await fetch(`/api/chat?eventId=${eventId}`);
+        const res = await fetch(`/api/chat?eventId=${eventId}&userEmail=${currentUser.email}`);
+        
         if (res.ok) {
           const data = await res.json();
           setMessages(data);
+          setIsRegistered(true);
+        } else if (res.status === 403) {
+          setIsRegistered(false);
         }
       } catch (err) {
         console.error("Failed to fetch chat history:", err);
@@ -32,7 +37,7 @@ export default function EventChat({ eventId, currentUser }) {
       }
     }
 
-    fetchChatHistory();
+    fetchChatHistoryAndVerify();
 
     const pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
@@ -56,7 +61,7 @@ export default function EventChat({ eventId, currentUser }) {
       channel.unsubscribe();
       pusherClient.disconnect();
     };
-  }, [eventId]);
+  }, [eventId, currentUser?.email]);
 
   // Close emoji picker if user clicks outside the chat area
   useEffect(() => {
@@ -117,7 +122,7 @@ export default function EventChat({ eventId, currentUser }) {
     } catch (err) {
       console.error("Failed to send message:", err);
       setMessages((prev) => prev.filter((m) => m.id !== temporaryId));
-      alert("Message failed to send. Please check connection.");
+      alert("Message failed to send. You must be registered to chat.");
     }
   };
 
@@ -133,7 +138,7 @@ export default function EventChat({ eventId, currentUser }) {
     } catch (err) {
       console.error("Failed to unsend message:", err);
       alert("Could not unsend message. Try again.");
-      const reloadRes = await fetch(`/api/chat?eventId=${eventId}`);
+      const reloadRes = await fetch(`/api/chat?eventId=${eventId}&userEmail=${currentUser?.email}`);
       if (reloadRes.ok) setMessages(await reloadRes.json());
     }
   };
@@ -145,6 +150,22 @@ export default function EventChat({ eventId, currentUser }) {
 
   if (loading) return <div className="text-zinc-400 text-sm p-4">Loading chat room...</div>;
 
+  // 🔒 Render Locked State Component if user is logged in but not registered for this event
+  if (!isRegistered) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[480px] w-full max-w-md border border-white/8 rounded-xl bg-[#111111] p-6 text-center shadow-md">
+        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 border border-white/10 text-xl font-bold">
+          🔒
+        </div>
+        <h3 className="text-white font-semibold text-[14px] mb-2">Attendee Chatroom Only</h3>
+        <p className="text-white/40 text-[11px] max-w-[240px] leading-relaxed">
+          The chatroom is locked for anti-spam protection. Secure your ticket or register for this event to view and join the discussion.
+        </p>
+      </div>
+    );
+  }
+
+  // ✅ Render Open Chat View if registered
   return (
     <div className="flex flex-col h-full w-full border border-white/8 rounded-xl bg-[#111111] shadow-sm overflow-hidden relative">
       {/* Header section */}
@@ -163,7 +184,7 @@ export default function EventChat({ eventId, currentUser }) {
       >
         {messages.length === 0 ? (
           <div className="text-zinc-500 text-xs text-center mt-20 px-4">
-            No messages yet. Be the first to ask a question, clear doubts, or find potential teammates!
+            Welcome to the attendee group! Ask a question, clear doubts, or coordinate with teammates.
           </div>
         ) : (
           messages.map((msg) => {
@@ -234,7 +255,7 @@ export default function EventChat({ eventId, currentUser }) {
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Ask something about this event..."
+          placeholder="Type a message..."
           className="flex-1 min-w-0 text-[12px] px-3 py-2 bg-[#111111] border border-white/8 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/20"
         />
         <button 

@@ -12,13 +12,25 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
-// 1. POST route to save and send a message
+// 1. POST route to save and send a message (Security: Attendee Only)
 export async function POST(req) {
   try {
     const { eventId, userName, userEmail, message } = await req.json();
 
-    if (!message || !eventId) {
+    if (!message || !eventId || !userEmail) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+
+    // Strict Guard Check: Verify if user has a verified entry in the Registration table
+    const registration = await prisma.registration.findFirst({
+      where: {
+        eventId: eventId,
+        user: { email: userEmail }
+      }
+    });
+
+    if (!registration) {
+      return NextResponse.json({ error: "Access Denied: Registration Required" }, { status: 403 });
     }
 
     // Save message to database via Prisma
@@ -36,14 +48,27 @@ export async function POST(req) {
   }
 }
 
-// 2. GET route to load old chat history when they open the page
+// 2. GET route to load old chat history when they open the page (Security: Attendee Only)
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const eventId = searchParams.get("eventId");
+    const userEmail = searchParams.get("userEmail"); // Sent from client component verification hooks
 
-    if (!eventId) {
-      return NextResponse.json({ error: "Event ID required" }, { status: 400 });
+    if (!eventId || !userEmail) {
+      return NextResponse.json({ error: "Event ID and User Email tracking required" }, { status: 400 });
+    }
+
+    // Verify registration status before serving historical logs
+    const registration = await prisma.registration.findFirst({
+      where: {
+        eventId: eventId,
+        user: { email: userEmail }
+      }
+    });
+
+    if (!registration) {
+      return NextResponse.json({ error: "Access Denied: Not Registered" }, { status: 403 });
     }
 
     const history = await prisma.chatMessage.findMany({
