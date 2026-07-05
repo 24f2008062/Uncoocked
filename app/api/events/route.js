@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '../../config/cities';
@@ -48,12 +47,9 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
-
-    // Extract organizerId from data if provided
     let organizerId = data.organizerId;
 
     if (organizerId && organizerId.includes('@')) {
-      // Frontend passed email instead of user ID
       const user = await prisma.user.findUnique({ where: { email: organizerId } });
       if (user) {
         organizerId = user.id;
@@ -61,7 +57,6 @@ export async function POST(request) {
         organizerId = null;
       }
     } else if (!organizerId && data.hostEmail) {
-      // Fallback: look up user by hostEmail
       const user = await prisma.user.findUnique({ where: { email: data.hostEmail } });
       if (user) {
         organizerId = user.id;

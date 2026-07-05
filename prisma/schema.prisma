@@ -252,3 +252,12 @@ model ChatMessage {
 
   // If you have an Event model in your schema, you can optionally link them here
 }
+
+model Review {
+  id        String   @id @default(cuid())
+  userName  String
+  userEmail String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}

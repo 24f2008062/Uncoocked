@@ -71,12 +71,14 @@ export default function Footer() {
             <form onSubmit={(e) => e.preventDefault()} className="flex gap-2 max-w-sm">
               <input
                 type="email"
+                suppressHydrationWarning={true}
                 placeholder="student@campus.edu"
                 className="flex-1 min-w-0 rounded-lg border border-white/8 bg-[#111111] px-3 py-2 text-[13px] text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#A855F7]/30 focus:border-[#A855F7]/50 transition-all duration-150"
                 required
               />
               <button
                 type="submit"
+                suppressHydrationWarning={true}
                 className="px-4 py-2 rounded-lg bg-[#A855F7] text-white text-[12px] font-semibold hover:bg-[#C084FC] transition-colors duration-150"
               >
                 Join

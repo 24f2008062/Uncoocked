@@ -285,6 +285,7 @@ export default function EventMatrixPreview() {
                       ) : (
                         <button
                           onClick={() => handleOpenRegister(ev)}
+                          suppressHydrationWarning={true}
                           className="px-4 py-1.5 bg-[#A855F7] text-white text-[11px] font-semibold rounded-full hover:bg-[#C084FC] hover:-translate-y-px hover:shadow-md transition-all duration-150 cursor-pointer"
                         >
                           Secure Ticket

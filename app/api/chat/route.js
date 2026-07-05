@@ -12,7 +12,7 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
-// 1. POST route to save and send a message (Security: Attendee Only)
+// 1. POST route: Save and broadcast a message (Security: Check Organizer Scam Guard)
 export async function POST(req) {
   try {
     const { eventId, userName, userEmail, message } = await req.json();
@@ -21,7 +21,23 @@ export async function POST(req) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // Strict Guard Check: Verify if user has a verified entry in the Registration table
+    // Anti-Scam Guard Check: Look up the event to find who hosts it
+    const targetEvent = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { organizer: true }
+    });
+
+    if (targetEvent) {
+      const isHost = 
+        targetEvent.organizerId === userEmail || 
+        targetEvent.organizer?.email === userEmail;
+
+      if (isHost) {
+        return NextResponse.json({ error: "Hosts are restricted from participating in attendee chat groups." }, { status: 403 });
+      }
+    }
+
+    // Verify structural attendance entry
     const registration = await prisma.registration.findFirst({
       where: {
         eventId: eventId,
@@ -33,12 +49,10 @@ export async function POST(req) {
       return NextResponse.json({ error: "Access Denied: Registration Required" }, { status: 403 });
     }
 
-    // Save message to database via Prisma
     const newMessage = await prisma.chatMessage.create({
       data: { eventId, userName, userEmail, message },
     });
 
-    // Trigger real-time update over Pusher channel specific to this event ID
     await pusher.trigger(`event-chat-${eventId}`, "new-message", newMessage);
 
     return NextResponse.json(newMessage, { status: 200 });
@@ -48,18 +62,33 @@ export async function POST(req) {
   }
 }
 
-// 2. GET route to load old chat history when they open the page (Security: Attendee Only)
+// 2. GET route: Load message feeds (Security: Check Organizer Lock)
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const eventId = searchParams.get("eventId");
-    const userEmail = searchParams.get("userEmail"); // Sent from client component verification hooks
+    const userEmail = searchParams.get("userEmail");
 
     if (!eventId || !userEmail) {
       return NextResponse.json({ error: "Event ID and User Email tracking required" }, { status: 400 });
     }
 
-    // Verify registration status before serving historical logs
+    // Anti-Scam Guard Check: Deny host access to history logs
+    const targetEvent = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { organizer: true }
+    });
+
+    if (targetEvent) {
+      const isHost = 
+        targetEvent.organizerId === userEmail || 
+        targetEvent.organizer?.email === userEmail;
+
+      if (isHost) {
+        return NextResponse.json({ error: "Access Denied: Hosts must use organizer dashboards." }, { status: 403 });
+      }
+    }
+
     const registration = await prisma.registration.findFirst({
       where: {
         eventId: eventId,
@@ -82,18 +111,17 @@ export async function GET(req) {
   }
 }
 
-// 3. DELETE route to unsend a specific chat message
+// 3. DELETE route: Unsend a specific chat message
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
     const messageId = searchParams.get("messageId");
-    const userEmail = searchParams.get("userEmail"); // Security check
+    const userEmail = searchParams.get("userEmail");
 
     if (!messageId || !userEmail) {
       return NextResponse.json({ error: "Missing required tracking parameters" }, { status: 400 });
     }
 
-    // Find the message first to ensure it exists and belongs to this user
     const existingMessage = await prisma.chatMessage.findUnique({
       where: { id: messageId }
     });
@@ -106,12 +134,10 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "Unauthorized to unsend this message" }, { status: 403 });
     }
 
-    // Delete from local SQLite database
     await prisma.chatMessage.delete({
       where: { id: messageId }
     });
 
-    // Broadcast the removal event immediately to all listeners
     await pusher.trigger(`event-chat-${existingMessage.eventId}`, "message-deleted", { id: messageId });
 
     return NextResponse.json({ success: true }, { status: 200 });

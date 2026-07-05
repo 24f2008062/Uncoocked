@@ -29,6 +29,9 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastContent, setBroadcastContent] = useState("");
 
+  // Determine if this user is explicitly the organizer of this page
+  const isCurrentlyHosting = event.isHost || (user && (event.organizer?.email === user || event.organizerId === user));
+
   useEffect(() => {
     let isMounted = true;
     const fetchRegistrations = async () => {
@@ -51,7 +54,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
         }
 
         let allRegs = [];
-        if (user && (event.organizer?.email === user || event.organizerId === user)) {
+        if (user && isCurrentlyHosting) {
           const res = await fetch(`/api/registrations?eventId=${event.id}&requesterEmail=${encodeURIComponent(user)}`);
           if (res.ok) {
             const data = await res.json();
@@ -76,9 +79,13 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
     };
     fetchRegistrations();
     return () => { isMounted = false; };
-  }, [event.id, user, event.organizer, event.organizerId]);
+  }, [event.id, user, event.organizer, event.organizerId, isCurrentlyHosting]);
 
   async function handleRegister(payload) {
+    if (isCurrentlyHosting) {
+      alert("Hosts are structurally restricted from registering for their own events.");
+      return;
+    }
     setModalOpen(false);
     try {
       const isFull = event.capacity ? localTicketsSold >= event.capacity : false;
@@ -158,8 +165,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
       const data = await res.json();
       if (data.success && data.bulletin) {
-        // Assume API returns the new bulletin with date and id properly formatted.
-        // Or we can just mock the date here if it doesn't return full details formatted exactly
         setBulletins((prev) => [{
           id: data.bulletin.id,
           date: new Date(data.bulletin.postedAt).toISOString().split("T")[0],
@@ -194,7 +199,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           </button>
         )}
 
-
         {/* 70/30 Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 lg:gap-12 items-start">
           
@@ -221,7 +225,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                   </h1>
                 </div>
               </div>
-
             </div>
 
             <EventDescription event={event} />
@@ -256,21 +259,34 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
             {activeSidebarTab === "amenities" ? (
               <div className="space-y-8">
-                <RegistrationCard 
-                  event={event}
-                  user={user}
-                  userRegistration={userRegistration}
-                  isRegistered={isRegistered}
-                  isSoldOut={isSoldOut}
-                  isWaitlistOnly={isWaitlistOnly}
-                  remainingCapacity={remainingCapacity}
-                  ticketsSold={ticketsSold}
-                  onRegisterClick={() => setModalOpen(true)}
-                  onCancelClick={handleCancelRegistration}
-                />
+                {/* Condition Layer: Hide core registration box interface components if user is the structural host */}
+                {isCurrentlyHosting ? (
+                  <div className="bg-[#111111] border border-white/8 rounded-xl p-5 text-center space-y-2 shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mx-auto text-white/60 text-xs font-bold">
+                      🛡️
+                    </div>
+                    <h4 className="text-white font-semibold text-[13px]">Creator Overview Mode</h4>
+                    <p className="text-white/40 text-[11px] leading-relaxed max-w-[210px] mx-auto">
+                      You are hosting this event. Manage announcements, broad updates, or view member records directly below.
+                    </p>
+                  </div>
+                ) : (
+                  <RegistrationCard 
+                    event={event}
+                    user={user}
+                    userRegistration={userRegistration}
+                    isRegistered={isRegistered}
+                    isSoldOut={isSoldOut}
+                    isWaitlistOnly={isWaitlistOnly}
+                    remainingCapacity={remainingCapacity}
+                    ticketsSold={ticketsSold}
+                    onRegisterClick={() => setModalOpen(true)}
+                    onCancelClick={handleCancelRegistration}
+                  />
+                )}
 
                 {/* Organizer Broadcast Tool */}
-                {user && (event.organizer?.email === user || event.organizerId === user) && (
+                {user && isCurrentlyHosting && (
                   <div className="bg-[#111111] border border-white/8 rounded-xl p-4 space-y-3 shadow-sm">
                     <h3 className="text-[12px] font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-white/6 pb-2">
                       <span className="text-[#A855F7]">⚡</span> Broadcast Update
@@ -293,8 +309,8 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                   </div>
                 )}
 
-                {/* Announcement Board - Only for Registered Users or Organizers */}
-                {(isRegistered || (user && (event.organizer?.email === user || event.organizerId === user))) && (
+                {/* Announcement Board - Open for Registrants OR Organizers */}
+                {(isRegistered || (user && isCurrentlyHosting)) && (
                   <div className="bg-[#111111] rounded-xl border border-white/8 p-1 shadow-sm">
                     <BulletinBoard updates={bulletins} />
                   </div>
@@ -319,10 +335,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                     <p className="text-white/40 text-[12px] max-w-[200px] mb-4 leading-relaxed">
                       Sign in to join the conversation and connect with others.
                     </p>
-                    <a 
-                      href="/login" 
-                      className="btn-primary text-[12px] px-6"
-                    >
+                    <a href="/login" className="btn-primary text-[12px] px-6">
                       Sign In
                     </a>
                   </div>
@@ -337,7 +350,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           <div className="pt-16 border-t border-dark-border/40">
             <RecommendedEvents userEmail={user} onSelectEvent={(id) => {
               if (onBack) onBack();
-              // In real app, push router `/event?id=${id}`
             }} />
           </div>
         )}
