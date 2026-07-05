@@ -77,7 +77,7 @@ export default function SignupPage() {
           <h2 className="text-2xl font-bold text-white tracking-tight">
             Create your Account
           </h2>
-          <p className="mt-2 text-[13px] text-white/40">Join Campus OS today.</p>
+          <p className="mt-2 text-[13px] text-white/40">Join Uncooked today.</p>
         </div>
 
         {/* Credentials Form */}
@@ -171,7 +171,7 @@ export default function SignupPage() {
 
           {success && (
             <div className="text-[12px] text-emerald-400 bg-emerald-500/6 border border-emerald-500/15 px-3 py-2.5 rounded-lg">
-              ✓ Account created successfully. Redirecting to Campus OS...
+              ✓ Account created successfully. Redirecting to Uncooked...
             </div>
           )}
 

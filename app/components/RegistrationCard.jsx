@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { formatDistanceToNow, isPast } from "date-fns";
+import TicketModal from "./TicketModal";
 
 export default function RegistrationCard({ 
   event, 
@@ -18,6 +19,7 @@ export default function RegistrationCard({
 }) {
   const [timeLeft, setTimeLeft] = useState("");
   const [justRegistered, setJustRegistered] = useState(false);
+  const [showTicketModal, setShowTicketModal] = useState(false);
 
   useEffect(() => {
     // Countdown timer logic
@@ -41,7 +43,7 @@ export default function RegistrationCard({
   }, [event.date]);
 
   const handleDownloadTicket = () => {
-    window.print(); // Simple trick to download as PDF
+    setShowTicketModal(true);
   };
 
   const handleAddToCalendar = () => {
@@ -88,7 +90,7 @@ export default function RegistrationCard({
           {userRegistration.status === "Confirmed" && (
             <div className="grid grid-cols-2 gap-2">
               <button onClick={handleDownloadTicket} className="py-2.5 bg-zinc-900 border border-dark-border hover:border-gray-500 text-white text-[10px] font-bold rounded-lg transition-all text-center">
-                Download Ticket
+                View Ticket
               </button>
               <button onClick={handleAddToCalendar} className="py-2.5 bg-zinc-900 border border-dark-border hover:border-gray-500 text-white text-[10px] font-bold rounded-lg transition-all text-center">
                 Add to Calendar
@@ -131,7 +133,9 @@ export default function RegistrationCard({
                 {isWaitlistOnly ? "Join Waitlist" : "Register Now"}
               </button>
             ) : (
-              <button onClick={onRegisterClick} className="w-full py-3.5 bg-neutral-900 border border-dark-border text-gray-400 font-extrabold text-xs uppercase tracking-wider rounded-xl hover:text-white transition-all hover:border-gray-500">
+              <button onClick={() => {
+                if (typeof window !== 'undefined') window.location.href = '/login';
+              }} className="w-full py-3.5 bg-neutral-900 border border-dark-border text-gray-400 font-extrabold text-xs uppercase tracking-wider rounded-xl hover:text-white transition-all hover:border-gray-500">
                 Sign in to Register
               </button>
             )
@@ -141,6 +145,21 @@ export default function RegistrationCard({
             </button>
           )}
         </div>
+      )}
+
+      {userRegistration?.status === "Confirmed" && (
+        <TicketModal
+          open={showTicketModal}
+          onClose={() => {
+            setShowTicketModal(false);
+          }}
+          eventTitle={event.title}
+          eventDate={event.date}
+          eventLocation={event.location}
+          attendeeName={userRegistration.name}
+          ticketId={userRegistration.ticketId}
+          ticketType={event.ticketType || "Free"}
+        />
       )}
     </div>
   );

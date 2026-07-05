@@ -7,7 +7,7 @@ export default function OpportunitiesPreview() {
     {
       badge: "Internship",
       badgeClass: "bg-[#A855F7]/10 text-[#C084FC] border-[#A855F7]/20",
-      rate: "$20/hr",
+      rate: "₹20/hr",
       title: "Frontend Developer Intern",
       company: "NeonTech Labs",
       location: "Remote",
@@ -15,7 +15,7 @@ export default function OpportunitiesPreview() {
     {
       badge: "Bounty",
       badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-      rate: "$500 - $2000",
+      rate: "₹500 - ₹2000",
       title: "Smart Contract Auditing Bounty",
       company: "DeFi Protocols",
       location: "Remote",

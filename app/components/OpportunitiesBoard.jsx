@@ -11,7 +11,7 @@ const mockOpportunities = [
     company: "NeonTech Labs",
     type: "Internship",
     location: "Remote",
-    salary: "$20/hr",
+    salary: "₹20/hr",
     description:
       "Join our core frontend team to build next-gen interactive React and Next.js applications.",
     tags: ["React", "Next.js", "Tailwind"],
@@ -22,7 +22,7 @@ const mockOpportunities = [
     company: "DeFi Protocols",
     type: "Bounty",
     location: "Remote",
-    salary: "$500 - $2000",
+    salary: "₹500 - ₹2000",
     description:
       "Find and patch vulnerabilities in our new liquidity pool staking contract on Ethereum.",
     tags: ["Solidity", "Security", "Web3"],
@@ -33,7 +33,7 @@ const mockOpportunities = [
     company: "Quantum Analytics",
     type: "Full-time",
     location: "New York, NY",
-    salary: "$80k - $100k",
+    salary: "₹80k - ₹100k",
     description:
       "Analyze large datasets and train predictive machine learning models for fintech clients.",
     tags: ["Python", "PyTorch", "SQL"],
@@ -44,7 +44,7 @@ const mockOpportunities = [
     company: "Creative Studios",
     type: "Freelance",
     location: "Hybrid",
-    salary: "$40/hr",
+    salary: "₹40/hr",
     description:
       "Design a high-converting landing page and onboarding flow for a new consumer app.",
     tags: ["Figma", "Prototyping", "User Research"],
@@ -55,7 +55,7 @@ const mockOpportunities = [
     company: "CloudScale Inc",
     type: "Internship",
     location: "San Francisco, CA",
-    salary: "$25/hr",
+    salary: "₹25/hr",
     description:
       "Help scale our Go microservices handling millions of concurrent requests daily.",
     tags: ["Go", "Kubernetes", "AWS"],

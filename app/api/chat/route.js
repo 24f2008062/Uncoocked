@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import Pusher from "pusher";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID,

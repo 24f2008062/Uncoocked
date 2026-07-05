@@ -112,7 +112,7 @@ export default function AnalyticsPage({ params }) {
         </div>
         <div className="bg-dark-card border border-dark-border p-5 rounded-2xl">
           <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold text-gray-400">Revenue</span><TrendingUp className="w-4 h-4 text-amber-400" /></div>
-          <div className="text-3xl font-black text-white">$2,625</div>
+          <div className="text-3xl font-black text-white">₹2,625</div>
           <div className="text-[10px] text-emerald-400 mt-1">↑ 15% vs last period</div>
         </div>
       </div>

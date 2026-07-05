@@ -70,7 +70,7 @@ export default function LoginPage() {
             </span>
           </Link>
           <h2 className="text-2xl font-black text-white tracking-tight">
-            Sign In to Campus OS
+            Sign In to Uncooked
           </h2>
           <p className="mt-2 text-xs text-gray-400">
             Authorize your credentials to sign in.

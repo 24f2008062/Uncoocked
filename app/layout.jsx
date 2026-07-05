@@ -4,7 +4,6 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { UserProvider } from "@/app/context/UserContext";
 import { NextAuthProvider } from "@/app/context/NextAuthProvider";
-import SplashScreen from "./components/SplashScreen";
 import SessionMonitor from "./components/SessionMonitor";
 
 const geistSans = Geist({
@@ -31,7 +30,6 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-black text-white transition-colors duration-300">
-        <SplashScreen />
         <NextAuthProvider>
           <UserProvider>
             <SessionMonitor />
