@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import TwinLayout from "@/app/components/TwinLayout";
-import EventsExplorer, { mockEvents } from "@/app/components/EventsExplorer";
-import RecommendedEvents from "@/app/components/RecommendedEvents";
+import TwinLayout from "@/app/components/layout/TwinLayout";
+import EventsExplorer, { mockEvents } from "@/app/components/explorer/EventsExplorer";
+import RecommendedEvents from "@/app/components/event/RecommendedEvents";
 import { useUser } from "@/app/context/UserContext";
 
 export default function EventPage() {

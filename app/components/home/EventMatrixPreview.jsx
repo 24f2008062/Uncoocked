@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Search, Calendar, Tag, Check, Terminal } from "lucide-react";
-import RegisterModal from "../RegisterModal";
+import RegisterModal from "@/app/components/event/RegisterModal";
 
 const INITIAL_MOCK_EVENTS = [
   {

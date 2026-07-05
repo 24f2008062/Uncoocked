@@ -6,7 +6,7 @@ import { useUser } from "@/app/context/UserContext";
 import { CITY_ZONES } from "@/app/config/cities";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import ImageCropper from "@/app/components/ImageCropper";
+import ImageCropper from "@/app/components/ui/ImageCropper";
 
 const BANNER_PRESETS = [
   {
@@ -383,7 +383,7 @@ function HostEventForm() {
               {newTicketType === "Paid" && (
                 <div className="space-y-2 animate-fadeIn">
                   <label className="block text-xs uppercase font-bold text-gray-500">
-                    Ticket Price ($)
+                    Ticket Price (₹)
                   </label>
                   <input
                     required

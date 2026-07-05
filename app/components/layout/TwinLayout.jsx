@@ -5,14 +5,14 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/app/context/UserContext";
 import { Share, Bookmark, Flag, ArrowLeft } from "lucide-react";
-import BulletinBoard from "./BulletinBoard";
-import RegisterModal from "./RegisterModal";
-import RegistrationCard from "./RegistrationCard";
-import EventChat from "./EventChat";
+import BulletinBoard from "@/app/components/event/BulletinBoard";
+import RegisterModal from "@/app/components/event/RegisterModal";
+import RegistrationCard from "@/app/components/event/RegistrationCard";
+import EventChat from "@/app/components/event/EventChat";
 
 // Lazy load heavy components
-const EventDescription = dynamic(() => import('./EventDescription'), { ssr: false });
-const RecommendedEvents = dynamic(() => import('./RecommendedEvents'), { ssr: false });
+const EventDescription = dynamic(() => import("@/app/components/event/EventDescription"), { ssr: false });
+const RecommendedEvents = dynamic(() => import("@/app/components/event/RecommendedEvents"), { ssr: false });
 
 export default function TwinLayout({ event, onBack, chatUserData, selectedEventId }) {
   const [modalOpen, setModalOpen] = useState(false);

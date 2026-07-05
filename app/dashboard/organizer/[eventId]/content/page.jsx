@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { Save, Image as ImageIcon, History, Eye, Layout } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import ImageCropper from "@/app/components/ImageCropper";
+import ImageCropper from "@/app/components/ui/ImageCropper";
 
 export default function ContentEditorPage({ params }) {
   const unwrappedParams = use(params);

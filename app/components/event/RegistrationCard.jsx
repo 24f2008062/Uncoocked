@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { formatDistanceToNow, isPast } from "date-fns";
-import TicketModal from "./TicketModal";
+import TicketModal from "@/app/components/event/TicketModal";
 
 export default function RegistrationCard({ 
   event, 
@@ -106,7 +106,7 @@ export default function RegistrationCard({
         <div className="space-y-6 z-10">
           <div className="pb-4 border-b border-dark-border">
             <h3 className="text-2xl font-black text-white">
-              {event.ticketType === "Paid" ? `$${event.price}` : "Free"}
+              {event.ticketType === "Paid" ? `₹${event.price}` : "Free"}
             </h3>
             <p className="text-xs text-gray-400 mt-1">General Admission</p>
           </div>

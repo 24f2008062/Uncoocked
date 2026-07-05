@@ -12,13 +12,30 @@ export default function ContactPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setStatus("sending");
-    // Simulate API request
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setStatus("success");
-    setName("");
-    setEmail("");
-    setMessage("");
-    setTimeout(() => setStatus("idle"), 4000);
+    
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, role, message }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      setStatus("success");
+      setName("");
+      setEmail("");
+      setMessage("");
+      setTimeout(() => setStatus("idle"), 4000);
+    } catch (error) {
+      console.error(error);
+      setStatus("error");
+      alert("Failed to send your message. Please try again later.");
+    }
   }
 
   return (
