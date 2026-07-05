@@ -79,6 +79,7 @@ export default function ReviewSection() {
                   <button
                     key={star}
                     type="button"
+                    suppressHydrationWarning={true}
                     onClick={() => setRating(star)}
                     className="text-sm transition-transform active:scale-90"
                   >
@@ -100,6 +101,7 @@ export default function ReviewSection() {
             <button
               type="submit"
               disabled={submitting}
+              suppressHydrationWarning={true}
               className="w-full py-1.5 bg-[#A855F7] hover:bg-[#9333EA] text-white text-[11px] font-semibold rounded-lg transition-all active:scale-95 disabled:opacity-50"
             >
               {submitting ? "Publishing..." : "Submit Review"}
