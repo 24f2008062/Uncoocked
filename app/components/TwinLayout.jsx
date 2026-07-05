@@ -24,6 +24,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
   const [bulletins, setBulletins] = useState(event.bulletinUpdates || []);
   const [registrations, setRegistrations] = useState([]);
+  const [localTicketsSold, setLocalTicketsSold] = useState(event._count?.registrations || 0);
   
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastContent, setBroadcastContent] = useState("");
@@ -32,18 +33,42 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
     let isMounted = true;
     const fetchRegistrations = async () => {
       try {
-        const res = await fetch(`/api/registrations?eventId=${event.id}`);
-        const data = await res.json();
-        if (data.success && isMounted) {
-          // Flatten user relation
-          const formatted = data.registrations.map(r => ({
-            ...r,
-            email: r.user.email,
-            name: r.user.name,
-            github: r.user.portfolioUrl,
-            ts: new Date(r.registeredAt).getTime(),
-          }));
-          setRegistrations(formatted);
+        let userRegs = [];
+        if (user) {
+          const userRes = await fetch(`/api/registrations?email=${encodeURIComponent(user)}`);
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            if (userData.success) {
+              userRegs = userData.registrations.filter(r => r.eventId === event.id).map(r => ({
+                ...r,
+                email: r.user?.email || "",
+                name: r.user?.name || "",
+                github: r.user?.portfolioUrl || "",
+                ts: new Date(r.registeredAt).getTime(),
+              }));
+            }
+          }
+        }
+
+        let allRegs = [];
+        if (user && (event.organizer?.email === user || event.organizerId === user)) {
+          const res = await fetch(`/api/registrations?eventId=${event.id}&requesterEmail=${encodeURIComponent(user)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+              allRegs = data.registrations.map(r => ({
+                ...r,
+                email: r.user?.email || "",
+                name: r.user?.name || "",
+                github: r.user?.portfolioUrl || "",
+                ts: new Date(r.registeredAt).getTime(),
+              }));
+            }
+          }
+        }
+
+        if (isMounted) {
+          setRegistrations(allRegs.length > 0 ? allRegs : userRegs);
         }
       } catch (err) {
         console.error(err);
@@ -51,13 +76,12 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
     };
     fetchRegistrations();
     return () => { isMounted = false; };
-  }, [event.id]);
+  }, [event.id, user, event.organizer, event.organizerId]);
 
   async function handleRegister(payload) {
     setModalOpen(false);
     try {
-      const currentTicketsSold = registrations.filter((r) => r.status !== "Waitlisted").length;
-      const isFull = event.capacity ? currentTicketsSold >= event.capacity : false;
+      const isFull = event.capacity ? localTicketsSold >= event.capacity : false;
       const finalStatus = isFull && event.waitlistEnabled ? "Waitlisted" : "Confirmed";
 
       const res = await fetch(`/api/registrations`, {
@@ -82,6 +106,9 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           ts: new Date(data.registration.registeredAt).getTime(),
         };
         setRegistrations((prev) => [...prev, newReg]);
+        if (finalStatus !== "Waitlisted") {
+          setLocalTicketsSold(prev => prev + 1);
+        }
         setLocalUserEmail(user || payload.email);
       }
     } catch (err) {
@@ -103,6 +130,9 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
       if (!res.ok) throw new Error("Failed to cancel");
 
       setRegistrations((prev) => prev.filter((r) => r.id !== regToCancel.id));
+      if (regToCancel.status !== "Waitlisted") {
+        setLocalTicketsSold(prev => Math.max(0, prev - 1));
+      }
       if (!user) setLocalUserEmail(null);
     } catch (err) {
       console.error(err);
@@ -150,7 +180,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
   const userRegistration = registrations.find((r) => r.email === activeEmail);
   const isRegistered = !!userRegistration;
 
-  const ticketsSold = registrations.filter((r) => r.status !== "Waitlisted").length;
+  const ticketsSold = localTicketsSold;
   const remainingCapacity = event.capacity ? Math.max(0, event.capacity - ticketsSold) : null;
   const isSoldOut = event.capacity ? remainingCapacity === 0 : false;
   const isWaitlistOnly = isSoldOut && event.waitlistEnabled;
