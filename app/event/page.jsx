@@ -35,6 +35,13 @@ export default function EventPage() {
     loadEvents();
   }, []);
 
+  // Force scroll the page back to the absolute top (0,0) whenever a student changes selected events
+  useEffect(() => {
+    if (selectedEventId && typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, [selectedEventId]);
+
   // 1. Sync state with URL parameter on mount & handle browser back arrow navigation
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -42,9 +49,8 @@ export default function EventPage() {
     const handleLocationChange = () => {
       const params = new URLSearchParams(window.location.search);
       const id = params.get("id");
-      setSelectedEventId(id); // Synchronizes the view when browser back/forward buttons are pressed
+      setSelectedEventId(id);
 
-      // If going back to all events list view, auto-scroll gracefully to explorer area
       if (!id) {
         setTimeout(() => {
           const explorerElement = document.getElementById("events-explorer-anchor");
@@ -55,7 +61,6 @@ export default function EventPage() {
       }
     };
 
-    // Check URL parameters on mount
     const params = new URLSearchParams(window.location.search);
     const initialId = params.get("id");
     if (initialId) {
@@ -72,26 +77,34 @@ export default function EventPage() {
       }, 150);
     }
 
-    // Attach native popstate listener for the top-left browser back arrow button
     window.addEventListener("popstate", handleLocationChange);
     return () => window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
-  // 2. Custom function to safely open an event and alter browser history stack state
   const handleSelectEvent = (id) => {
     setSelectedEventId(id);
     if (typeof window !== "undefined" && window.history.pushState) {
-      // Pushes a history entry state so the browser back button registers it as a page forward movement
       window.history.pushState({ eventId: id }, "", `/event?id=${id}`);
     }
   };
 
-  // If an event is selected, render TwinLayout details page view
   if (selectedEventId) {
     const selectedEvent = allEvents.find((e) => e.id === selectedEventId);
     if (selectedEvent) {
+      const userEmail = user?.email || (typeof user === "string" ? user : "anonymous@student.com");
+      const currentUserId = user?.id || null;
+      
+      // Foolproof Normalized Anti-Scam Check: Validates ID strings and organizer relationship chains completely
+      const isOrganizerUser = !!(
+        (selectedEvent.organizerId && currentUserId && String(selectedEvent.organizerId) === String(currentUserId)) ||
+        (selectedEvent.organizer?.id && currentUserId && String(selectedEvent.organizer.id) === String(currentUserId)) ||
+        (selectedEvent.organizer?.email && userEmail && String(selectedEvent.organizer.email).toLowerCase() === String(userEmail).toLowerCase()) ||
+        (selectedEvent.organizerId && String(selectedEvent.organizerId).toLowerCase() === String(userEmail).toLowerCase())
+      );
+
       const eventData = {
         ...selectedEvent,
+        isHost: isOrganizerUser, // Injected flag passed down to hide the action triggers cleanly
         schedule:
           selectedEvent.schedule ||
           `
@@ -114,7 +127,8 @@ export default function EventPage() {
 
       const chatUserData = {
         name: user?.fullName || user?.name || "Student",
-        email: user?.email || (typeof user === "string" ? user : "anonymous@student.com"),
+        email: userEmail,
+        isHost: isOrganizerUser,
       };
 
       return (
@@ -137,8 +151,6 @@ export default function EventPage() {
   return (
     <div className="bg-[#000000] w-full min-h-screen pt-6 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
-        
-        {/* Page Header */}
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Events
@@ -154,7 +166,7 @@ export default function EventPage() {
           events={allEvents}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onSelectEvent={handleSelectEvent} // Swapped to our new route history action
+          onSelectEvent={handleSelectEvent}
           recommendedSection={
             user && (
               <RecommendedEvents 
@@ -168,3 +180,5 @@ export default function EventPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

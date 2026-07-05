@@ -10,6 +10,7 @@ import DashboardPreview from "./components/home/DashboardPreview";
 import OpportunitiesPreview from "./components/home/OpportunitiesPreview";
 import Partners from "./components/home/Partners";
 import CTA from "./components/home/CTA";
+import ReviewSection from "@/app/components/home/ReviewSection";
 
 export default function Home() {
   return (
@@ -47,6 +48,11 @@ export default function Home() {
 
       {/* 10. Final CTA Conversion Section */}
       <CTA />
+
+      {/* 11. Horizontal Scrollable Student Review Strip */}
+      <div className="w-full">
+        <ReviewSection />
+      </div>
     </div>
   );
 }
