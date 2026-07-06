@@ -112,7 +112,7 @@ export default function AnalyticsPage({ params }) {
         </div>
         <div className="bg-dark-card border border-dark-border p-5 rounded-2xl">
           <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold text-gray-400">Revenue</span><TrendingUp className="w-4 h-4 text-amber-400" /></div>
-          <div className="text-3xl font-black text-white">$2,625</div>
+          <div className="text-3xl font-black text-white">₹2,625</div>
           <div className="text-[10px] text-emerald-400 mt-1">↑ 15% vs last period</div>
         </div>
       </div>
@@ -232,7 +232,7 @@ export default function AnalyticsPage({ params }) {
                 <XAxis dataKey="date" stroke="#666" tick={{fill: '#888', fontSize: 10}} tickLine={false} axisLine={false} />
                 <YAxis stroke="#666" tick={{fill: '#888', fontSize: 10}} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="revenue" name="Revenue ($)" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b', strokeWidth: 0, r: 4 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="revenue" name="Revenue (₹)" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b', strokeWidth: 0, r: 4 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

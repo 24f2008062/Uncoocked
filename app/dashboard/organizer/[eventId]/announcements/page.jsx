@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { Megaphone, Plus, Trash2, Edit3, Pin, Eye, EyeOff } from "lucide-react";
+import { Megaphone, Plus, Trash2, Edit3, Pin, Eye, EyeOff, XCircle } from "lucide-react";
 
 export default function AnnouncementsPage({ params }) {
   const unwrappedParams = use(params);
@@ -17,34 +17,61 @@ export default function AnnouncementsPage({ params }) {
   const [visibility, setVisibility] = useState("All");
 
   useEffect(() => {
-    // Mock fetch
-    setTimeout(() => {
-      setAnnouncements([
-        { id: "ann-1", title: "Welcome to the Event!", content: "We are so excited to see you all.", visibility: "All", isPinned: true, date: "2026-06-15" },
-        { id: "ann-2", title: "Schedule Update", content: "The keynote has been moved to 10:30 AM.", visibility: "Registered Users", isPinned: false, date: "2026-06-16" },
-      ]);
-      setLoading(false);
-    }, 400);
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await fetch(`/api/events/${eventId}/announcements`);
+        const data = await res.json();
+        if (res.ok) {
+          setAnnouncements(data.announcements || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch announcements:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnnouncements();
   }, [eventId]);
 
-  const handlePost = (e) => {
+  const handlePost = async (e) => {
     e.preventDefault();
     if (!title || !message) return;
     
-    const newAnn = {
-      id: `ann-${Date.now()}`,
-      title,
-      content: message,
-      visibility,
-      isPinned: false,
-      date: new Date().toISOString().split("T")[0]
-    };
-    
-    setAnnouncements([newAnn, ...announcements]);
-    setTitle("");
-    setMessage("");
-    setVisibility("All");
-    setShowForm(false);
+    try {
+      const res = await fetch(`/api/events/${eventId}/announcements`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          content: message,
+          visibility,
+          isPinned: false
+        })
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.announcement) {
+        // Formatting to match the expected UI structure
+        const newAnn = {
+          id: data.announcement.id,
+          title: data.announcement.title,
+          content: data.announcement.content,
+          visibility: visibility,
+          isPinned: false,
+          date: new Date(data.announcement.postedAt || Date.now()).toISOString().split("T")[0]
+        };
+        setAnnouncements([newAnn, ...announcements]);
+        setTitle("");
+        setMessage("");
+        setVisibility("All");
+        setShowForm(false);
+      } else {
+        alert("Failed to post announcement");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error posting announcement");
+    }
   };
 
   const deleteAnnouncement = (id) => {

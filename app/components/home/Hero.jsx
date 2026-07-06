@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Play, Terminal, Zap, Users } from "lucide-react";
-import CountUp from "../CountUp";
+import CountUp from "@/app/components/ui/CountUp";
 
 export default function Hero() {
   return (

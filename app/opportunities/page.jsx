@@ -1,6 +1,6 @@
 "use client";
 
-import OpportunitiesBoard from "@/app/components/OpportunitiesBoard";
+import OpportunitiesBoard from "@/app/components/explorer/OpportunitiesBoard";
 
 export default function OpportunitiesPage() {
   return (

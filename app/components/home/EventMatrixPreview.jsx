@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Search, Calendar, Tag, Check, Terminal } from "lucide-react";
-import RegisterModal from "../RegisterModal";
+import RegisterModal from "@/app/components/event/RegisterModal";
 
 const INITIAL_MOCK_EVENTS = [
   {
@@ -13,7 +13,7 @@ const INITIAL_MOCK_EVENTS = [
     category: "Fests",
     date: "June 20-22, 2026",
     registrations: 412,
-    prizePool: "Trophies + $20k",
+    prizePool: "Trophies + ₹20k",
     desc: "Inter-college cultural showcase. Compete in street plays, battle of bands, classical dance, and fashion shows.",
     bannerUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=60",
   },
@@ -63,7 +63,7 @@ const INITIAL_MOCK_EVENTS = [
     category: "Hackathons",
     date: "June 20-22, 2026",
     registrations: 145,
-    prizePool: "$50,000",
+    prizePool: "₹50,000",
     desc: "Build functional prototypes, join projects teams, and pitch ideas directly to ecosystem VC funds.",
     bannerUrl: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&auto=format&fit=crop&q=60",
   },
@@ -285,6 +285,7 @@ export default function EventMatrixPreview() {
                       ) : (
                         <button
                           onClick={() => handleOpenRegister(ev)}
+                          suppressHydrationWarning={true}
                           className="px-4 py-1.5 bg-[#A855F7] text-white text-[11px] font-semibold rounded-full hover:bg-[#C084FC] hover:-translate-y-px hover:shadow-md transition-all duration-150 cursor-pointer"
                         >
                           Secure Ticket

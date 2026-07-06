@@ -1,4 +1,4 @@
-import TeamSection from "@/app/components/TeamSection";
+import TeamSection from "@/app/components/ui/TeamSection";
 
 export const metadata = {
   title: "About Uncooked | The Zero-Noise OS",

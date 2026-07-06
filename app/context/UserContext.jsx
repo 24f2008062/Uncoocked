@@ -30,7 +30,17 @@ export function UserProvider({ children }) {
         router.push("/onboarding");
       }
     } else if (status === "unauthenticated") {
-      // NextAuth finished loading and confirmed no session
+      // Check for a local test session first
+      if (typeof window !== "undefined") {
+        const localSession = localStorage.getItem("user_session");
+        if (localSession) {
+          setUserState(localSession);
+          setIsLoading(false);
+          return; // Skip clearing the state
+        }
+      }
+
+      // NextAuth finished loading and confirmed no session and no local session
       // Strictly clear any local fallback sessions to prevent stale access
       setUserState(null);
       if (typeof window !== "undefined") {

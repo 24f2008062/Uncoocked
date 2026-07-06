@@ -6,7 +6,7 @@ import { useUser } from "@/app/context/UserContext";
 import { CITY_ZONES } from "@/app/config/cities";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import ImageCropper from "@/app/components/ImageCropper";
+import ImageCropper from "@/app/components/ui/ImageCropper";
 
 const BANNER_PRESETS = [
   {
@@ -32,7 +32,7 @@ const BANNER_PRESETS = [
 ];
 
 function HostEventForm() {
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
@@ -108,6 +108,12 @@ function HostEventForm() {
     }
   }, [isEditing, editId]);
 
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login?callbackUrl=/dashboard/organizer/new");
+    }
+  }, [isLoading, user, router]);
+
   const handleHostNewEvent = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -164,6 +170,14 @@ function HostEventForm() {
       setSubmitting(false);
     }
   };
+
+  if (isLoading || (!user && !loadingEvent)) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center py-12 px-4">
+        <div className="w-8 h-8 border-4 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (loadingEvent) {
     return (
@@ -230,15 +244,14 @@ function HostEventForm() {
               </div>
               <div className="space-y-2">
                 <label className="block text-xs uppercase font-bold text-gray-500">
-                  Event Date
+                  Event Date and Time
                 </label>
                 <input
                   required
-                  type="text"
-                  placeholder="e.g. July 24-26, 2026"
+                  type="datetime-local"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  className="w-full px-4 py-3 bg-black border border-dark-border rounded-lg text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple"
+                  className="w-full px-4 py-3 bg-black border border-dark-border rounded-lg text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple [color-scheme:dark]"
                 />
               </div>
             </div>
@@ -307,7 +320,7 @@ function HostEventForm() {
 
             <div className="space-y-2">
               <label className="block text-xs uppercase font-bold text-gray-500">
-                Google Maps URL
+                Google Maps URL <span className="text-red-500">*</span>
               </label>
               <input
                 required
@@ -370,7 +383,7 @@ function HostEventForm() {
               {newTicketType === "Paid" && (
                 <div className="space-y-2 animate-fadeIn">
                   <label className="block text-xs uppercase font-bold text-gray-500">
-                    Ticket Price ($)
+                    Ticket Price (₹)
                   </label>
                   <input
                     required

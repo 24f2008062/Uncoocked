@@ -39,7 +39,7 @@ export default function MobileMockup() {
                 Annual Cultural Fest 2026
               </h4>
               <p className="text-[9px] text-gray-400 mt-1">
-                Main Campus Arena • $20k Trophies
+                Main Campus Arena • ₹20k Trophies
               </p>
             </div>
             <div className="h-1.5 w-full bg-black rounded-full overflow-hidden border border-dark-border">
@@ -66,7 +66,7 @@ export default function MobileMockup() {
                       Frontend Intern
                     </span>
                     <span className="text-[7px] text-emerald-400 font-mono">
-                      $20/hr
+                      ₹20/hr
                     </span>
                   </div>
                   <p className="text-[8px] text-gray-300">
@@ -81,7 +81,7 @@ export default function MobileMockup() {
                       Smart Contract Bounty
                     </span>
                     <span className="text-[7px] text-emerald-400 font-mono">
-                      $500+
+                      ₹500+
                     </span>
                   </div>
                   <p className="text-[8px] text-gray-300">

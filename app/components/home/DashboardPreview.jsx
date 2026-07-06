@@ -104,6 +104,7 @@ export default function DashboardPreview() {
                 <div className="space-y-2 text-[11px] font-mono">
                   <input
                     disabled
+                    suppressHydrationWarning={true}
                     placeholder="Title: e.g. Pizza Room update"
                     className="block w-full rounded-lg border border-white/8 bg-[#111111] px-3 py-2 text-[10px] text-white/50 placeholder:text-white/20 focus:outline-none"
                   />
