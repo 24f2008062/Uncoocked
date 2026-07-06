@@ -1,8 +1,9 @@
 # Uncooked Portal - User Manual
-**Version**: 1.0.0
-**Prepared For**: Client
+**Version**: 1.0.0 (Prototype) 
+**Prepared For**: UnfusedZ
 **Prepared By**: Uncooked Development Team
-**Date**: July 2026
+**Date**: 6 July 2026
+**Acess via** : unfusedz.admin@gmail.com (Google sing in)
 
 ---
 
