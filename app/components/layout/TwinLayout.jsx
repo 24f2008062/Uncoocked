@@ -5,14 +5,14 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/app/context/UserContext";
 import { Share, Bookmark, Flag, ArrowLeft } from "lucide-react";
-import BulletinBoard from "./BulletinBoard";
-import RegisterModal from "./RegisterModal";
-import RegistrationCard from "./RegistrationCard";
-import EventChat from "./EventChat";
+import BulletinBoard from "@/app/components/event/BulletinBoard";
+import RegisterModal from "@/app/components/event/RegisterModal";
+import RegistrationCard from "@/app/components/event/RegistrationCard";
+import EventChat from "@/app/components/event/EventChat";
 
 // Lazy load heavy components
-const EventDescription = dynamic(() => import('./EventDescription'), { ssr: false });
-const RecommendedEvents = dynamic(() => import('./RecommendedEvents'), { ssr: false });
+const EventDescription = dynamic(() => import("@/app/components/event/EventDescription"), { ssr: false });
+const RecommendedEvents = dynamic(() => import("@/app/components/event/RecommendedEvents"), { ssr: false });
 
 export default function TwinLayout({ event, onBack, chatUserData, selectedEventId }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -24,26 +24,54 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
   const [bulletins, setBulletins] = useState(event.bulletinUpdates || []);
   const [registrations, setRegistrations] = useState([]);
+  const [localTicketsSold, setLocalTicketsSold] = useState(event._count?.registrations || 0);
   
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastContent, setBroadcastContent] = useState("");
+
+  // Determine if this user is explicitly the organizer of this page
+  const isCurrentlyHosting = event.isHost || (user && (event.organizer?.email === user || event.organizerId === user));
 
   useEffect(() => {
     let isMounted = true;
     const fetchRegistrations = async () => {
       try {
-        const res = await fetch(`/api/registrations?eventId=${event.id}`);
-        const data = await res.json();
-        if (data.success && isMounted) {
-          // Flatten user relation
-          const formatted = data.registrations.map(r => ({
-            ...r,
-            email: r.user.email,
-            name: r.user.name,
-            github: r.user.portfolioUrl,
-            ts: new Date(r.registeredAt).getTime(),
-          }));
-          setRegistrations(formatted);
+        let userRegs = [];
+        if (user) {
+          const userRes = await fetch(`/api/registrations?email=${encodeURIComponent(user)}`);
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            if (userData.success) {
+              userRegs = userData.registrations.filter(r => r.eventId === event.id).map(r => ({
+                ...r,
+                email: r.user?.email || "",
+                name: r.user?.name || "",
+                github: r.user?.portfolioUrl || "",
+                ts: new Date(r.registeredAt).getTime(),
+              }));
+            }
+          }
+        }
+
+        let allRegs = [];
+        if (user && isCurrentlyHosting) {
+          const res = await fetch(`/api/registrations?eventId=${event.id}&requesterEmail=${encodeURIComponent(user)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+              allRegs = data.registrations.map(r => ({
+                ...r,
+                email: r.user?.email || "",
+                name: r.user?.name || "",
+                github: r.user?.portfolioUrl || "",
+                ts: new Date(r.registeredAt).getTime(),
+              }));
+            }
+          }
+        }
+
+        if (isMounted) {
+          setRegistrations(allRegs.length > 0 ? allRegs : userRegs);
         }
       } catch (err) {
         console.error(err);
@@ -51,13 +79,16 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
     };
     fetchRegistrations();
     return () => { isMounted = false; };
-  }, [event.id]);
+  }, [event.id, user, event.organizer, event.organizerId, isCurrentlyHosting]);
 
   async function handleRegister(payload) {
+    if (isCurrentlyHosting) {
+      alert("Hosts are structurally restricted from registering for their own events.");
+      return;
+    }
     setModalOpen(false);
     try {
-      const currentTicketsSold = registrations.filter((r) => r.status !== "Waitlisted").length;
-      const isFull = event.capacity ? currentTicketsSold >= event.capacity : false;
+      const isFull = event.capacity ? localTicketsSold >= event.capacity : false;
       const finalStatus = isFull && event.waitlistEnabled ? "Waitlisted" : "Confirmed";
 
       const res = await fetch(`/api/registrations`, {
@@ -82,6 +113,9 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           ts: new Date(data.registration.registeredAt).getTime(),
         };
         setRegistrations((prev) => [...prev, newReg]);
+        if (finalStatus !== "Waitlisted") {
+          setLocalTicketsSold(prev => prev + 1);
+        }
         setLocalUserEmail(user || payload.email);
       }
     } catch (err) {
@@ -103,6 +137,9 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
       if (!res.ok) throw new Error("Failed to cancel");
 
       setRegistrations((prev) => prev.filter((r) => r.id !== regToCancel.id));
+      if (regToCancel.status !== "Waitlisted") {
+        setLocalTicketsSold(prev => Math.max(0, prev - 1));
+      }
       if (!user) setLocalUserEmail(null);
     } catch (err) {
       console.error(err);
@@ -128,8 +165,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
       const data = await res.json();
       if (data.success && data.bulletin) {
-        // Assume API returns the new bulletin with date and id properly formatted.
-        // Or we can just mock the date here if it doesn't return full details formatted exactly
         setBulletins((prev) => [{
           id: data.bulletin.id,
           date: new Date(data.bulletin.postedAt).toISOString().split("T")[0],
@@ -150,7 +185,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
   const userRegistration = registrations.find((r) => r.email === activeEmail);
   const isRegistered = !!userRegistration;
 
-  const ticketsSold = registrations.filter((r) => r.status !== "Waitlisted").length;
+  const ticketsSold = localTicketsSold;
   const remainingCapacity = event.capacity ? Math.max(0, event.capacity - ticketsSold) : null;
   const isSoldOut = event.capacity ? remainingCapacity === 0 : false;
   const isWaitlistOnly = isSoldOut && event.waitlistEnabled;
@@ -163,7 +198,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to All Events
           </button>
         )}
-
 
         {/* 70/30 Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 lg:gap-12 items-start">
@@ -191,7 +225,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                   </h1>
                 </div>
               </div>
-
             </div>
 
             <EventDescription event={event} />
@@ -226,21 +259,34 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
             {activeSidebarTab === "amenities" ? (
               <div className="space-y-8">
-                <RegistrationCard 
-                  event={event}
-                  user={user}
-                  userRegistration={userRegistration}
-                  isRegistered={isRegistered}
-                  isSoldOut={isSoldOut}
-                  isWaitlistOnly={isWaitlistOnly}
-                  remainingCapacity={remainingCapacity}
-                  ticketsSold={ticketsSold}
-                  onRegisterClick={() => setModalOpen(true)}
-                  onCancelClick={handleCancelRegistration}
-                />
+                {/* Condition Layer: Hide core registration box interface components if user is the structural host */}
+                {isCurrentlyHosting ? (
+                  <div className="bg-[#111111] border border-white/8 rounded-xl p-5 text-center space-y-2 shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mx-auto text-white/60 text-xs font-bold">
+                      🛡️
+                    </div>
+                    <h4 className="text-white font-semibold text-[13px]">Creator Overview Mode</h4>
+                    <p className="text-white/40 text-[11px] leading-relaxed max-w-[210px] mx-auto">
+                      You are hosting this event. Manage announcements, broad updates, or view member records directly below.
+                    </p>
+                  </div>
+                ) : (
+                  <RegistrationCard 
+                    event={event}
+                    user={user}
+                    userRegistration={userRegistration}
+                    isRegistered={isRegistered}
+                    isSoldOut={isSoldOut}
+                    isWaitlistOnly={isWaitlistOnly}
+                    remainingCapacity={remainingCapacity}
+                    ticketsSold={ticketsSold}
+                    onRegisterClick={() => setModalOpen(true)}
+                    onCancelClick={handleCancelRegistration}
+                  />
+                )}
 
                 {/* Organizer Broadcast Tool */}
-                {user && (event.organizer?.email === user || event.organizerId === user) && (
+                {user && isCurrentlyHosting && (
                   <div className="bg-[#111111] border border-white/8 rounded-xl p-4 space-y-3 shadow-sm">
                     <h3 className="text-[12px] font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-white/6 pb-2">
                       <span className="text-[#A855F7]">⚡</span> Broadcast Update
@@ -263,8 +309,8 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                   </div>
                 )}
 
-                {/* Announcement Board - Only for Registered Users or Organizers */}
-                {(isRegistered || (user && (event.organizer?.email === user || event.organizerId === user))) && (
+                {/* Announcement Board - Open for Registrants OR Organizers */}
+                {(isRegistered || (user && isCurrentlyHosting)) && (
                   <div className="bg-[#111111] rounded-xl border border-white/8 p-1 shadow-sm">
                     <BulletinBoard updates={bulletins} />
                   </div>
@@ -289,10 +335,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                     <p className="text-white/40 text-[12px] max-w-[200px] mb-4 leading-relaxed">
                       Sign in to join the conversation and connect with others.
                     </p>
-                    <a 
-                      href="/login" 
-                      className="btn-primary text-[12px] px-6"
-                    >
+                    <a href="/login" className="btn-primary text-[12px] px-6">
                       Sign In
                     </a>
                   </div>
@@ -307,7 +350,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           <div className="pt-16 border-t border-dark-border/40">
             <RecommendedEvents userEmail={user} onSelectEvent={(id) => {
               if (onBack) onBack();
-              // In real app, push router `/event?id=${id}`
             }} />
           </div>
         )}

@@ -7,7 +7,7 @@ export default function OpportunitiesPreview() {
     {
       badge: "Internship",
       badgeClass: "bg-[#A855F7]/10 text-[#C084FC] border-[#A855F7]/20",
-      rate: "$20/hr",
+      rate: "₹20/hr",
       title: "Frontend Developer Intern",
       company: "NeonTech Labs",
       location: "Remote",
@@ -15,7 +15,7 @@ export default function OpportunitiesPreview() {
     {
       badge: "Bounty",
       badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-      rate: "$500 - $2000",
+      rate: "₹500 - ₹2000",
       title: "Smart Contract Auditing Bounty",
       company: "DeFi Protocols",
       location: "Remote",
@@ -70,7 +70,7 @@ export default function OpportunitiesPreview() {
                     <MapPin className="h-3 w-3 shrink-0" />
                     <span>{item.location}</span>
                   </div>
-                  <button className="px-4 py-1.5 bg-[#1a1a1a] hover:bg-[#A855F7] border border-white/10 hover:border-[#A855F7] text-white/70 hover:text-white text-[11px] font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-150">
+                  <button suppressHydrationWarning={true} className="px-4 py-1.5 bg-[#1a1a1a] hover:bg-[#A855F7] border border-white/10 hover:border-[#A855F7] text-white/70 hover:text-white text-[11px] font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-150">
                     Apply <ExternalLink className="h-3 w-3" />
                   </button>
                 </div>

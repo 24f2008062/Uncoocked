@@ -23,6 +23,7 @@ export async function PUT(request, context) {
         capacity: data.capacity ? parseInt(data.capacity) : 100,
         waitlistEnabled: data.waitlistEnabled ?? true,
         archived: data.archived !== undefined ? data.archived : undefined,
+        googleMapsUrl: data.googleMapsUrl,
       },
     });
 

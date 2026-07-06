@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useUser } from "@/app/context/UserContext";
 import Link from "next/link";
-import TicketModal from "@/app/components/TicketModal";
-import { mockEvents } from "@/app/components/EventsExplorer";
+import TicketModal from "@/app/components/event/TicketModal";
+import { mockEvents } from "@/app/components/explorer/EventsExplorer";
 import {
   Calendar,
   MapPin,

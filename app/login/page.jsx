@@ -16,7 +16,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -39,11 +38,7 @@ export default function LoginPage() {
       // Simulate network authentication delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
       login(email, selectedRole);
-      setSuccess(true);
-      // Delay routing slightly to show success visual state
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 500);
+      router.push("/dashboard");
     } catch (err) {
       setError("Authentication failed. Please verify credentials.");
       setLoading(false);
@@ -75,7 +70,7 @@ export default function LoginPage() {
             </span>
           </Link>
           <h2 className="text-2xl font-black text-white tracking-tight">
-            Sign In to Campus OS
+            Sign In to Uncooked
           </h2>
           <p className="mt-2 text-xs text-gray-400">
             Authorize your credentials to sign in.
@@ -101,7 +96,7 @@ export default function LoginPage() {
                 placeholder="student@campus.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading || success}
+                disabled={loading}
                 className="block w-full rounded-md border border-dark-border bg-black px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple disabled:opacity-50"
               />
             </div>
@@ -131,7 +126,7 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading || success}
+                disabled={loading}
                 className="block w-full rounded-md border border-dark-border bg-black px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple disabled:opacity-50"
               />
             </div>
@@ -144,16 +139,10 @@ export default function LoginPage() {
             </div>
           )}
 
-          {success && (
-            <div className="text-[10px] text-green-300 bg-green-950/20 border border-green-800/40 p-2.5 rounded-md">
-              ✓ Credentials authorized. Redirecting to Campus OS...
-            </div>
-          )}
-
           {/* Submit Trigger */}
           <button
             type="submit"
-            disabled={loading || success}
+            disabled={loading}
             className="w-full py-2.5 bg-neon-purple text-white font-bold text-xs rounded-md hover:bg-neon-purple/95 transition-all shadow-neon hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
           >
             {loading ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import ConversionModal from "./ConversionModal";
+import ConversionModal from "@/app/components/ui/ConversionModal";
 
 export default function BulletinBoard({ updates, onAddUpdate }) {
   const [modalOpen, setModalOpen] = useState(false);

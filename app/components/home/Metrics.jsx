@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Users, Calendar, Award, CheckCircle } from "lucide-react";
-import CountUp from "../CountUp";
+import CountUp from "@/app/components/ui/CountUp";
 
 export default function Metrics() {
   const stats = [

@@ -65,7 +65,7 @@ const eventItems = [
     categoryName: "Hackathons",
     title: "Campus Innovation Hackathon 2026",
     summary:
-      "Build prototypes, join project teams, and pitch ideas for a $50k prize pool.",
+      "Build prototypes, join project teams, and pitch ideas for a ₹50k prize pool.",
     detailLink: "/event",
   },
   {

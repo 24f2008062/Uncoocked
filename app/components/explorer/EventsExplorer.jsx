@@ -34,11 +34,11 @@ export const mockEvents = [
 - **5:00 PM** - Valedictory & Awards Distribution
     `,
     prizePool: `
-## Total Prizes: $20,000 + Trophies
-- **🥇 Best Cultural Contingent** - Trophy + $5,000
-- **🥈 Runner-up College** - Trophy + $3,000
-- **🎭 Best Street Play Crew** - $2,000
-- **🎸 Battle of Bands Winner** - $3,000
+## Total Prizes: ₹20,000 + Trophies
+- **🥇 Best Cultural Contingent** - Trophy + ₹5,000
+- **🥈 Runner-up College** - Trophy + ₹3,000
+- **🎭 Best Street Play Crew** - ₹2,000
+- **🎸 Battle of Bands Winner** - ₹3,000
     `,
     bulletinUpdates: [
       {
@@ -79,8 +79,8 @@ export const mockEvents = [
     `,
     prizePool: `
 ## Awards & Freshers Titles
-- **👑 Mr. & Ms. Fresher 2026** - $1,000 Gift Vouchers + Sash
-- **🌟 Best Talent Performer** - $500 Voucher
+- **👑 Mr. & Ms. Fresher 2026** - ₹1,000 Gift Vouchers + Sash
+- **🌟 Best Talent Performer** - ₹500 Voucher
     `,
     bulletinUpdates: [
       {
@@ -114,8 +114,8 @@ export const mockEvents = [
     `,
     prizePool: `
 ## Festive Dress & Dance Awards
-- **🥇 Best Dancer (Male & Female)** - $1,000 each + Golden Dandiya Stick
-- **👗 Best Traditional Dress** - $1,000 Voucher
+- **🥇 Best Dancer (Male & Female)** - ₹1,000 each + Golden Dandiya Stick
+- **👗 Best Traditional Dress** - ₹1,000 Voucher
     `,
     bulletinUpdates: [],
     ticketType: "Paid",
@@ -143,7 +143,7 @@ export const mockEvents = [
     prizePool: `
 ## Certificate & Compute Credits
 - Certified completion certificates for all registered student attendees.
-- $200 in OpenAI sandbox API credits.
+- ₹200 in OpenAI sandbox API credits.
     `,
     bulletinUpdates: [],
     ticketType: "Free",
@@ -187,7 +187,7 @@ export const mockEvents = [
     date: "June 20-22, 2026",
     location: "Tech Hub Building, Main Campus",
     description:
-      "Build prototypes, join project teams, and pitch ideas for a $50k prize pool. All skill levels welcome.",
+      "Build prototypes, join project teams, and pitch ideas for a ₹50k prize pool. All skill levels welcome.",
     schedule: `
 ## Day 1 - Friday, June 20
 - **9:00 AM** - Registration & Breakfast
@@ -204,11 +204,11 @@ export const mockEvents = [
 - **4:00 PM** - Judging & Awards Ceremony
     `,
     prizePool: `
-## Total Prize Pool: $50,000
-- **🥇 First Place** - $15,000
-- **🥈 Second Place** - $10,000
-- **🥉 Third Place** - $5,000
-- **Category Winners** - $5,000 each (Mobile, AI/ML, Design)
+## Total Prize Pool: ₹50,000
+- **🥇 First Place** - ₹15,000
+- **🥈 Second Place** - ₹10,000
+- **🥉 Third Place** - ₹5,000
+- **Category Winners** - ₹5,000 each (Mobile, AI/ML, Design)
     `,
     bulletinUpdates: [
       {
