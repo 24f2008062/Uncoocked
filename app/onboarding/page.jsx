@@ -56,7 +56,7 @@ export default function OnboardingPage() {
             console.error("Session update failed", e);
           }
         }
-        router.push("/event");
+        window.location.href = "/event";
       } else {
         console.error("Failed to save interests");
       }
