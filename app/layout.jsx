@@ -5,6 +5,7 @@ import Footer from "@/app/components/layout/Footer";
 import { UserProvider } from "@/app/context/UserContext";
 import { NextAuthProvider } from "@/app/context/NextAuthProvider";
 import SessionMonitor from "@/app/components/dashboard/SessionMonitor";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
             <Footer />
           </UserProvider>
         </NextAuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

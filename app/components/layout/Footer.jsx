@@ -60,7 +60,6 @@ export default function Footer() {
             </ul>
           </div>
 
-
         </div>
 
         {/* Bottom bar */}
