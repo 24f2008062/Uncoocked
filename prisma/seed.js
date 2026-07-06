@@ -5,6 +5,22 @@ const prisma = new PrismaClient({ datasourceUrl: "file:../dev.db" });
 async function main() {
   console.log('Seeding events...');
 
+  console.log('Seeding users...');
+  
+  // Seed a demo user for testing and give them the Organizer role
+  const demoUser = await prisma.user.upsert({
+    where: { email: 'demo@campus.edu' },
+    update: { role: 'Organizer' },
+    create: {
+      email: 'demo@campus.edu',
+      passwordHash: 'dummyhash',
+      fullName: 'Demo Student',
+      role: 'Organizer',
+      interests: JSON.stringify(['AI & Machine Learning', 'Programming']),
+      onboardingCompleted: true
+    }
+  });
+
   // Ensure mock events have appropriate categories and tags for the recommendation engine
   const mockEvents = [
     {
@@ -124,27 +140,13 @@ async function main() {
   ];
 
   for (const eventData of mockEvents) {
+    eventData.organizerId = demoUser.id;
     await prisma.event.upsert({
       where: { id: eventData.id },
       update: eventData,
       create: eventData,
     });
   }
-
-  console.log('Seeding users...');
-  
-  // Seed a demo user for testing
-  await prisma.user.upsert({
-    where: { email: 'demo@campus.edu' },
-    update: {},
-    create: {
-      email: 'demo@campus.edu',
-      passwordHash: 'dummyhash',
-      fullName: 'Demo Student',
-      interests: JSON.stringify(['AI & Machine Learning', 'Programming']),
-      onboardingCompleted: true
-    }
-  });
 
   console.log('Seed completed successfully!');
 }
