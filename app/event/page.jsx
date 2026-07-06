@@ -7,7 +7,7 @@ import RecommendedEvents from "@/app/components/event/RecommendedEvents";
 import { useUser } from "@/app/context/UserContext";
 
 export default function EventPage() {
-  const { user } = useUser();
+  const { user, isAuthenticated } = useUser();
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [allEvents, setAllEvents] = useState([]);
@@ -170,7 +170,7 @@ export default function EventPage() {
           onSearchChange={setSearchQuery}
           onSelectEvent={handleSelectEvent}
           recommendedSection={
-            user && (
+            isAuthenticated && user && (
               <RecommendedEvents 
                 userEmail={typeof user === "string" ? user : user?.email} 
                 onSelectEvent={handleSelectEvent} 

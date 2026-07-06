@@ -21,7 +21,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
   const [localUserEmail, setLocalUserEmail] = useState(null);
   const router = useRouter();
 
-  const { user } = useUser();
+  const { user, isAuthenticated } = useUser();
 
   const [bulletins, setBulletins] = useState(event.bulletinUpdates || []);
   const [registrations, setRegistrations] = useState([]);
@@ -347,7 +347,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
         </div>
 
         {/* Bottom Section - Recommended Events */}
-        {user && (
+        {isAuthenticated && user && (
           <div className="pt-16 border-t border-dark-border/40">
             <RecommendedEvents userEmail={user} onSelectEvent={(id) => {
               if (onBack) onBack();

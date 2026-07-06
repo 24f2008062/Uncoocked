@@ -77,7 +77,7 @@ export function UserProvider({ children }) {
 
   return (
     <UserContext.Provider
-      value={{ user, isLoading, login, signup, logout }}
+      value={{ user, isLoading, login, signup, logout, isAuthenticated: status === "authenticated" }}
     >
       {children}
     </UserContext.Provider>
