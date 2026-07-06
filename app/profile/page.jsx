@@ -85,6 +85,9 @@ export default function ProfilePage() {
             setGithub(profile.github || "");
             setTrack(profile.track || "Fullstack Developer");
             setTeam(profile.team || "");
+            if (profile.interests && profile.interests.length > 0) {
+              setSelectedInterests(profile.interests);
+            }
           }
         } else {
           // Pre-populate with username
@@ -150,6 +153,7 @@ export default function ProfilePage() {
           track,
           team,
           dob,
+          interests: selectedInterests,
         };
         localStorage.setItem(`profile_${user}`, JSON.stringify(payload));
         // Enrich registrations in localStorage matching this email with the updated fullName/track/team
