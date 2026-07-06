@@ -39,27 +39,42 @@ export default function EventChat({ eventId, currentUser }) {
 
     fetchChatHistoryAndVerify();
 
-    const pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
-    });
+    let pusherClient;
+    let channel;
 
-    const channel = pusherClient.subscribe(`event-chat-${eventId}`);
+    if (process.env.NEXT_PUBLIC_PUSHER_KEY) {
+      try {
+        pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+          cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+        });
 
-    channel.bind("new-message", (incomingMessage) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === incomingMessage.id)) return prev;
-        return [...prev, incomingMessage];
-      });
-    });
+        channel = pusherClient.subscribe(`event-chat-${eventId}`);
 
-    channel.bind("message-deleted", (deletedData) => {
-      setMessages((prev) => prev.filter((m) => m.id !== deletedData.id));
-    });
+        channel.bind("new-message", (incomingMessage) => {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === incomingMessage.id)) return prev;
+            return [...prev, incomingMessage];
+          });
+        });
+
+        channel.bind("message-deleted", (deletedData) => {
+          setMessages((prev) => prev.filter((m) => m.id !== deletedData.id));
+        });
+      } catch (error) {
+        console.error("Pusher initialization failed:", error);
+      }
+    } else {
+      console.warn("NEXT_PUBLIC_PUSHER_KEY is missing, realtime chat is disabled.");
+    }
 
     return () => {
-      channel.unbind_all();
-      channel.unsubscribe();
-      pusherClient.disconnect();
+      if (channel) {
+        channel.unbind_all();
+        channel.unsubscribe();
+      }
+      if (pusherClient) {
+        pusherClient.disconnect();
+      }
     };
   }, [eventId, currentUser?.email]);
 
