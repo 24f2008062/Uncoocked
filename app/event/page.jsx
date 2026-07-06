@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import TwinLayout from "@/app/components/layout/TwinLayout";
-import EventsExplorer, { mockEvents } from "@/app/components/explorer/EventsExplorer";
+import EventsExplorer from "@/app/components/explorer/EventsExplorer";
+import { mockEvents } from "@/lib/mockData";
 import RecommendedEvents from "@/app/components/event/RecommendedEvents";
 import { useUser } from "@/app/context/UserContext";
 
