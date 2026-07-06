@@ -291,13 +291,23 @@ export default function EventMatrixPreview() {
                         <span className="inline-flex items-center gap-1 px-4 py-1.5 bg-emerald-500/8 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold rounded-full">
                           <Check className="h-3 w-3" /> Registered
                         </span>
-                      ) : (
+                      ) : user ? (
                         <button
                           onClick={() => handleOpenRegister(ev)}
                           suppressHydrationWarning={true}
                           className="px-4 py-1.5 bg-[#A855F7] text-white text-[11px] font-semibold rounded-full hover:bg-[#C084FC] hover:-translate-y-px hover:shadow-md transition-all duration-150 cursor-pointer"
                         >
                           Secure Ticket
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (typeof window !== 'undefined') window.location.href = '/login';
+                          }}
+                          suppressHydrationWarning={true}
+                          className="px-4 py-1.5 bg-neutral-900 border border-dark-border text-gray-400 font-semibold text-[11px] rounded-full hover:text-white transition-all hover:border-gray-500 cursor-pointer"
+                        >
+                          Sign in to Register
                         </button>
                       )}
                     </div>
