@@ -68,11 +68,16 @@ export const authOptions = {
       else if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.sub = user.id;
         token.onboardingCompleted = user.onboardingCompleted;
       }
+      
+      if (trigger === "update" && session?.onboardingCompleted !== undefined) {
+        token.onboardingCompleted = session.onboardingCompleted;
+      }
+      
       return token;
     },
     async session({ session, token }) {
