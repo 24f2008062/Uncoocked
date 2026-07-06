@@ -17,7 +17,7 @@ const SUGGESTED_CATEGORIES = [
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, isLoading: isContextLoading } = useUser();
-  const { update } = useSession();
+  const { update, status } = useSession();
   const [selectedInterests, setSelectedInterests] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -49,7 +49,13 @@ export default function OnboardingPage() {
       });
       if (res.ok) {
         // Update the NextAuth session so it knows onboarding is complete
-        await update({ onboardingCompleted: true });
+        if (status === "authenticated") {
+          try {
+            await update({ onboardingCompleted: true });
+          } catch (e) {
+            console.error("Session update failed", e);
+          }
+        }
         router.push("/event");
       } else {
         console.error("Failed to save interests");
