@@ -59,6 +59,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+
         </div>
 
         {/* Bottom bar */}

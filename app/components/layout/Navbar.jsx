@@ -41,7 +41,7 @@ export default function Navbar() {
                   height={20}
                   className="group-hover:opacity-80 transition-opacity duration-150 object-contain rounded-full"
                 />
-                <span className="text-sm font-bold tracking-tight text-white group-hover:text-white/80 transition-colors duration-150 hidden sm:block">
+                <span className="text-sm font-bold tracking-tight text-purple-500 group-hover:text-purple-400 transition-colors duration-150 hidden sm:block">
                   UNCOOKED
                 </span>
               </Link>

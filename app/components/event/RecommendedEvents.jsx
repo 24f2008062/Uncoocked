@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, MapPin, ArrowRight, Bookmark, Sparkles } from "lucide-react";
+import Image from "next/image";
 
 export default function RecommendedEvents({ userEmail, onSelectEvent }) {
   const [recommendations, setRecommendations] = useState([]);
@@ -109,10 +110,12 @@ export default function RecommendedEvents({ userEmail, onSelectEvent }) {
             {/* Banner */}
             <div className="relative h-24 w-full overflow-hidden bg-[#0A0A0A] border-b border-white/6">
               {ev.bannerUrl ? (
-                <img
+                <Image
                   src={ev.bannerUrl}
                   alt={ev.title}
-                  className="w-full h-full object-cover transition-transform duration-300 opacity-80 group-hover:opacity-100"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 320px"
+                  className="object-cover transition-transform duration-300 opacity-80 group-hover:opacity-100"
                 />
               ) : (
                 <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center p-3 text-center">

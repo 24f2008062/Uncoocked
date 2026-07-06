@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Search, Calendar, Tag, Check, Terminal } from "lucide-react";
+import Image from "next/image";
 import RegisterModal from "@/app/components/event/RegisterModal";
+import { useUser } from "@/app/context/UserContext";
 
 const INITIAL_MOCK_EVENTS = [
   {
@@ -70,6 +72,7 @@ const INITIAL_MOCK_EVENTS = [
 ];
 
 export default function EventMatrixPreview() {
+  const { user } = useUser();
   const [events, setEvents] = useState(INITIAL_MOCK_EVENTS);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -101,6 +104,10 @@ export default function EventMatrixPreview() {
   }, [modalOpen]);
 
   const handleOpenRegister = (ev) => {
+    if (!user) {
+      if (typeof window !== 'undefined') window.location.href = '/login';
+      return;
+    }
     setSelectedEvent(ev);
     setModalOpen(true);
   };
@@ -223,10 +230,12 @@ export default function EventMatrixPreview() {
                   {/* Banner */}
                   <div className="relative h-32 w-full overflow-hidden bg-[#0A0A0A]">
                     {ev.bannerUrl ? (
-                      <img
+                      <Image
                         src={ev.bannerUrl}
                         alt={ev.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                       />
                     ) : (
                       <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center p-4 text-center">
@@ -282,13 +291,23 @@ export default function EventMatrixPreview() {
                         <span className="inline-flex items-center gap-1 px-4 py-1.5 bg-emerald-500/8 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold rounded-full">
                           <Check className="h-3 w-3" /> Registered
                         </span>
-                      ) : (
+                      ) : user ? (
                         <button
                           onClick={() => handleOpenRegister(ev)}
                           suppressHydrationWarning={true}
                           className="px-4 py-1.5 bg-[#A855F7] text-white text-[11px] font-semibold rounded-full hover:bg-[#C084FC] hover:-translate-y-px hover:shadow-md transition-all duration-150 cursor-pointer"
                         >
                           Secure Ticket
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (typeof window !== 'undefined') window.location.href = '/login';
+                          }}
+                          suppressHydrationWarning={true}
+                          className="px-4 py-1.5 bg-neutral-900 border border-dark-border text-gray-400 font-semibold text-[11px] rounded-full hover:text-white transition-all hover:border-gray-500 cursor-pointer"
+                        >
+                          Sign in to Register
                         </button>
                       )}
                     </div>

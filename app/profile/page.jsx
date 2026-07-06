@@ -609,7 +609,7 @@ export default function ProfilePage() {
                       </p>
                       {bio ? (
                         <div className="bg-zinc-900/50 p-4 rounded-xl border border-dark-border/50 text-sm text-gray-300 leading-relaxed italic">
-                          "{bio}"
+                          &quot;{bio}&quot;
                         </div>
                       ) : (
                         <span className="text-xs text-gray-600 italic">No biography provided</span>
