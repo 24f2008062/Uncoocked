@@ -75,7 +75,7 @@ export default function OnboardingPage() {
             Personalize Your Feed
           </h1>
           <p className="text-gray-400 text-sm md:text-base max-w-xl mx-auto">
-            Select the topics you're interested in so we can recommend the best events for you.
+            Select the topics you&apos;re interested in so we can recommend the best events for you.
           </p>
         </div>
 

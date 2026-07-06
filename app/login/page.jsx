@@ -201,7 +201,7 @@ export default function LoginPage() {
 
           <div className="text-center mt-4">
             <span className="text-xs text-gray-400">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
             </span>
             <Link
               href="/signup"

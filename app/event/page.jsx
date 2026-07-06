@@ -32,7 +32,9 @@ export default function EventPage() {
   };
 
   useEffect(() => {
-    loadEvents();
+    setTimeout(() => {
+      loadEvents();
+    }, 0);
   }, []);
 
   // Force scroll the page back to the absolute top (0,0) whenever a student changes selected events
@@ -64,7 +66,7 @@ export default function EventPage() {
     const params = new URLSearchParams(window.location.search);
     const initialId = params.get("id");
     if (initialId) {
-      setSelectedEventId(initialId);
+      setTimeout(() => setSelectedEventId(initialId), 0);
     }
 
     const hash = window.location.hash;

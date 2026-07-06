@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Search, Calendar, Tag, Check, Terminal } from "lucide-react";
+import Image from "next/image";
 import RegisterModal from "@/app/components/event/RegisterModal";
 
 const INITIAL_MOCK_EVENTS = [
@@ -223,10 +224,12 @@ export default function EventMatrixPreview() {
                   {/* Banner */}
                   <div className="relative h-32 w-full overflow-hidden bg-[#0A0A0A]">
                     {ev.bannerUrl ? (
-                      <img
+                      <Image
                         src={ev.bannerUrl}
                         alt={ev.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                       />
                     ) : (
                       <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center p-4 text-center">

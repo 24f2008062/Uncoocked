@@ -9,6 +9,7 @@ import BulletinBoard from "@/app/components/event/BulletinBoard";
 import RegisterModal from "@/app/components/event/RegisterModal";
 import RegistrationCard from "@/app/components/event/RegistrationCard";
 import EventChat from "@/app/components/event/EventChat";
+import Image from "next/image";
 
 // Lazy load heavy components
 const EventDescription = dynamic(() => import("@/app/components/event/EventDescription"), { ssr: false });
@@ -208,7 +209,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
             <div className="w-full">
               <div className="w-full h-56 md:h-64 rounded-2xl overflow-hidden border border-white/6 relative mb-6">
                 {event.bannerUrl ? (
-                  <img src={event.bannerUrl} alt={event.title} className="w-full h-full object-cover" />
+                  <Image src={event.bannerUrl} alt={event.title} fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover" />
                 ) : (
                   <div className="w-full h-full bg-[#1a1a1a]" />
                 )}

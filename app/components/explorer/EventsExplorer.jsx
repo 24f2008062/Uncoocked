@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, Calendar, MapPin, ArrowRight } from "lucide-react";
+import Image from "next/image";
 import { LUCKNOW_ZONES } from "@/app/config/cities";
 
 export const mockEvents = [
@@ -416,10 +417,12 @@ export default function EventsExplorer({
               {/* Event Card Banner Preview */}
               <div className="relative h-28 w-full overflow-hidden bg-[#0A0A0A] border-b border-white/6">
                 {ev.bannerUrl ? (
-                  <img
+                  <Image
                     src={ev.bannerUrl}
                     alt={ev.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 opacity-80 group-hover:opacity-100"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105 opacity-80 group-hover:opacity-100"
                   />
                 ) : (
                   <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center p-4 text-center">

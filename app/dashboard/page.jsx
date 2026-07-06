@@ -25,6 +25,7 @@ import {
   History,
 } from "lucide-react";
 import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
+import Image from "next/image";
 
 // getInitialHostedEvents is obsolete, handled by seed or empty start
 
@@ -125,14 +126,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) {
-      loadDashboardData();
+      setTimeout(() => loadDashboardData(), 0);
       const handleStorageChange = () => {
-        loadDashboardData();
+        setTimeout(() => loadDashboardData(), 0);
       };
       window.addEventListener("storage", handleStorageChange);
       return () => window.removeEventListener("storage", handleStorageChange);
     } else {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 0);
     }
   }, [user]);
 
@@ -437,7 +438,7 @@ export default function DashboardPage() {
               <div className="bg-[#111111]/40 border border-white/6 border-dashed rounded-xl p-10 text-center space-y-4">
                 <span className="text-3xl block">🎟️</span>
                 <p className="text-[13px] text-white/40 leading-normal">
-                  You aren't registered for any campus events yet.
+                  You aren&apos;t registered for any campus events yet.
                 </p>
                 <Link
                   href="/event"
@@ -481,7 +482,7 @@ export default function DashboardPage() {
               <div className="bg-[#111111]/40 border border-white/6 border-dashed rounded-xl p-10 text-center space-y-4">
                 <span className="text-3xl block">📣</span>
                 <p className="text-[13px] text-white/40 leading-normal">
-                  You aren't hosting any active events yet.
+                  You aren&apos;t hosting any active events yet.
                 </p>
                 <button
                   onClick={handleOpenHostModal}
@@ -506,10 +507,12 @@ export default function DashboardPage() {
                       {/* Event Card Banner Preview */}
                       <div className="relative h-28 w-full overflow-hidden bg-[#0A0A0A]">
                         {hev.bannerUrl ? (
-                          <img
+                          <Image
                             src={hev.bannerUrl}
                             alt={hev.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 320px"
+                            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                           />
                         ) : (
                           <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-[10px] text-white/30">

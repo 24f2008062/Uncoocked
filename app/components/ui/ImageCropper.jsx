@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/cropImage";
 import { Upload, Check, X } from "lucide-react";
+import Image from "next/image";
 
 export default function ImageCropper({ onCropCompleteCallback, currentImageUrl }) {
   const [imageSrc, setImageSrc] = useState(null);
@@ -98,7 +99,7 @@ export default function ImageCropper({ onCropCompleteCallback, currentImageUrl }
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           {preview ? (
             <div className="relative w-full sm:w-64 h-32 rounded-lg overflow-hidden border border-white/10 group">
-              <img src={preview} alt="Banner Preview" className="w-full h-full object-cover" />
+              <Image src={preview} alt="Banner Preview" fill sizes="320px" className="object-cover" />
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <label className="cursor-pointer px-3 py-2 bg-black border border-white/20 rounded-lg text-xs font-bold hover:border-neon-purple transition-all">
                   Change

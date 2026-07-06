@@ -5,6 +5,23 @@ import { use } from "react";
 import { useState, useEffect } from "react";
 import { Users, Ticket, DollarSign, Activity, Calendar } from "lucide-react";
 
+const StatCard = ({ title, value, icon: Icon, trend, prefix = "" }) => (
+  <div className="bg-dark-card border border-dark-border p-5 rounded-2xl shadow-sm">
+    <div className="flex justify-between items-start mb-2">
+      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{title}</h3>
+      <Icon className="w-4 h-4 text-neon-purple" />
+    </div>
+    <div className="flex items-end gap-3">
+      <div className="text-3xl font-black text-white">{prefix}{value}</div>
+      {trend && (
+        <div className="text-[10px] font-bold text-emerald-400 mb-1.5 bg-emerald-950/30 px-1.5 py-0.5 rounded">
+          +{trend}%
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 export default function OrganizerOverviewPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -38,22 +55,6 @@ export default function OrganizerOverviewPage({ params }) {
     return () => { isMounted = false; };
   }, [unwrappedParams.eventId]);
 
-  const StatCard = ({ title, value, icon: Icon, trend, prefix = "" }) => (
-    <div className="bg-dark-card border border-dark-border p-5 rounded-2xl shadow-sm">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{title}</h3>
-        <Icon className="w-4 h-4 text-neon-purple" />
-      </div>
-      <div className="flex items-end gap-3">
-        <div className="text-3xl font-black text-white">{prefix}{value}</div>
-        {trend && (
-          <div className="text-[10px] font-bold text-emerald-400 mb-1.5 bg-emerald-950/30 px-1.5 py-0.5 rounded">
-            +{trend}%
-          </div>
-        )}
-      </div>
-    </div>
-  );
 
   if (loading) return <div className="text-white text-sm animate-pulse">Loading overview...</div>;
 

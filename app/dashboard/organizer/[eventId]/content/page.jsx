@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { Save, Image as ImageIcon, History, Eye, Layout } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import ImageCropper from "@/app/components/ui/ImageCropper";
+import Image from "next/image";
 
 export default function ContentEditorPage({ params }) {
   const unwrappedParams = use(params);
@@ -142,7 +143,9 @@ export default function ContentEditorPage({ params }) {
               {/* Simulated Event Page Layout */}
               <div className="max-w-3xl mx-auto space-y-8">
                 {formData.bannerUrl && (
-                  <img src={formData.bannerUrl} alt="Banner" className="w-full h-64 object-cover rounded-2xl" />
+                  <div className="relative w-full h-64 rounded-2xl overflow-hidden">
+                    <Image src={formData.bannerUrl} alt="Banner" fill className="object-cover" />
+                  </div>
                 )}
                 
                 <div className="prose prose-invert prose-p:text-sm prose-h1:text-3xl prose-h2:text-2xl prose-a:text-neon-lavender max-w-none">
