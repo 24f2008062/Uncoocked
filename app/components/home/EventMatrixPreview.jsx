@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search, Calendar, Tag, Check, Terminal } from "lucide-react";
 import Image from "next/image";
 import RegisterModal from "@/app/components/event/RegisterModal";
+import { useUser } from "@/app/context/UserContext";
 
 const INITIAL_MOCK_EVENTS = [
   {
@@ -71,6 +72,7 @@ const INITIAL_MOCK_EVENTS = [
 ];
 
 export default function EventMatrixPreview() {
+  const { user } = useUser();
   const [events, setEvents] = useState(INITIAL_MOCK_EVENTS);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -102,6 +104,10 @@ export default function EventMatrixPreview() {
   }, [modalOpen]);
 
   const handleOpenRegister = (ev) => {
+    if (!user) {
+      if (typeof window !== 'undefined') window.location.href = '/login';
+      return;
+    }
     setSelectedEvent(ev);
     setModalOpen(true);
   };
