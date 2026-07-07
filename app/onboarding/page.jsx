@@ -48,9 +48,14 @@ export default function OnboardingPage() {
         })
       });
       if (res.ok) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("onboarding_just_completed", "true");
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("onboarding_just_completed", "true");
+          }
+        } catch (e) {
+          console.warn("localStorage error:", e);
         }
+
         if (status === "authenticated") {
           try {
             if (typeof update === 'function') {
@@ -61,9 +66,9 @@ export default function OnboardingPage() {
             console.error("Session update error:", e);
           }
         }
-        setTimeout(() => {
-          router.push("/event");
-        }, 100);
+
+        // Force browser redirect immediately
+        window.location.href = "/event";
       } else {
         console.error("Failed to save interests");
         setLoading(false);
@@ -125,9 +130,14 @@ export default function OnboardingPage() {
                   })
                 });
                 if (res.ok) {
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem("onboarding_just_completed", "true");
+                  try {
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem("onboarding_just_completed", "true");
+                    }
+                  } catch (e) {
+                    console.warn("localStorage error:", e);
                   }
+                  
                   if (status === "authenticated") {
                     try {
                       if (typeof update === 'function') {
@@ -138,9 +148,9 @@ export default function OnboardingPage() {
                       console.error("Session update error:", e);
                     }
                   }
-                  setTimeout(() => {
-                    router.push("/event");
-                  }, 100);
+                  
+                  // Force browser redirect immediately
+                  window.location.href = "/event";
                 } else {
                   setLoading(false);
                 }
