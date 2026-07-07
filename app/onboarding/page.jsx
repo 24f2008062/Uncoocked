@@ -37,47 +37,53 @@ export default function OnboardingPage() {
     );
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  const navigateToEvent = () => {
+    // Attempt local storage flag for bounce protection
     try {
-      const res = await fetch("/api/users/onboarding", {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("onboarding_just_completed", "true");
+      }
+    } catch(e) {}
+    
+    // Force native browser redirect unconditionally
+    if (typeof window !== "undefined") {
+      window.location.href = "/event";
+    }
+  };
+
+  const submitOnboarding = async (interests) => {
+    try {
+      // 1. Trigger the background API request
+      const email = typeof user === "string" ? user : user?.email || "demo@campus.edu";
+      await fetch("/api/users/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: user || "demo@campus.edu",
-          interests: selectedInterests
-        })
+        body: JSON.stringify({ email, interests })
       });
-      if (res.ok) {
-        try {
-          if (typeof window !== "undefined") {
-            localStorage.setItem("onboarding_just_completed", "true");
-          }
-        } catch (e) {
-          console.warn("localStorage error:", e);
-        }
-
-        if (status === "authenticated") {
-          try {
-            if (typeof update === 'function') {
-              const p = update({ onboardingCompleted: true });
-              if (p && p.catch) p.catch(e => console.error(e));
-            }
-          } catch (e) {
-            console.error("Session update error:", e);
-          }
-        }
-
-        // Force browser redirect immediately
-        window.location.href = "/event";
-      } else {
-        console.error("Failed to save interests");
-        setIsSaving(false);
+      
+      // 2. Trigger NextAuth update asynchronously (if authenticated)
+      if (status === "authenticated" && typeof update === "function") {
+         try {
+           const p = update({ onboardingCompleted: true });
+           if (p && p.catch) p.catch(() => {});
+         } catch(e) {}
       }
     } catch (err) {
-      console.error(err);
-      setIsSaving(false);
+      console.warn("Silent failure during onboarding save", err);
     }
+    
+    // 3. Guarantee redirection unconditionally
+    navigateToEvent();
+  };
+
+  const handleSave = () => {
+    setIsSaving(true);
+    submitOnboarding(selectedInterests);
+  };
+
+  const handleSkip = () => {
+    setIsSkipping(true);
+    submitOnboarding([]);
   };
 
   if (isContextLoading || !user) return null; // Prevent flicker
@@ -119,47 +125,7 @@ export default function OnboardingPage() {
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-8 border-t border-dark-border/50">
           <button
-            onClick={async () => {
-              setIsSkipping(true);
-              try {
-                const res = await fetch("/api/users/onboarding", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    email: user || "demo@campus.edu",
-                    interests: []
-                  })
-                });
-                if (res.ok) {
-                  try {
-                    if (typeof window !== "undefined") {
-                      localStorage.setItem("onboarding_just_completed", "true");
-                    }
-                  } catch (e) {
-                    console.warn("localStorage error:", e);
-                  }
-                  
-                  if (status === "authenticated") {
-                    try {
-                      if (typeof update === 'function') {
-                        const p = update({ onboardingCompleted: true });
-                        if (p && p.catch) p.catch(e => console.error(e));
-                      }
-                    } catch (e) {
-                      console.error("Session update error:", e);
-                    }
-                  }
-                  
-                  // Force browser redirect immediately
-                  window.location.href = "/event";
-                } else {
-                  setIsSkipping(false);
-                }
-              } catch (err) {
-                console.error(err);
-                setIsSkipping(false);
-              }
-            }}
+            onClick={handleSkip}
             disabled={isSaving || isSkipping}
             className="w-full sm:w-auto px-6 py-3 bg-zinc-900 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all"
           >
