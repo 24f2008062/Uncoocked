@@ -27,7 +27,11 @@ export function UserProvider({ children }) {
       
       // Auto-redirect new users to onboarding
       if (session.user.onboardingCompleted === false && pathname !== "/onboarding") {
-        router.push("/onboarding");
+        if (typeof window !== "undefined" && localStorage.getItem("onboarding_just_completed") === "true") {
+          // Bypass redirect if user just completed onboarding to avoid NextAuth race condition
+        } else {
+          router.push("/onboarding");
+        }
       }
     } else if (status === "unauthenticated") {
       // Check for a local test session first

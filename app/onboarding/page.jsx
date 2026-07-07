@@ -48,12 +48,15 @@ export default function OnboardingPage() {
         })
       });
       if (res.ok) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("onboarding_just_completed", "true");
+        }
         if (status === "authenticated") {
           update({ onboardingCompleted: true }).catch(e => console.error("Session update failed", e));
         }
         setTimeout(() => {
           window.location.href = "/event";
-        }, 300);
+        }, 100);
       } else {
         console.error("Failed to save interests");
         setLoading(false);
@@ -115,12 +118,15 @@ export default function OnboardingPage() {
                   })
                 });
                 if (res.ok) {
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem("onboarding_just_completed", "true");
+                  }
                   if (status === "authenticated") {
                     update({ onboardingCompleted: true }).catch(e => console.error(e));
                   }
                   setTimeout(() => {
                     window.location.href = "/event";
-                  }, 300);
+                  }, 100);
                 } else {
                   setLoading(false);
                 }
