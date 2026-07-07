@@ -48,21 +48,18 @@ export default function OnboardingPage() {
         })
       });
       if (res.ok) {
-        // Update the NextAuth session so it knows onboarding is complete
         if (status === "authenticated") {
-          try {
-            await update({ onboardingCompleted: true });
-          } catch (e) {
-            console.error("Session update failed", e);
-          }
+          update({ onboardingCompleted: true }).catch(e => console.error("Session update failed", e));
         }
-        window.location.href = "/event";
+        setTimeout(() => {
+          window.location.href = "/event";
+        }, 300);
       } else {
         console.error("Failed to save interests");
+        setLoading(false);
       }
     } catch (err) {
       console.error(err);
-    } finally {
       setLoading(false);
     }
   };
@@ -119,13 +116,16 @@ export default function OnboardingPage() {
                 });
                 if (res.ok) {
                   if (status === "authenticated") {
-                    try { await update({ onboardingCompleted: true }); } catch (e) { console.error(e); }
+                    update({ onboardingCompleted: true }).catch(e => console.error(e));
                   }
-                  window.location.href = "/event";
+                  setTimeout(() => {
+                    window.location.href = "/event";
+                  }, 300);
+                } else {
+                  setLoading(false);
                 }
               } catch (err) {
                 console.error(err);
-              } finally {
                 setLoading(false);
               }
             }}
