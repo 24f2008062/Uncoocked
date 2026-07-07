@@ -19,7 +19,8 @@ export default function OnboardingPage() {
   const { user, isLoading: isContextLoading } = useUser();
   const { update, status } = useSession();
   const [selectedInterests, setSelectedInterests] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
   // If no mock user session is active, go to login
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function OnboardingPage() {
   };
 
   const handleSave = async () => {
-    setLoading(true);
+    setIsSaving(true);
     try {
       const res = await fetch("/api/users/onboarding", {
         method: "POST",
@@ -71,11 +72,11 @@ export default function OnboardingPage() {
         window.location.href = "/event";
       } else {
         console.error("Failed to save interests");
-        setLoading(false);
+        setIsSaving(false);
       }
     } catch (err) {
       console.error(err);
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -119,7 +120,7 @@ export default function OnboardingPage() {
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-8 border-t border-dark-border/50">
           <button
             onClick={async () => {
-              setLoading(true);
+              setIsSkipping(true);
               try {
                 const res = await fetch("/api/users/onboarding", {
                   method: "POST",
@@ -152,25 +153,25 @@ export default function OnboardingPage() {
                   // Force browser redirect immediately
                   window.location.href = "/event";
                 } else {
-                  setLoading(false);
+                  setIsSkipping(false);
                 }
               } catch (err) {
                 console.error(err);
-                setLoading(false);
+                setIsSkipping(false);
               }
             }}
-            disabled={loading}
+            disabled={isSaving || isSkipping}
             className="w-full sm:w-auto px-6 py-3 bg-zinc-900 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all"
           >
-            Skip for now
+            {isSkipping ? "Skipping..." : "Skip for now"}
           </button>
           
           <button
             onClick={handleSave}
-            disabled={loading || selectedInterests.length === 0}
+            disabled={isSaving || isSkipping || selectedInterests.length === 0}
             className="w-full sm:w-auto px-8 py-3 bg-neon-purple text-white text-sm font-bold rounded-xl hover:bg-neon-purple/90 transition-all shadow-neon disabled:opacity-50 disabled:scale-100"
           >
-            {loading ? "Saving..." : "Save Preferences"}
+            {isSaving ? "Saving..." : (selectedInterests.length === 0 ? "Select interests to save" : "Save Preferences")}
           </button>
         </div>
       </motion.div>
