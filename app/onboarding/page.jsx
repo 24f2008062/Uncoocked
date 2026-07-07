@@ -53,7 +53,7 @@ export default function OnboardingPage() {
 
   const submitOnboarding = async (interests) => {
     try {
-      // 1. Trigger the background API request
+      // 1. Await the API request fully before redirecting
       const email = typeof user === "string" ? user : user?.email || "demo@campus.edu";
       
       let fullName = undefined;
@@ -85,12 +85,14 @@ export default function OnboardingPage() {
            if (p && p.catch) p.catch(() => {});
          } catch(e) {}
       }
+
+      // 3. Guarantee redirection AFTER successful save
+      navigateToEvent();
     } catch (err) {
-      console.warn("Silent failure during onboarding save", err);
+      console.warn("API call failed", err);
+      // Still navigate even on failure to avoid trapping the user
+      navigateToEvent();
     }
-    
-    // 3. Guarantee redirection unconditionally
-    navigateToEvent();
   };
 
   const handleSave = () => {
