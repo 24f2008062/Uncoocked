@@ -106,7 +106,29 @@ export default function OnboardingPage() {
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-8 border-t border-dark-border/50">
           <button
-            onClick={() => router.push("/event")}
+            onClick={async () => {
+              setLoading(true);
+              try {
+                const res = await fetch("/api/users/onboarding", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    email: user || "demo@campus.edu",
+                    interests: []
+                  })
+                });
+                if (res.ok) {
+                  if (status === "authenticated") {
+                    try { await update({ onboardingCompleted: true }); } catch (e) { console.error(e); }
+                  }
+                  window.location.href = "/event";
+                }
+              } catch (err) {
+                console.error(err);
+              } finally {
+                setLoading(false);
+              }
+            }}
             disabled={loading}
             className="w-full sm:w-auto px-6 py-3 bg-zinc-900 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all"
           >
