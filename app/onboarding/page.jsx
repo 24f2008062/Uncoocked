@@ -52,10 +52,17 @@ export default function OnboardingPage() {
           localStorage.setItem("onboarding_just_completed", "true");
         }
         if (status === "authenticated") {
-          update({ onboardingCompleted: true }).catch(e => console.error("Session update failed", e));
+          try {
+            if (typeof update === 'function') {
+              const p = update({ onboardingCompleted: true });
+              if (p && p.catch) p.catch(e => console.error(e));
+            }
+          } catch (e) {
+            console.error("Session update error:", e);
+          }
         }
         setTimeout(() => {
-          window.location.href = "/event";
+          router.push("/event");
         }, 100);
       } else {
         console.error("Failed to save interests");
@@ -122,10 +129,17 @@ export default function OnboardingPage() {
                     localStorage.setItem("onboarding_just_completed", "true");
                   }
                   if (status === "authenticated") {
-                    update({ onboardingCompleted: true }).catch(e => console.error(e));
+                    try {
+                      if (typeof update === 'function') {
+                        const p = update({ onboardingCompleted: true });
+                        if (p && p.catch) p.catch(e => console.error(e));
+                      }
+                    } catch (e) {
+                      console.error("Session update error:", e);
+                    }
                   }
                   setTimeout(() => {
-                    window.location.href = "/event";
+                    router.push("/event");
                   }, 100);
                 } else {
                   setLoading(false);
