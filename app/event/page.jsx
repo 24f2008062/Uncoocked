@@ -19,7 +19,7 @@ export default function EventPage() {
       const data = await res.json();
       if (data.success) {
         if (data.events && data.events.length > 0) {
-          setAllEvents(data.events);
+          setAllEvents([...data.events, ...mockEvents]);
         } else {
           setAllEvents(mockEvents);
         }

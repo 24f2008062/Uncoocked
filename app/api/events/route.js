@@ -53,13 +53,13 @@ export async function POST(request) {
       const user = await prisma.user.findUnique({ where: { email: organizerId } });
       if (user) {
         organizerId = user.id;
-      } else {
-        organizerId = null;
       }
     } else if (!organizerId && data.hostEmail) {
       const user = await prisma.user.findUnique({ where: { email: data.hostEmail } });
       if (user) {
         organizerId = user.id;
+      } else {
+        organizerId = data.hostEmail;
       }
     }
 

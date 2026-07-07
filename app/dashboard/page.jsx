@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useUser } from "@/app/context/UserContext";
 import Link from "next/link";
 import TicketModal from "@/app/components/event/TicketModal";
-import { mockEvents } from "@/app/components/explorer/EventsExplorer";
+import { mockEvents } from "@/lib/mockData";
 import {
   Calendar,
   MapPin,
@@ -98,10 +98,18 @@ export default function DashboardPage() {
           ts: new Date(ev.date).getTime()
         }));
 
-        setAllEvents(fetchedEvents);
+        const formattedMockEvents = mockEvents.map(ev => ({
+          ...ev,
+          dateStr: ev.date,
+          date: new Date(ev.date).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }),
+          ts: new Date(ev.date).getTime()
+        }));
+
+        const combinedEvents = [...fetchedEvents, ...formattedMockEvents];
+        setAllEvents(combinedEvents);
 
         // Filter Hosted Events
-        const hosted = fetchedEvents.filter((ev) => ev.organizer?.email === user || ev.organizerId === user);
+        const hosted = combinedEvents.filter((ev) => ev.organizer?.email === user || ev.organizerId === user);
         setHostedEvents(hosted);
 
         // 2. Fetch user's registrations from API
