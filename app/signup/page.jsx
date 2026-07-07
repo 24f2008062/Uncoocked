@@ -47,26 +47,34 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // 1. Create user in the database FIRST
-      const res = await fetch("/api/users/onboarding", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          interests: [],
+      // 1. Set local session immediately
+      signup(email, selectedRole);
+
+      // Cache profile data for onboarding page to pick up
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`profile_${email}`, JSON.stringify({
           fullName: name,
           dob: dob,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "Failed to create account");
+        }));
       }
 
-      // 2. Set local session
-      signup(email, selectedRole);
-      
+      // 2. Create user in the database (best-effort, non-blocking)
+      // If this fails, the onboarding page will create the user when they save interests
+      try {
+        await fetch("/api/users/onboarding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            interests: [],
+            fullName: name,
+            dob: dob,
+          }),
+        });
+      } catch (dbErr) {
+        console.warn("DB user creation deferred to onboarding:", dbErr);
+      }
+
       setSuccess(true);
       // Delay routing slightly to show success visual state
       setTimeout(() => {
