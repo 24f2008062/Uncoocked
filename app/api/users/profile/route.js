@@ -60,3 +60,5 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';
