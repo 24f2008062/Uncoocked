@@ -91,8 +91,8 @@ export default function ProfilePage() {
           if (isMounted) setFullName(user.split("@")[0]);
         }
 
-        // Fetch interests from database
-        const profileRes = await fetch(`/api/users/profile?email=${encodeURIComponent(user)}`);
+        // Fetch interests from database with no-store to prevent stale cache
+        const profileRes = await fetch(`/api/users/profile?email=${encodeURIComponent(user)}`, { cache: "no-store" });
         const profileData = await profileRes.json();
         if (profileData.success && profileData.user) {
           if (profileData.user.interests && isMounted) {

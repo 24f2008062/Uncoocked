@@ -171,7 +171,7 @@ export default function EventPage() {
           onSearchChange={setSearchQuery}
           onSelectEvent={handleSelectEvent}
           recommendedSection={
-            isAuthenticated && user && (
+            user && (
               <RecommendedEvents 
                 userEmail={typeof user === "string" ? user : user?.email} 
                 onSelectEvent={handleSelectEvent} 
