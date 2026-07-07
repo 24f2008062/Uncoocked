@@ -50,6 +50,15 @@ export default function SignupPage() {
       // Simulate network authentication delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
       signup(email, selectedRole);
+      
+      // Save profile data to localStorage for onboarding and profile pages
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`profile_${email}`, JSON.stringify({
+          fullName: name,
+          dob: dob
+        }));
+      }
+      
       setSuccess(true);
       // Delay routing slightly to show success visual state
       setTimeout(() => {

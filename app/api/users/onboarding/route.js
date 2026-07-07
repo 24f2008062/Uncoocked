@@ -6,7 +6,7 @@ const prisma = new PrismaClient({});
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, interests } = body;
+    const { email, interests, fullName, dob } = body;
 
     if (!email || !interests) {
       return NextResponse.json({ error: 'Email and interests are required' }, { status: 400 });
@@ -18,11 +18,14 @@ export async function POST(request) {
       update: {
         interests: JSON.stringify(interests),
         onboardingCompleted: true,
+        ...(fullName && { fullName }),
+        ...(dob && { dob }),
       },
       create: {
         email,
         passwordHash: 'dummy',
-        fullName: 'New User',
+        fullName: fullName || 'New User',
+        dob: dob || null,
         interests: JSON.stringify(interests),
         onboardingCompleted: true,
       }

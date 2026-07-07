@@ -55,10 +55,27 @@ export default function OnboardingPage() {
     try {
       // 1. Trigger the background API request
       const email = typeof user === "string" ? user : user?.email || "demo@campus.edu";
+      
+      let fullName = undefined;
+      let dob = undefined;
+      
+      try {
+        if (typeof window !== "undefined") {
+          const storedProfileStr = localStorage.getItem(`profile_${email}`);
+          if (storedProfileStr) {
+            const profile = JSON.parse(storedProfileStr);
+            fullName = profile.fullName;
+            dob = profile.dob;
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to load profile from localStorage", e);
+      }
+
       await fetch("/api/users/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, interests })
+        body: JSON.stringify({ email, interests, fullName, dob })
       });
       
       // 2. Trigger NextAuth update asynchronously (if authenticated)

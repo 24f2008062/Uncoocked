@@ -92,7 +92,7 @@ export default function ProfilePage() {
         }
 
         // Fetch interests from database
-        const profileRes = await fetch(`/api/users/profile?email=${user}`);
+        const profileRes = await fetch(`/api/users/profile?email=${encodeURIComponent(user)}`);
         const profileData = await profileRes.json();
         if (profileData.success && profileData.user) {
           if (profileData.user.interests && isMounted) {
