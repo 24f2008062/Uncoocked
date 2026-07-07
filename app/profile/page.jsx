@@ -140,6 +140,7 @@ export default function ProfilePage() {
             email: user,
             interests: selectedInterests,
             dob: dob,
+            fullName: fullName,
           })
         });
 

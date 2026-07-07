@@ -39,9 +39,19 @@ export async function POST(request) {
     if (fullName !== undefined) updateData.fullName = fullName;
     if (dob !== undefined) updateData.dob = dob;
 
-    const user = await prisma.user.update({
+    const user = await prisma.user.upsert({
       where: { email },
-      data: updateData,
+      update: updateData,
+      create: {
+        email,
+        passwordHash: 'dummy',
+        fullName: fullName || 'New User',
+        dob: dob || null,
+        interests: interests ? JSON.stringify(interests) : '[]',
+        department: department || null,
+        portfolioUrl: portfolioUrl || null,
+        onboardingCompleted: true,
+      }
     });
 
     return NextResponse.json({ success: true, user });
