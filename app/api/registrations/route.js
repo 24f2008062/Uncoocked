@@ -71,6 +71,45 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Check if event exists, if not, see if it's a mock event and seed it
+    let event = await prisma.event.findUnique({
+      where: { id: eventId }
+    });
+
+    if (!event) {
+      const { mockEvents } = await import('@/lib/mockData');
+      const mockEvent = mockEvents.find(e => e.id === eventId);
+      
+      if (mockEvent) {
+        let dateStr = mockEvent.date;
+        if (dateStr.includes('-')) {
+          dateStr = dateStr.split('-')[0] + ', ' + dateStr.split(', ')[1];
+        }
+        
+        event = await prisma.event.create({
+          data: {
+            id: mockEvent.id,
+            title: mockEvent.title,
+            type: mockEvent.type,
+            category: mockEvent.category,
+            date: new Date(dateStr) || new Date(),
+            location: mockEvent.location,
+            description: mockEvent.description,
+            schedule: mockEvent.schedule,
+            prizePool: mockEvent.prizePool,
+            bannerUrl: mockEvent.bannerUrl,
+            ticketType: mockEvent.ticketType,
+            price: mockEvent.price || 0,
+            capacity: mockEvent.capacity || 100,
+            waitlistEnabled: mockEvent.waitlistEnabled || false,
+            status: "Active",
+          }
+        });
+      } else {
+        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      }
+    }
+
     // Find or create user
     let user = await prisma.user.findUnique({
       where: { email },
