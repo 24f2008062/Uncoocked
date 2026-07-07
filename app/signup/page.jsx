@@ -47,17 +47,25 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // Simulate network authentication delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      signup(email, selectedRole);
-      
-      // Save profile data to localStorage for onboarding and profile pages
-      if (typeof window !== "undefined") {
-        localStorage.setItem(`profile_${email}`, JSON.stringify({
+      // 1. Create user in the database FIRST
+      const res = await fetch("/api/users/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          interests: [],
           fullName: name,
-          dob: dob
-        }));
+          dob: dob,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to create account");
       }
+
+      // 2. Set local session
+      signup(email, selectedRole);
       
       setSuccess(true);
       // Delay routing slightly to show success visual state
@@ -65,6 +73,7 @@ export default function SignupPage() {
         router.push("/onboarding");
       }, 500);
     } catch (err) {
+      console.error("Signup error:", err);
       setError("Registration failed. Please try again.");
       setLoading(false);
     }

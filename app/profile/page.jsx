@@ -75,34 +75,48 @@ export default function ProfilePage() {
           return;
         }
 
-        // Load custom profile details
-        const storedProfileStr = localStorage.getItem(`profile_${user}`);
-        if (storedProfileStr) {
-          const profile = JSON.parse(storedProfileStr);
+        // Fetch ALL profile data from the database (single source of truth)
+        const profileRes = await fetch(`/api/users/profile?email=${encodeURIComponent(user)}`, { cache: "no-store" });
+        const profileData = await profileRes.json();
+        
+        if (profileData.success && profileData.user) {
+          const dbUser = profileData.user;
           if (isMounted) {
-            setFullName(profile.fullName || "");
-            setBio(profile.bio || "");
-            setGithub(profile.github || "");
-            setTrack(profile.track || "Fullstack Developer");
-            setTeam(profile.team || "");
+            // Load fullName from DB, fallback to email prefix
+            setFullName(dbUser.fullName || dbUser.name || user.split("@")[0]);
+            // Load DOB from DB
+            if (dbUser.dob) setDob(dbUser.dob);
+            // Load interests from DB
+            if (dbUser.interests) {
+              try {
+                setSelectedInterests(JSON.parse(dbUser.interests));
+              } catch (e) {
+                setSelectedInterests([]);
+              }
+            }
+            // Load other fields from DB if available
+            if (dbUser.department) setTrack(dbUser.department);
+            if (dbUser.portfolioUrl) setGithub(dbUser.portfolioUrl);
           }
         } else {
-          // Pre-populate with username
+          // User not found in DB — fallback to email prefix
           if (isMounted) setFullName(user.split("@")[0]);
         }
 
-        // Fetch interests from database with no-store to prevent stale cache
-        const profileRes = await fetch(`/api/users/profile?email=${encodeURIComponent(user)}`, { cache: "no-store" });
-        const profileData = await profileRes.json();
-        if (profileData.success && profileData.user) {
-          if (profileData.user.interests && isMounted) {
-            setSelectedInterests(JSON.parse(profileData.user.interests));
+        // Load bio/team from localStorage (these aren't in DB schema)
+        try {
+          const storedProfileStr = localStorage.getItem(`profile_${user}`);
+          if (storedProfileStr) {
+            const profile = JSON.parse(storedProfileStr);
+            if (isMounted) {
+              if (profile.bio) setBio(profile.bio);
+              if (profile.team) setTeam(profile.team);
+            }
           }
-          if (profileData.user.dob && isMounted) setDob(profileData.user.dob);
-        }
+        } catch (e) {}
 
         // Calculate attending count via API
-        const resReg = await fetch(`/api/registrations?email=${user}`);
+        const resReg = await fetch(`/api/registrations?email=${encodeURIComponent(user)}`);
         const regData = await resReg.json();
         if (regData.success && isMounted) {
           setAttendingCount(regData.registrations.length);
@@ -133,7 +147,8 @@ export default function ProfilePage() {
     e.preventDefault();
     if (typeof window !== "undefined" && user) {
       try {
-        await fetch("/api/users/profile", {
+        // Save ALL profile fields to the database
+        const res = await fetch("/api/users/profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -141,18 +156,21 @@ export default function ProfilePage() {
             interests: selectedInterests,
             dob: dob,
             fullName: fullName,
+            department: track,
+            portfolioUrl: github,
           })
         });
 
-        const payload = {
-          fullName,
-          bio,
-          github,
-          track,
-          team,
-          dob,
-        };
-        localStorage.setItem(`profile_${user}`, JSON.stringify(payload));
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error("Profile save failed:", errData);
+          return; // Don't show success on failure
+        }
+
+        // Save bio/team to localStorage (not in DB schema)
+        const localPayload = { bio, team };
+        localStorage.setItem(`profile_${user}`, JSON.stringify(localPayload));
+        
         // Enrich registrations in localStorage matching this email with the updated fullName/track/team
         const storedRegs = JSON.parse(
           localStorage.getItem("registrations") || "[]",
@@ -175,7 +193,7 @@ export default function ProfilePage() {
         window.dispatchEvent(new Event("storage"));
         setIsEditing(false); // Close edit section after saving
       } catch (err) {
-        console.error(err);
+        console.error("Profile save error:", err);
       }
     }
   };

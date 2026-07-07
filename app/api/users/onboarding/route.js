@@ -8,15 +8,17 @@ export async function POST(request) {
     const body = await request.json();
     const { email, interests, fullName, dob } = body;
 
-    if (!email || !interests) {
-      return NextResponse.json({ error: 'Email and interests are required' }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
+
+    const interestsToSave = Array.isArray(interests) ? interests : [];
 
     // Upsert user if they don't exist, otherwise update their interests
     const user = await prisma.user.upsert({
       where: { email },
       update: {
-        interests: JSON.stringify(interests),
+        interests: JSON.stringify(interestsToSave),
         onboardingCompleted: true,
         ...(fullName && { fullName }),
         ...(dob && { dob }),
@@ -26,7 +28,7 @@ export async function POST(request) {
         passwordHash: 'dummy',
         fullName: fullName || 'New User',
         dob: dob || null,
-        interests: JSON.stringify(interests),
+        interests: JSON.stringify(interestsToSave),
         onboardingCompleted: true,
       }
     });
@@ -37,3 +39,5 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Failed to complete onboarding' }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';

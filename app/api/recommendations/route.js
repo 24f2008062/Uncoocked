@@ -21,3 +21,5 @@ export async function GET(request) {
     return NextResponse.json({ error: error.message || 'Failed to fetch recommendations' }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';
