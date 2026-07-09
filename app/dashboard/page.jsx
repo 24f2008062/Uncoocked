@@ -7,7 +7,7 @@ import { useUser } from "@/app/context/UserContext";
 import Link from "next/link";
 import TicketModal from "@/app/components/event/TicketModal";
 import { toast } from "sonner";
-import { mockEvents } from "@/lib/mockData";
+import { mergeWithMockEvents } from "@/lib/mockData";
 import {
   Calendar,
   MapPin,
@@ -85,28 +85,22 @@ export default function DashboardPage() {
         // 1. Fetch Events from Backend
         const res = await fetch("/api/events?includeArchived=true");
         const data = await res.json();
-        
-        let fetchedEvents = [];
-        if (data.success) {
-          fetchedEvents = data.events;
-        }
 
-        // Format dates for display
-        fetchedEvents = fetchedEvents.map(ev => ({
-          ...ev,
-          dateStr: ev.date, // keep original date string
-          date: new Date(ev.date).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }),
-          ts: new Date(ev.date).getTime()
-        }));
+        const fetchedEvents = Array.isArray(data?.events) ? data.events : [];
 
-        const formattedMockEvents = mockEvents.map(ev => ({
-          ...ev,
-          dateStr: ev.date,
-          date: new Date(ev.date).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }),
-          ts: new Date(ev.date).getTime()
-        }));
-
-        const combinedEvents = [...fetchedEvents, ...formattedMockEvents];
+        // Merge DB events with the mock fallback (deduped by id), then format.
+        const combinedEvents = mergeWithMockEvents(fetchedEvents).map((ev) => {
+          const d = ev.dateISO ? new Date(ev.dateISO) : new Date(ev.date);
+          const valid = !isNaN(d.getTime());
+          return {
+            ...ev,
+            dateStr: ev.date, // keep original date string
+            date: valid
+              ? d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+              : ev.date,
+            ts: valid ? d.getTime() : 0,
+          };
+        });
         setAllEvents(combinedEvents);
 
         // Filter Hosted Events

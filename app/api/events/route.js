@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { getToken } from 'next-auth/jwt';
 import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '../../config/cities';
-
-const prisma = new PrismaClient({});
 
 export async function GET(request) {
   try {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import TwinLayout from "@/app/components/layout/TwinLayout";
 import EventsExplorer from "@/app/components/explorer/EventsExplorer";
-import { mockEvents } from "@/lib/mockData";
+import { mockEvents, mergeWithMockEvents } from "@/lib/mockData";
 import RecommendedEvents from "@/app/components/event/RecommendedEvents";
 import { useUser } from "@/app/context/UserContext";
 
@@ -17,12 +17,8 @@ export default function EventPage() {
     try {
       const res = await fetch("/api/events", { cache: "no-store" });
       const data = await res.json();
-      if (data.success) {
-        if (data.events && data.events.length > 0) {
-          setAllEvents([...data.events, ...mockEvents]);
-        } else {
-          setAllEvents(mockEvents);
-        }
+      if (data.success && Array.isArray(data.events)) {
+        setAllEvents(mergeWithMockEvents(data.events));
       } else {
         setAllEvents(mockEvents);
       }

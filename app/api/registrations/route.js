@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { getToken } from 'next-auth/jwt';
-
-const prisma = new PrismaClient({});
 
 export async function GET(request) {
   try {
@@ -85,32 +83,35 @@ export async function POST(request) {
 
     if (!event) {
       const { mockEvents } = await import('@/lib/mockData');
-      const mockEvent = mockEvents.find(e => e.id === eventId);
-      
+      const mockEvent = mockEvents.find((e) => e.id === eventId);
+
       if (mockEvent) {
-        let dateStr = mockEvent.date;
-        if (dateStr.includes('-')) {
-          dateStr = dateStr.split('-')[0] + ', ' + dateStr.split(', ')[1];
-        }
-        
         event = await prisma.event.create({
           data: {
             id: mockEvent.id,
             title: mockEvent.title,
             type: mockEvent.type,
             category: mockEvent.category,
-            date: new Date(dateStr) || new Date(),
+            date: new Date(mockEvent.dateISO),
             location: mockEvent.location,
+            zone: mockEvent.zone,
+            city: mockEvent.city,
+            state: mockEvent.state,
+            country: mockEvent.country,
             description: mockEvent.description,
             schedule: mockEvent.schedule,
             prizePool: mockEvent.prizePool,
             bannerUrl: mockEvent.bannerUrl,
-            ticketType: mockEvent.ticketType,
-            price: mockEvent.price || 0,
+            tags: JSON.stringify(mockEvent.tags || []),
+            keywords: JSON.stringify(mockEvent.keywords || []),
+            popularityScore: mockEvent.popularityScore || 0,
+            ticketType: mockEvent.ticketType || "Free",
+            price: mockEvent.price ? parseFloat(mockEvent.price) : 0,
             capacity: mockEvent.capacity || 100,
-            waitlistEnabled: mockEvent.waitlistEnabled || false,
-            status: "Active",
-          }
+            waitlistEnabled: mockEvent.waitlistEnabled ?? true,
+            status: mockEvent.status || "Active",
+            archived: mockEvent.archived ?? false,
+          },
         });
       } else {
         return NextResponse.json({ error: 'Event not found' }, { status: 404 });
