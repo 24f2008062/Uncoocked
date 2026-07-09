@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useUser } from "@/app/context/UserContext";
 import Link from "next/link";
 import TicketModal from "@/app/components/event/TicketModal";
+import { toast } from "sonner";
 import { mockEvents } from "@/lib/mockData";
 import {
   Calendar,
@@ -202,7 +203,7 @@ export default function DashboardPage() {
         await loadDashboardData();
       } catch (err) {
         console.error(err);
-        alert("Failed to delete event. Please check the logs.");
+        toast.error("Failed to delete event. Please check the logs.");
       }
     }
   };
@@ -228,7 +229,7 @@ export default function DashboardPage() {
       await loadDashboardData();
     } catch (err) {
       console.error(err);
-      alert("Failed to post announcement. Please check logs.");
+      toast.error("Failed to post announcement. Please check logs.");
     }
   };
 

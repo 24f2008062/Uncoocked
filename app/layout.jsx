@@ -6,6 +6,7 @@ import { UserProvider } from "@/app/context/UserContext";
 import { NextAuthProvider } from "@/app/context/NextAuthProvider";
 import SessionMonitor from "@/app/components/dashboard/SessionMonitor";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({ children }) {
             <Footer />
           </UserProvider>
         </NextAuthProvider>
+        <Toaster theme="dark" position="bottom-right" richColors />
         <SpeedInsights />
       </body>
     </html>

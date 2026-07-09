@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getToken } from 'next-auth/jwt';
 
 const prisma = new PrismaClient({});
 
@@ -65,7 +66,13 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const { eventId, email, name, track, teamName, status, paymentStatus } = data;
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { eventId, name, track, teamName, status, paymentStatus } = data;
+    const email = data.email || token.email;
 
     if (!eventId || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

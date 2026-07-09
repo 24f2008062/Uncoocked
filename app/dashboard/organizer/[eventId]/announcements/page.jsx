@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { Megaphone, Plus, Trash2, Edit3, Pin, Eye, EyeOff, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AnnouncementsPage({ params }) {
   const unwrappedParams = use(params);
@@ -66,11 +67,11 @@ export default function AnnouncementsPage({ params }) {
         setVisibility("All");
         setShowForm(false);
       } else {
-        alert("Failed to post announcement");
+        toast.error("Failed to post announcement");
       }
     } catch (err) {
       console.error(err);
-      alert("Error posting announcement");
+      toast.error("Error posting announcement");
     }
   };
 

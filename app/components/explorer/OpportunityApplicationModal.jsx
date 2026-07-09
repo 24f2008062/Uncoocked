@@ -124,6 +124,15 @@ export default function OpportunityApplicationModal({
               </div>
             )}
 
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              className="hidden"
+              aria-hidden="true"
+            />
+
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1.5">
                 Full Name <span className="text-red-400">*</span>

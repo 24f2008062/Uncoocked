@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { sendEmail, escapeHtml } from "@/lib/email";
+
+export const runtime = "nodejs";
 
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -25,6 +27,14 @@ export async function POST(request) {
     const opportunityType = (formData.get("opportunityType") || "").toString().trim();
     const opportunityLocation = (formData.get("opportunityLocation") || "").toString().trim();
     const resume = formData.get("resume");
+
+    // Honeypot: real users never fill this hidden field.
+    if ((formData.get("website") || "").toString().trim()) {
+      return NextResponse.json(
+        { error: "Submission rejected." },
+        { status: 400 }
+      );
+    }
 
     if (!fullName || !email || !role) {
       return NextResponse.json(
@@ -61,34 +71,26 @@ export async function POST(request) {
       );
     }
 
-    if (!process.env.RESEND_API_KEY) {
-      console.warn("RESEND_API_KEY is not set. Simulating success for development.");
-      return NextResponse.json({ success: true, simulated: true }, { status: 200 });
-    }
-
-    const resend = new Resend(process.env.RESEND_API_KEY);
     const fileBuffer = Buffer.from(await resume.arrayBuffer());
 
-    const data = await resend.emails.send({
-      from: "Uncooked Portal <onboarding@resend.dev>",
-      to: "unfusedz.admin@gmail.com",
-      subject: `New Opportunity Application — ${opportunityTitle}`,
+    const data = await sendEmail({
+      subject: `New Opportunity Application — ${escapeHtml(opportunityTitle)}`,
       html: `
         <h2>New Opportunity Application</h2>
         <h3>Opportunity</h3>
-        <p><strong>Title:</strong> ${opportunityTitle}</p>
-        <p><strong>Company:</strong> ${opportunityCompany}</p>
-        <p><strong>Type:</strong> ${opportunityType}</p>
-        <p><strong>Location:</strong> ${opportunityLocation}</p>
+        <p><strong>Title:</strong> ${escapeHtml(opportunityTitle)}</p>
+        <p><strong>Company:</strong> ${escapeHtml(opportunityCompany)}</p>
+        <p><strong>Type:</strong> ${escapeHtml(opportunityType)}</p>
+        <p><strong>Location:</strong> ${escapeHtml(opportunityLocation)}</p>
         <br/>
         <h3>Applicant</h3>
-        <p><strong>Name:</strong> ${fullName}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Phone:</strong> ${phone || "N/A"}</p>
-        <p><strong>Role:</strong> ${role}</p>
+        <p><strong>Name:</strong> ${escapeHtml(fullName)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+        <p><strong>Phone:</strong> ${phone ? escapeHtml(phone) : "N/A"}</p>
+        <p><strong>Role:</strong> ${escapeHtml(role)}</p>
         <br/>
         <p><strong>Message:</strong></p>
-        <p>${message || "N/A"}</p>
+        <p>${message ? escapeHtml(message) : "N/A"}</p>
       `,
       attachments: [
         {
@@ -97,11 +99,6 @@ export async function POST(request) {
         },
       ],
     });
-
-    if (data.error) {
-      console.error("Resend API Error:", data.error);
-      return NextResponse.json({ error: data.error.message }, { status: 500 });
-    }
 
     return NextResponse.json({ success: true, data }, { status: 200 });
   } catch (error) {

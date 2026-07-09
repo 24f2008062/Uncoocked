@@ -8,6 +8,22 @@ import {
 } from "recharts";
 import { TrendingUp, Users, Eye, MousePointerClick, Filter } from "lucide-react";
 
+function CustomTooltip({ active, payload, label }) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-zinc-950 border border-dark-border p-3 rounded-lg shadow-xl">
+        <p className="text-xs font-bold text-white mb-2">{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} className="text-[10px] font-mono" style={{ color: entry.color }}>
+            {entry.name}: <span className="font-bold">{entry.value}</span>
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
 export default function AnalyticsPage({ params }) {
   const unwrappedParams = use(params);
   const eventId = unwrappedParams.eventId;
@@ -52,22 +68,6 @@ export default function AnalyticsPage({ params }) {
       setLoading(false);
     }, 600);
   }, [eventId, timeRange]);
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-zinc-950 border border-dark-border p-3 rounded-lg shadow-xl">
-          <p className="text-xs font-bold text-white mb-2">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-[10px] font-mono" style={{ color: entry.color }}>
-              {entry.name}: <span className="font-bold">{entry.value}</span>
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   if (loading) {
     return <div className="text-gray-400 text-xs animate-pulse">Loading analytics engine...</div>;

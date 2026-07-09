@@ -97,23 +97,15 @@ export default function ProfilePage() {
             // Load other fields from DB if available
             if (dbUser.department) setTrack(dbUser.department);
             if (dbUser.portfolioUrl) setGithub(dbUser.portfolioUrl);
+            if (dbUser.bio) setBio(dbUser.bio);
+            if (dbUser.team) setTeam(dbUser.team);
           }
         } else {
           // User not found in DB — fallback to email prefix
           if (isMounted) setFullName(user.split("@")[0]);
         }
 
-        // Load bio/team from localStorage (these aren't in DB schema)
-        try {
-          const storedProfileStr = localStorage.getItem(`profile_${user}`);
-          if (storedProfileStr) {
-            const profile = JSON.parse(storedProfileStr);
-            if (isMounted) {
-              if (profile.bio) setBio(profile.bio);
-              if (profile.team) setTeam(profile.team);
-            }
-          }
-        } catch (e) {}
+        // bio/team now live in the DB (see /api/users/profile).
 
         // Calculate attending count via API
         const resReg = await fetch(`/api/registrations?email=${encodeURIComponent(user)}`);
@@ -158,6 +150,8 @@ export default function ProfilePage() {
             fullName: fullName,
             department: track,
             portfolioUrl: github,
+            bio: bio,
+            team: team,
           })
         });
 
@@ -167,11 +161,7 @@ export default function ProfilePage() {
           return; // Don't show success on failure
         }
 
-        // Save bio/team to localStorage (not in DB schema)
-        const localPayload = { bio, team };
-        localStorage.setItem(`profile_${user}`, JSON.stringify(localPayload));
-        
-        // Enrich registrations in localStorage matching this email with the updated fullName/track/team
+        // bio/team are now persisted to the DB above.
         const storedRegs = JSON.parse(
           localStorage.getItem("registrations") || "[]",
         );

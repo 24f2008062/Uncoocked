@@ -7,6 +7,7 @@ import { Search, Calendar, Tag, Check, Terminal } from "lucide-react";
 import Image from "next/image";
 import RegisterModal from "@/app/components/event/RegisterModal";
 import { useUser } from "@/app/context/UserContext";
+import { toast } from "sonner";
 
 const INITIAL_MOCK_EVENTS = [
   {
@@ -105,7 +106,7 @@ export default function EventMatrixPreview() {
 
   const handleOpenRegister = (ev) => {
     if (!user) {
-      if (typeof window !== 'undefined') window.location.href = '/login';
+      if (typeof window !== 'undefined') window.location.assign('/login');
       return;
     }
     setSelectedEvent(ev);
@@ -116,7 +117,7 @@ export default function EventMatrixPreview() {
     if (!selectedEvent) return;
     try {
       if (registeredEventIds.includes(selectedEvent.id)) {
-        alert("You are already registered for this event!");
+        toast("You are already registered for this event!");
         setModalOpen(false);
         return;
       }
@@ -145,7 +146,7 @@ export default function EventMatrixPreview() {
       setModalOpen(false);
     } catch (err) {
       console.error(err);
-      alert("Registration failed. Please check logs.");
+      toast.error("Registration failed. Please check logs.");
     }
   };
 
@@ -302,7 +303,7 @@ export default function EventMatrixPreview() {
                       ) : (
                         <button
                           onClick={() => {
-                            if (typeof window !== 'undefined') window.location.href = '/login';
+      if (typeof window !== 'undefined') window.location.assign('/login');
                           }}
                           suppressHydrationWarning={true}
                           className="px-4 py-1.5 bg-neutral-900 border border-dark-border text-gray-400 font-semibold text-[11px] rounded-full hover:text-white transition-all hover:border-gray-500 cursor-pointer"

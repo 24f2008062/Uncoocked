@@ -59,6 +59,7 @@ export default function RegistrationDatabase() {
 
         return () => clearTimeout(timer);
       } catch (err) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(false);
       }
     }

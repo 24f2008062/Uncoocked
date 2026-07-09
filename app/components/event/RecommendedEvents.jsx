@@ -28,6 +28,7 @@ export default function RecommendedEvents({ userEmail, onSelectEvent }) {
 
   useEffect(() => {
     if (userEmail) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchRecommendations();
     }
   }, [userEmail]);

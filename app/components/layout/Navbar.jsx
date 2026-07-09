@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useUser } from "@/app/context/UserContext";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -16,6 +17,7 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -138,7 +140,7 @@ export default function Navbar() {
                               onClick={() => {
                                 setProfileOpen(false);
                                 logout();
-                                alert("Logged out successfully!");
+                                toast.success("Logged out successfully!");
                               }}
                               className="w-full text-center py-2 bg-red-500/8 border border-red-500/15 hover:bg-red-500/15 text-red-400 hover:text-red-300 text-[11px] font-semibold rounded-lg transition-all duration-150"
                             >
@@ -236,7 +238,7 @@ export default function Navbar() {
                       onClick={() => {
                         setMobileMenuOpen(false);
                         logout();
-                        alert("Logged out successfully!");
+                        toast.success("Logged out successfully!");
                       }}
                       className="w-full text-center px-4 py-2 border border-red-500/15 bg-red-500/8 hover:bg-red-500/15 text-red-400 text-[12px] font-semibold rounded-lg transition-all duration-150"
                     >
