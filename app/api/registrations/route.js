@@ -82,40 +82,7 @@ export async function POST(request) {
     });
 
     if (!event) {
-      const { mockEvents } = await import('@/lib/mockData');
-      const mockEvent = mockEvents.find((e) => e.id === eventId);
-
-      if (mockEvent) {
-        event = await prisma.event.create({
-          data: {
-            id: mockEvent.id,
-            title: mockEvent.title,
-            type: mockEvent.type,
-            category: mockEvent.category,
-            date: new Date(mockEvent.dateISO),
-            location: mockEvent.location,
-            zone: mockEvent.zone,
-            city: mockEvent.city,
-            state: mockEvent.state,
-            country: mockEvent.country,
-            description: mockEvent.description,
-            schedule: mockEvent.schedule,
-            prizePool: mockEvent.prizePool,
-            bannerUrl: mockEvent.bannerUrl,
-            tags: JSON.stringify(mockEvent.tags || []),
-            keywords: JSON.stringify(mockEvent.keywords || []),
-            popularityScore: mockEvent.popularityScore || 0,
-            ticketType: mockEvent.ticketType || "Free",
-            price: mockEvent.price ? parseFloat(mockEvent.price) : 0,
-            capacity: mockEvent.capacity || 100,
-            waitlistEnabled: mockEvent.waitlistEnabled ?? true,
-            status: mockEvent.status || "Active",
-            archived: mockEvent.archived ?? false,
-          },
-        });
-      } else {
-        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
-      }
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
     // Find or create user

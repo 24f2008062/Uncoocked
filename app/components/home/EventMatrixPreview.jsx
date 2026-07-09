@@ -9,72 +9,15 @@ import RegisterModal from "@/app/components/event/RegisterModal";
 import { useUser } from "@/app/context/UserContext";
 import { toast } from "sonner";
 
-const INITIAL_MOCK_EVENTS = [
-  {
-    id: "cultural-fest",
-    title: "Annual Cultural Fest 2026",
-    category: "Fests",
-    date: "June 20-22, 2026",
-    registrations: 412,
-    prizePool: "Trophies + ₹20k",
-    desc: "Inter-college cultural showcase. Compete in street plays, battle of bands, classical dance, and fashion shows.",
-    bannerUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "freshers-party",
-    title: "Campus Freshers Welcome Party",
-    category: "Parties",
-    date: "July 15, 2026",
-    registrations: 184,
-    prizePool: "Awards & Sashes",
-    desc: "Join us for the official welcome mixer for incoming freshers. Live music, food courts, and network games.",
-    bannerUrl: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "dandiya-night",
-    title: "Grand Dandiya Festive Night 2026",
-    category: "Festive Nights",
-    date: "October 12, 2026",
-    registrations: 256,
-    prizePool: "Golden Dandiya Stick",
-    desc: "Celebrate the festive season with traditional Garba, live orchestra, authentic food stalls, and prizes.",
-    bannerUrl: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "ai-workshop",
-    title: "Generative AI & LLM Workshop",
-    category: "Workshops",
-    date: "July 2, 2026",
-    registrations: 98,
-    prizePool: "API Credits",
-    desc: "Learn prompt engineering, vector databases, embeddings, and building active AI agents with PyTorch.",
-    bannerUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "entrepreneur-meetup",
-    title: "Founder & Startup Meetup",
-    category: "Meetups",
-    date: "July 18, 2026",
-    registrations: 74,
-    prizePool: "Incubator Seats",
-    desc: "Connect with startup founders, exchange ideas, and network with active angel mentors and VC investors.",
-    bannerUrl: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "hackathon-2026",
-    title: "Campus Innovation Hackathon 2026",
-    category: "Hackathons",
-    date: "June 20-22, 2026",
-    registrations: 145,
-    prizePool: "₹50,000",
-    desc: "Build functional prototypes, join projects teams, and pitch ideas directly to ecosystem VC funds.",
-    bannerUrl: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&auto=format&fit=crop&q=60",
-  },
-];
+const fmtDate = (d) => {
+  if (!d) return "";
+  const dt = new Date(d);
+  return isNaN(dt.getTime()) ? String(d) : dt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+};
 
 export default function EventMatrixPreview() {
   const { user } = useUser();
-  const [events, setEvents] = useState(INITIAL_MOCK_EVENTS);
+  const [events, setEvents] = useState([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
@@ -103,6 +46,30 @@ export default function EventMatrixPreview() {
     fetchUserRegistrations();
     return () => { isMounted = false; };
   }, [modalOpen]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadEvents = async () => {
+      try {
+        const res = await fetch("/api/events", { cache: "no-store" });
+        const data = await res.json();
+        if (data.success && isMounted) {
+          setEvents(
+            (data.events || []).map((e) => ({
+              ...e,
+              desc: e.description || e.desc || "",
+              registrations: e._count?.registrations ?? e.registrations ?? 0,
+              date: fmtDate(e.date),
+            }))
+          );
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadEvents();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleOpenRegister = (ev) => {
     if (!user) {

@@ -7,8 +7,6 @@ import { Search, Calendar, MapPin, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { LUCKNOW_ZONES } from "@/app/config/cities";
 
-import { mockEvents } from "@/lib/mockData";
-
 export default function EventsExplorer({
   events,
   searchQuery,
