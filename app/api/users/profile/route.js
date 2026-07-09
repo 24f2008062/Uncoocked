@@ -46,7 +46,6 @@ export async function POST(request) {
       update: updateData,
       create: {
         email,
-        passwordHash: 'dummy',
         fullName: fullName || 'New User',
         dob: dob || null,
         interests: interests ? JSON.stringify(interests) : '[]',

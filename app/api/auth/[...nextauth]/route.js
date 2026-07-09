@@ -1,10 +1,46 @@
 import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { prisma } from "@/lib/prisma";
+import { verifyPassword } from "@/lib/password";
 
 export const authOptions = {
-  // No provider is configured yet. Add one here when re-enabling auth
-  // (e.g. Email magic link, Credentials, or another OAuth provider).
-  // Until then, every gated route stays locked via middleware.js.
-  providers: [],
+  providers: [
+    CredentialsProvider({
+      name: "Email and Password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email?.toLowerCase().trim();
+        const password = credentials?.password;
+        if (!email || !password) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email },
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            name: true,
+            passwordHash: true,
+            onboardingCompleted: true,
+          },
+        });
+        if (!user || !user.passwordHash) return null;
+
+        const valid = await verifyPassword(password, user.passwordHash);
+        if (!valid) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.fullName || user.name,
+          onboardingCompleted: user.onboardingCompleted,
+        };
+      },
+    }),
+  ],
 
   secret: process.env.NEXTAUTH_SECRET,
   debug: false,

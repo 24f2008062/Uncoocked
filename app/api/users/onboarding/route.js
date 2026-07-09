@@ -25,7 +25,6 @@ export async function POST(request) {
       },
       create: {
         email,
-        passwordHash: 'dummy',
         fullName: fullName || 'New User',
         dob: dob || null,
         interests: JSON.stringify(interestsToSave),
