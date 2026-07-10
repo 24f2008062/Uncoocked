@@ -22,7 +22,10 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
+    // Base /dashboard is intentionally public: it renders its own inline
+    // "sign in to view" prompt (app/dashboard/page.jsx) instead of redirecting.
+    // Only the host/creator sub-routes require a session.
+    "/dashboard/organizer/:path*",
     "/profile/:path*",
     "/onboarding/:path*",
     "/api/users/:path*",
