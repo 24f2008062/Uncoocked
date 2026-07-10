@@ -35,8 +35,10 @@ export function UserProvider({ children }) {
         }
       }
     } else if (status === "unauthenticated") {
-      // No NextAuth session: reuse the local session from a prior sign-in so
-      // the dashboard stays accessible after login. No session -> signed out.
+      // No NextAuth session. Reuse a previously entered local session if one
+      // was stored; otherwise the visitor is simply signed out. Demo is just
+      // another account — it must be reached by entering its credentials, not
+      // auto-assigned.
       if (typeof window !== "undefined") {
         const localSession = localStorage.getItem("user_session");
         if (localSession) {
@@ -50,32 +52,18 @@ export function UserProvider({ children }) {
     }
   }, [session, status, pathname, router]);
 
-  const login = (email) => {
-    setUserState(email);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("user_session", email);
-    }
-  };
-
-  const signup = (email) => {
-    setUserState(email);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("user_session", email);
-    }
-  };
-
   const logout = async () => {
     setUserState(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem("user_session");
     }
-    // Also sign out of NextAuth
+    // Sign out of NextAuth
     await nextAuthSignOut({ redirect: false });
   };
 
   return (
     <UserContext.Provider
-      value={{ user, isLoading, login, signup, logout, isAuthenticated: status === "authenticated" }}
+      value={{ user, isLoading, logout, isAuthenticated: status === "authenticated" }}
     >
       {children}
     </UserContext.Provider>

@@ -1,7 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { mockEvents } from '../lib/mockData.js';
+import { hashPassword } from '../lib/password.js';
 
 const prisma = new PrismaClient();
+
+// Known credentials for the demo account. Demo is a normal account — it must
+// be signed into with these, not auto-assigned to anonymous visitors.
+const DEMO_EMAIL = 'demo@campus.edu';
+const DEMO_PASSWORD = 'demo1234';
 
 // Map the canonical mock event shape (lib/mockData.js) to the Prisma Event model.
 function toEventCreate(mock, organizerId) {
@@ -39,12 +45,13 @@ async function main() {
   console.log('Seeding users...');
   
   // Seed a demo user for testing and give them the Organizer role
+  const demoPasswordHash = await hashPassword(DEMO_PASSWORD);
   const demoUser = await prisma.user.upsert({
-    where: { email: 'demo@campus.edu' },
-    update: { role: 'Organizer' },
+    where: { email: DEMO_EMAIL },
+    update: { role: 'Organizer', passwordHash: demoPasswordHash },
     create: {
-      email: 'demo@campus.edu',
-      passwordHash: 'dummyhash',
+      email: DEMO_EMAIL,
+      passwordHash: demoPasswordHash,
       fullName: 'Demo Student',
       role: 'Organizer',
       interests: JSON.stringify(['AI & Machine Learning', 'Programming']),

@@ -240,12 +240,13 @@ export default function DashboardPage() {
     return (
       <div className="min-h-[80vh] bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-6 bg-[#111111] border border-white/8 p-8 rounded-2xl text-center shadow-sm">
-          <span className="text-4xl block">🚫</span>
+          <span className="text-4xl block">🔐</span>
           <h2 className="text-2xl font-bold text-white tracking-tight">
-            Access Denied
+            Sign in to view your dashboard
           </h2>
           <p className="text-[13px] text-white/45 leading-relaxed">
-            Please sign in to your campus account to access this dashboard.
+            Your campus dashboard with registered and hosted events is just a
+            sign-in away. Log in to your account to continue.
           </p>
           <div className="flex flex-col gap-3">
             <Link

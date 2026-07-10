@@ -26,9 +26,9 @@
 
 **Root cause:** An auth refactor removed the local `user_session` fallback from `UserContext`. With no NextAuth session, `useUser()` returned `null`, and `app/dashboard/page.jsx:239` renders the sign-in gate whenever `user` is null. `app/components/home/EventMatrixPreview.jsx` still reads/writes `user_session`, expecting the old fallback.
 
-**Fix:** `app/context/UserContext.jsx` — restored the local `user_session` fallback (when present, reuse it) and default to the `demo@campus.edu` demo user when unauthenticated, so the dashboard renders on first visit. Also restored the `login`/`signup` exports for call-site compatibility.
+**Fix:** `app/context/UserContext.jsx` — restored the local `user_session` fallback (when present, reuse it) and kept the `login`/`signup` exports for call-site compatibility. It no longer auto-assigns the `demo@campus.edu` demo user to anonymous visitors; when unauthenticated with no stored local session, `user` stays `null` and the dashboard shows its sign-in gate. `prisma/seed.js` now hashes a real, known demo password (`demo1234`) so the demo account is reachable by entering its credentials, rather than the previous non-loginable `dummyhash`.
 
-**Note:** This intentionally re-enables the demo/local session that the security refactor removed. If real auth should gate the dashboard later, that is a separate task.
+**Note:** Demo is treated like any other account — access requires signing in with `demo@campus.edu` / `demo1234`. Anonymous visitors are not auto-logged-in; if the dashboard should be publicly reachable, that is a separate task.
 
 ---
 
