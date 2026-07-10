@@ -35,8 +35,8 @@ export function UserProvider({ children }) {
         }
       }
     } else if (status === "unauthenticated") {
-      // No NextAuth session: fall back to the local demo session so the
-      // dashboard/explorer stay usable without a real login (as before).
+      // No NextAuth session: reuse the local session from a prior sign-in so
+      // the dashboard stays accessible after login. No session -> signed out.
       if (typeof window !== "undefined") {
         const localSession = localStorage.getItem("user_session");
         if (localSession) {
@@ -45,8 +45,7 @@ export function UserProvider({ children }) {
           return;
         }
       }
-      // Default demo user keeps the dashboard visible on first visit.
-      setUserState("demo@campus.edu");
+      setUserState(null);
       setIsLoading(false);
     }
   }, [session, status, pathname, router]);
