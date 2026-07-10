@@ -35,15 +35,35 @@ export function UserProvider({ children }) {
         }
       }
     } else if (status === "unauthenticated") {
-      // No NextAuth session: clear any stale local fallback sessions.
-      setUserState(null);
+      // No NextAuth session: fall back to the local demo session so the
+      // dashboard/explorer stay usable without a real login (as before).
       if (typeof window !== "undefined") {
-        localStorage.removeItem("user_session");
-        localStorage.removeItem("uncooked_user_cache");
+        const localSession = localStorage.getItem("user_session");
+        if (localSession) {
+          setUserState(localSession);
+          setIsLoading(false);
+          return;
+        }
       }
+      // Default demo user keeps the dashboard visible on first visit.
+      setUserState("demo@campus.edu");
       setIsLoading(false);
     }
   }, [session, status, pathname, router]);
+
+  const login = (email) => {
+    setUserState(email);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user_session", email);
+    }
+  };
+
+  const signup = (email) => {
+    setUserState(email);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user_session", email);
+    }
+  };
 
   const logout = async () => {
     setUserState(null);
@@ -56,7 +76,7 @@ export function UserProvider({ children }) {
 
   return (
     <UserContext.Provider
-      value={{ user, isLoading, logout, isAuthenticated: status === "authenticated" }}
+      value={{ user, isLoading, login, signup, logout, isAuthenticated: status === "authenticated" }}
     >
       {children}
     </UserContext.Provider>
