@@ -239,7 +239,7 @@ export default function EventMatrixPreview() {
                         <div>
                           <span className="block text-[10px] uppercase tracking-wider pb-1 text-white/25">Prize Pool</span>
                           {ev.prizePool ? (
-                            <div className="text-white/70 text-[12px] leading-relaxed prose-invert max-w-none prose-p:mb-0.5 prose-li:my-0">
+                            <div className="text-white/70 text-[12px] leading-relaxed prose prose-invert max-w-none prose-p:mb-0.5 prose-li:my-0">
                               <ReactMarkdown
                                 components={{
                                   h2: ({ node: _node, ...props }) => <h2 className="text-[12px] font-semibold text-white mb-1" {...props} />,

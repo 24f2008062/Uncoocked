@@ -238,28 +238,24 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="min-h-[80vh] bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-6 bg-[#111111] border border-white/8 p-8 rounded-2xl text-center shadow-sm">
-          <span className="text-4xl block">🔐</span>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
-            Sign in to view your dashboard
-          </h2>
-          <p className="text-[13px] text-white/45 leading-relaxed">
-            Your campus dashboard with registered and hosted events is just a
-            sign-in away. Log in to your account to continue.
-          </p>
-          <div className="flex flex-col gap-3">
+      <div className="bg-black w-full min-h-[60vh] py-16 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl">
+          <div className="bg-[#111111] border border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+            <span className="text-4xl shrink-0">🔐</span>
+            <div className="flex-1 space-y-1">
+              <h2 className="text-lg font-semibold text-white">
+                You need to sign in
+              </h2>
+              <p className="text-[13px] text-white/45 leading-relaxed">
+                Sign in to your campus account to view your registered and
+                hosted events.
+              </p>
+            </div>
             <Link
               href="/login"
-              className="w-full py-2 bg-[#A855F7] text-white text-[13px] font-semibold rounded-lg hover:bg-[#C084FC] transition-colors duration-150"
+              className="shrink-0 px-5 py-2.5 bg-[#A855F7] text-white text-[13px] font-semibold rounded-lg hover:bg-[#C084FC] transition-colors duration-150"
             >
-              Sign In to Campus Account
-            </Link>
-            <Link
-              href="/"
-              className="text-[13px] text-white/35 hover:text-white/70 transition-colors duration-150"
-            >
-              Back to Home
+              Sign In
             </Link>
           </div>
         </div>
