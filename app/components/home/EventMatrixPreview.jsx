@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Search, Calendar, Tag, Check, Terminal } from "lucide-react";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
 import RegisterModal from "@/app/components/event/RegisterModal";
 import { useUser } from "@/app/context/UserContext";
 import { toast } from "sonner";
@@ -237,7 +238,24 @@ export default function EventMatrixPreview() {
                       <div className="grid grid-cols-2 gap-2 pt-3 text-[11px] border-t border-white/6 text-white/40">
                         <div>
                           <span className="block text-[10px] uppercase tracking-wider pb-1 text-white/25">Prize Pool</span>
-                          <span className="text-white/70 font-semibold text-[12px]">{ev.prizePool}</span>
+                          {ev.prizePool ? (
+                            <div className="text-white/70 text-[12px] leading-relaxed prose-invert max-w-none prose-p:mb-0.5 prose-li:my-0">
+                              <ReactMarkdown
+                                components={{
+                                  h2: ({ node: _node, ...props }) => <h2 className="text-[12px] font-semibold text-white mb-1" {...props} />,
+                                  h3: ({ node: _node, ...props }) => <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white mb-0.5" {...props} />,
+                                  p: ({ node: _node, ...props }) => <p className="text-white/70 text-[12px] mb-0.5 leading-relaxed" {...props} />,
+                                  ul: ({ node: _node, ...props }) => <ul className="list-disc list-inside text-white/70 text-[12px] space-y-0.5 ml-1" {...props} />,
+                                  li: ({ node: _node, ...props }) => <li className="text-white/70 text-[12px]" {...props} />,
+                                  strong: ({ node: _node, ...props }) => <strong className="font-semibold text-white" {...props} />,
+                                }}
+                              >
+                                {ev.prizePool}
+                              </ReactMarkdown>
+                            </div>
+                          ) : (
+                            <span className="text-white/40 font-normal text-[12px]">No prize pool listed</span>
+                          )}
                         </div>
                         <div>
                           <span className="block text-[10px] uppercase tracking-wider pb-1 text-white/25">Registrations</span>

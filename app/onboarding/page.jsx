@@ -54,7 +54,7 @@ export default function OnboardingPage() {
   const submitOnboarding = async (interests) => {
     try {
       // 1. Await the API request fully before redirecting
-      const email = typeof user === "string" ? user : user?.email || "demo@campus.edu";
+      const email = typeof user === "string" ? user : user?.email;
       
       let fullName = undefined;
       let dob = undefined;

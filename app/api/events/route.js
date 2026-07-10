@@ -3,10 +3,22 @@ import { prisma } from '@/lib/prisma';
 import { getToken } from 'next-auth/jwt';
 import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '../../config/cities';
 
+// Events change rarely; cache the read so repeat page loads don't pay the
+// ~3s DB round-trip on every request. Invalidate on create/update.
+const EVENTS_CACHE_TTL_MS = 60_000;
+let eventsCache = { at: 0, data: null };
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const includeArchived = searchParams.get('includeArchived') === 'true';
+
+    const cached = eventsCache.data && Date.now() - eventsCache.at < EVENTS_CACHE_TTL_MS
+      ? eventsCache.data
+      : null;
+    if (cached) {
+      return NextResponse.json({ success: true, events: cached, cached: true });
+    }
 
     const whereClause = {
       city: { in: ACTIVE_CITIES }
@@ -32,6 +44,8 @@ export async function GET(request) {
         }
       }
     });
+
+    eventsCache = { at: Date.now(), data: events };
 
     return NextResponse.json({
       success: true,
@@ -92,6 +106,8 @@ export async function POST(request) {
         organizerId: organizerId || null,
       },
     });
+
+    eventsCache = { at: 0, data: null };
 
     return NextResponse.json({
       success: true,
