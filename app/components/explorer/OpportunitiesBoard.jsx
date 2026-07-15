@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { MapPin, DollarSign, ExternalLink, Search } from "lucide-react";
+import OpportunityApplicationModal from "./OpportunityApplicationModal";
 
 const mockOpportunities = [
   {
@@ -65,6 +66,8 @@ const mockOpportunities = [
 export default function OpportunitiesBoard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeType, setActiveType] = useState("All");
+  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const types = useMemo(() => {
     const uniqueTypes = new Set(mockOpportunities.map((opp) => opp.type));
@@ -216,7 +219,13 @@ export default function OpportunitiesBoard() {
                 </div>
 
                 <div className="pt-3 border-t border-white/6">
-                  <button className="btn-secondary w-full text-[12px]">
+                  <button
+                    className="btn-secondary w-full text-[12px]"
+                    onClick={() => {
+                      setSelectedOpportunity(opp);
+                      setIsModalOpen(true);
+                    }}
+                  >
                     Apply Now <ExternalLink className="h-3 w-3" />
                   </button>
                 </div>
@@ -224,6 +233,17 @@ export default function OpportunitiesBoard() {
             </motion.div>
           ))}
         </motion.div>
+      )}
+      {isModalOpen && selectedOpportunity && (
+        <OpportunityApplicationModal
+          key={selectedOpportunity.id}
+          open={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedOpportunity(null);
+          }}
+          opportunity={selectedOpportunity}
+        />
       )}
     </div>
   );

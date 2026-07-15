@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Pusher from "pusher-js";
 import EmojiPicker from "emoji-picker-react";
+import { toast } from "sonner";
 
 export default function EventChat({ eventId, currentUser }) {
   const [messages, setMessages] = useState([]);
@@ -137,7 +138,7 @@ export default function EventChat({ eventId, currentUser }) {
     } catch (err) {
       console.error("Failed to send message:", err);
       setMessages((prev) => prev.filter((m) => m.id !== temporaryId));
-      alert("Message failed to send. You must be registered to chat.");
+      toast.error("Message failed to send. You must be registered to chat.");
     }
   };
 
@@ -152,7 +153,7 @@ export default function EventChat({ eventId, currentUser }) {
       if (!res.ok) throw new Error("Could not delete message");
     } catch (err) {
       console.error("Failed to unsend message:", err);
-      alert("Could not unsend message. Try again.");
+      toast.error("Could not unsend message. Try again.");
       const reloadRes = await fetch(`/api/chat?eventId=${eventId}&userEmail=${currentUser?.email}`);
       if (reloadRes.ok) setMessages(await reloadRes.json());
     }

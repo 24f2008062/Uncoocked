@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { getToken } from 'next-auth/jwt';
 import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '../../config/cities';
 
-const prisma = new PrismaClient({});
+// Events change rarely; cache the read so repeat page loads don't pay the
+// ~3s DB round-trip on every request. Invalidate on create/update.
+const EVENTS_CACHE_TTL_MS = 60_000;
+let eventsCache = { at: 0, data: null };
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const includeArchived = searchParams.get('includeArchived') === 'true';
+
+    const cached = eventsCache.data && Date.now() - eventsCache.at < EVENTS_CACHE_TTL_MS
+      ? eventsCache.data
+      : null;
+    if (cached) {
+      return NextResponse.json({ success: true, events: cached, cached: true });
+    }
 
     const whereClause = {
       city: { in: ACTIVE_CITIES }
@@ -34,6 +45,8 @@ export async function GET(request) {
       }
     });
 
+    eventsCache = { at: Date.now(), data: events };
+
     return NextResponse.json({
       success: true,
       events,
@@ -49,17 +62,26 @@ export async function POST(request) {
     const data = await request.json();
     let organizerId = data.organizerId;
 
+    // Require an authenticated session; the organizer is the caller.
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!organizerId) {
+      organizerId = token.email;
+    }
+
     if (organizerId && organizerId.includes('@')) {
       const user = await prisma.user.findUnique({ where: { email: organizerId } });
       if (user) {
         organizerId = user.id;
-      } else {
-        organizerId = null;
       }
     } else if (!organizerId && data.hostEmail) {
       const user = await prisma.user.findUnique({ where: { email: data.hostEmail } });
       if (user) {
         organizerId = user.id;
+      } else {
+        organizerId = data.hostEmail;
       }
     }
 
@@ -84,6 +106,8 @@ export async function POST(request) {
         organizerId: organizerId || null,
       },
     });
+
+    eventsCache = { at: 0, data: null };
 
     return NextResponse.json({
       success: true,

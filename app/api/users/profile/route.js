@@ -26,7 +26,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, interests, department, portfolioUrl, fullName, dob } = body;
+    const { email, interests, department, portfolioUrl, fullName, dob, bio, team } = body;
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -38,6 +38,8 @@ export async function POST(request) {
     if (portfolioUrl !== undefined) updateData.portfolioUrl = portfolioUrl;
     if (fullName !== undefined) updateData.fullName = fullName;
     if (dob !== undefined) updateData.dob = dob;
+    if (bio !== undefined) updateData.bio = bio;
+    if (team !== undefined) updateData.team = team;
 
     const user = await prisma.user.upsert({
       where: { email },
@@ -48,6 +50,15 @@ export async function POST(request) {
         fullName: fullName || 'New User',
         ...updateData,
       },
+        fullName: fullName || 'New User',
+        dob: dob || null,
+        interests: interests ? JSON.stringify(interests) : '[]',
+        department: department || null,
+        portfolioUrl: portfolioUrl || null,
+        bio: bio || null,
+        team: team || null,
+        onboardingCompleted: true,
+      }
     });
 
     return NextResponse.json({ success: true, user });
@@ -56,3 +67,5 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';

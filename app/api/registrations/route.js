@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient({});
+import { prisma } from '@/lib/prisma';
+import { getToken } from 'next-auth/jwt';
 
 export async function GET(request) {
   try {
@@ -65,10 +64,25 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const { eventId, email, name, track, teamName, status, paymentStatus } = data;
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { eventId, name, track, teamName, status, paymentStatus } = data;
+    const email = data.email || token.email;
 
     if (!eventId || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Check if event exists, if not, see if it's a mock event and seed it
+    let event = await prisma.event.findUnique({
+      where: { id: eventId }
+    });
+
+    if (!event) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
     // Find or create user

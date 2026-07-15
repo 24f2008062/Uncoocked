@@ -29,6 +29,8 @@ model User {
   clubAssociation String?
   portfolioUrl    String?
   interests       String?        // JSON serialized array of interests
+  bio             String?
+  team            String?
   preferenceScore Float          @default(0)
   onboardingCompleted Boolean    @default(false)
   createdAt       DateTime       @default(now())

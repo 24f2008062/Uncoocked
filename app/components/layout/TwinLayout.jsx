@@ -10,6 +10,7 @@ import RegisterModal from "@/app/components/event/RegisterModal";
 import RegistrationCard from "@/app/components/event/RegistrationCard";
 import EventChat from "@/app/components/event/EventChat";
 import Image from "next/image";
+import { toast } from "sonner";
 
 // Lazy load heavy components
 const EventDescription = dynamic(() => import("@/app/components/event/EventDescription"), { ssr: false });
@@ -84,7 +85,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
   async function handleRegister(payload) {
     if (isCurrentlyHosting) {
-      alert("Hosts are structurally restricted from registering for their own events.");
+      toast("Hosts are structurally restricted from registering for their own events.");
       return;
     }
     setModalOpen(false);
@@ -121,7 +122,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
       }
     } catch (err) {
       console.error(err);
-      alert("Registration failed. Please check logs.");
+      toast.error("Registration failed. Please check logs.");
     }
   }
 
@@ -144,7 +145,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
       if (!user) setLocalUserEmail(null);
     } catch (err) {
       console.error(err);
-      alert("Failed to cancel registration.");
+      toast.error("Failed to cancel registration.");
     }
   };
 
@@ -175,7 +176,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to post update. Please check logs.");
+      toast.error("Failed to post update. Please check logs.");
     }
 
     setBroadcastTitle("");

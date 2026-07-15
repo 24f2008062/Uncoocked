@@ -1,161 +1,60 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Search, Calendar, Tag, Check, Terminal } from "lucide-react";
+import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import Image from "next/image";
-import RegisterModal from "@/app/components/event/RegisterModal";
-import { useUser } from "@/app/context/UserContext";
 
-const INITIAL_MOCK_EVENTS = [
-  {
-    id: "cultural-fest",
-    title: "Annual Cultural Fest 2026",
-    category: "Fests",
-    date: "June 20-22, 2026",
-    registrations: 412,
-    prizePool: "Trophies + ₹20k",
-    desc: "Inter-college cultural showcase. Compete in street plays, battle of bands, classical dance, and fashion shows.",
-    bannerUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "freshers-party",
-    title: "Campus Freshers Welcome Party",
-    category: "Parties",
-    date: "July 15, 2026",
-    registrations: 184,
-    prizePool: "Awards & Sashes",
-    desc: "Join us for the official welcome mixer for incoming freshers. Live music, food courts, and network games.",
-    bannerUrl: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "dandiya-night",
-    title: "Grand Dandiya Festive Night 2026",
-    category: "Festive Nights",
-    date: "October 12, 2026",
-    registrations: 256,
-    prizePool: "Golden Dandiya Stick",
-    desc: "Celebrate the festive season with traditional Garba, live orchestra, authentic food stalls, and prizes.",
-    bannerUrl: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "ai-workshop",
-    title: "Generative AI & LLM Workshop",
-    category: "Workshops",
-    date: "July 2, 2026",
-    registrations: 98,
-    prizePool: "API Credits",
-    desc: "Learn prompt engineering, vector databases, embeddings, and building active AI agents with PyTorch.",
-    bannerUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "entrepreneur-meetup",
-    title: "Founder & Startup Meetup",
-    category: "Meetups",
-    date: "July 18, 2026",
-    registrations: 74,
-    prizePool: "Incubator Seats",
-    desc: "Connect with startup founders, exchange ideas, and network with active angel mentors and VC investors.",
-    bannerUrl: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=600&auto=format&fit=crop&q=60",
-  },
-  {
-    id: "hackathon-2026",
-    title: "Campus Innovation Hackathon 2026",
-    category: "Hackathons",
-    date: "June 20-22, 2026",
-    registrations: 145,
-    prizePool: "₹50,000",
-    desc: "Build functional prototypes, join projects teams, and pitch ideas directly to ecosystem VC funds.",
-    bannerUrl: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&auto=format&fit=crop&q=60",
-  },
-];
+const fmtDate = (d) => {
+  if (!d) return "";
+  const dt = new Date(d);
+  return isNaN(dt.getTime()) ? String(d) : dt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+};
+
+const getTypeStyle = (type) => {
+  switch (type?.toLowerCase()) {
+    case "hackathon":
+      return "bg-[#A855F7]/10 text-[#C084FC] border border-[#A855F7]/20";
+    case "fest":
+      return "bg-pink-500/10 text-pink-400 border border-pink-500/20";
+    case "party":
+      return "bg-purple-500/10 text-purple-400 border border-purple-500/20";
+    case "festive night":
+      return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
+    case "meetup":
+      return "bg-blue-500/10 text-blue-400 border border-blue-500/20";
+    case "workshop":
+      return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+    default:
+      return "bg-white/5 text-white/50 border border-white/10";
+  }
+};
 
 export default function EventMatrixPreview() {
-  const { user } = useUser();
-  const [events, setEvents] = useState(INITIAL_MOCK_EVENTS);
-  const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [registeredEventIds, setRegisteredEventIds] = useState([]);
-  const [successMessage, setSuccessMessage] = useState("");
-
-  const categories = ["All", "Fests", "Parties", "Festive Nights", "Workshops", "Meetups", "Hackathons"];
+  const [events, setEvents] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
-    const fetchUserRegistrations = async () => {
-      const userEmail = localStorage.getItem("user_session") || "";
-      if (userEmail) {
-        try {
-          const res = await fetch(`/api/registrations?email=${userEmail}`);
-          const data = await res.json();
-          if (data.success && isMounted) {
-            setRegisteredEventIds(data.registrations.map((r) => r.eventId));
-          }
-        } catch (err) {
-          console.error(err);
+    const loadEvents = async () => {
+      try {
+        const res = await fetch("/api/events", { cache: "no-store" });
+        const data = await res.json();
+        if (data.success && isMounted) {
+          setEvents(
+            (data.events || []).map((e) => ({
+              ...e,
+              desc: e.description || e.desc || "",
+              date: fmtDate(e.date),
+            }))
+          );
         }
+      } catch (err) {
+        console.error(err);
       }
     };
-    fetchUserRegistrations();
+    loadEvents();
     return () => { isMounted = false; };
-  }, [modalOpen]);
-
-  const handleOpenRegister = (ev) => {
-    if (!user) {
-      if (typeof window !== 'undefined') window.location.href = '/login';
-      return;
-    }
-    setSelectedEvent(ev);
-    setModalOpen(true);
-  };
-
-  const handleRegisterSubmit = async (payload) => {
-    if (!selectedEvent) return;
-    try {
-      if (registeredEventIds.includes(selectedEvent.id)) {
-        alert("You are already registered for this event!");
-        setModalOpen(false);
-        return;
-      }
-
-      const userEmail = payload.email || localStorage.getItem("user_session");
-      const res = await fetch(`/api/registrations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, email: userEmail, eventId: selectedEvent.id, status: "Confirmed" }),
-      });
-
-      if (!res.ok) throw new Error("Failed to register");
-
-      setEvents((prev) =>
-        prev.map((e) => e.id === selectedEvent.id ? { ...e, registrations: e.registrations + 1 } : e)
-      );
-
-      if (!localStorage.getItem("user_session")) {
-        localStorage.setItem("user_session", userEmail);
-        window.dispatchEvent(new Event("storage"));
-      }
-
-      setRegisteredEventIds((prev) => [...prev, selectedEvent.id]);
-      setSuccessMessage(`✓ Registered successfully for ${selectedEvent.title}!`);
-      setTimeout(() => setSuccessMessage(""), 4000);
-      setModalOpen(false);
-    } catch (err) {
-      console.error(err);
-      alert("Registration failed. Please check logs.");
-    }
-  };
-
-  const filteredEvents = events.filter((ev) => {
-    const matchesSearch =
-      ev.title.toLowerCase().includes(search.toLowerCase()) ||
-      ev.desc.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = activeCategory === "All" || ev.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  });
+  }, []);
 
   return (
     <section className="py-12 relative w-full border-t border-white/6">
@@ -168,169 +67,93 @@ export default function EventMatrixPreview() {
               Explore the Event Matrix
             </h2>
             <p className="text-[13px] text-white/45 max-w-lg leading-relaxed">
-              Browse and checkout tickets for upcoming hackathons, startup pitch
-              panels, system dev sprints, and community drives.
+              A quick glance at the upcoming hackathons, fests, workshops, and
+              community drives happening around campus.
             </p>
           </div>
 
-          {/* Search */}
-          <div className="relative w-full md:max-w-xs">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
-            <input
-              type="text"
-              placeholder="Filter by keyword..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              suppressHydrationWarning
-              className="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/8 bg-[#111111] text-[13px] text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#A855F7]/30 focus:border-[#A855F7]/50 transition-all duration-150"
-            />
-          </div>
+          <Link
+            href="/event"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#A855F7] text-white text-[12px] font-semibold hover:bg-[#C084FC] hover:-translate-y-px transition-all duration-150 whitespace-nowrap"
+          >
+            View all events <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-white/6">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              suppressHydrationWarning
-              className={`px-4 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-150 whitespace-nowrap cursor-pointer ${
-                activeCategory === cat
-                  ? "bg-[#A855F7] text-white"
-                  : "bg-[#111111] text-white/50 border border-white/8 hover:text-white/80 hover:border-white/16"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Success Banner */}
-        {successMessage && (
-          <div className="bg-emerald-500/8 border border-emerald-500/20 text-emerald-400 text-[12px] p-3 rounded-xl animate-fadeIn text-center font-medium">
-            {successMessage}
+        {/* Events Grid — same card style as the Events page */}
+        {events.length === 0 ? (
+          <div className="text-center py-16 bg-[#111111] border border-white/6 rounded-xl text-[12px] text-white/30">
+            No upcoming events right now.
           </div>
-        )}
-
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence mode="popLayout">
-            {filteredEvents.map((ev) => {
-              const isRegistered = registeredEventIds.includes(ev.id);
-              return (
-                <motion.div
-                  key={ev.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
-                  className="group flex flex-col overflow-hidden bg-[#111111] border border-white/8 rounded-xl hover:border-white/16 hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 min-h-[320px]"
-                >
-                  {/* Banner */}
-                  <div className="relative h-32 w-full overflow-hidden bg-[#0A0A0A]">
-                    {ev.bannerUrl ? (
-                      <Image
-                        src={ev.bannerUrl}
-                        alt={ev.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 400px"
-                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center p-4 text-center">
-                        <span className="font-bold text-base text-white/60 leading-snug line-clamp-2">{ev.title}</span>
-                      </div>
-                    )}
-                    {/* Category tag */}
-                    <div className="absolute top-3 left-3">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-black/70 border border-white/10 text-white/70">
-                        <Tag className="h-2.5 w-2.5 text-white/40" /> {ev.category}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {events.map((ev) => (
+              <Link
+                key={ev.id}
+                href={`/event?id=${ev.id}`}
+                className="group flex flex-col overflow-hidden bg-[#111111] border border-white/8 hover:border-white/16 rounded-xl transition-all duration-150 min-h-[300px] shadow-sm cursor-pointer"
+              >
+                {/* Banner */}
+                <div className="relative h-28 w-full overflow-hidden bg-[#0A0A0A] border-b border-white/6">
+                  {ev.bannerUrl ? (
+                    <Image
+                      src={ev.bannerUrl}
+                      alt={ev.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 400px"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105 opacity-80 group-hover:opacity-100"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center p-4 text-center">
+                      <span className="font-bold text-sm text-white/50 leading-snug line-clamp-2">
+                        {ev.title}
                       </span>
                     </div>
+                  )}
+                  {/* Type tag */}
+                  <div className="absolute top-3 left-3">
+                    <span
+                      className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${getTypeStyle(ev.type)}`}
+                    >
+                      {ev.type}
+                    </span>
                   </div>
+                </div>
 
-                  {/* Card Content */}
-                  <div className="p-4 flex flex-col justify-between flex-1 space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center text-[11px] text-white/35 font-mono">
-                        <Calendar className="h-3 w-3 mr-1.5 shrink-0" /> {ev.date}
-                      </div>
-
-                      <h3 className="text-[15px] font-semibold text-white leading-snug group-hover:text-white/80 transition-colors duration-150 truncate">
-                        {ev.title}
-                      </h3>
-
-                      <p className="text-[12px] text-white/45 leading-relaxed line-clamp-3">
-                        {ev.desc}
-                      </p>
-
-                      {/* Metadata */}
-                      <div className="grid grid-cols-2 gap-2 pt-3 text-[11px] border-t border-white/6 text-white/40">
-                        <div>
-                          <span className="block text-[10px] uppercase tracking-wider pb-1 text-white/25">Prize Pool</span>
-                          <span className="text-white/70 font-semibold text-[12px]">{ev.prizePool}</span>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] uppercase tracking-wider pb-1 text-white/25">Registrations</span>
-                          <span className="text-white/70 font-semibold text-[12px]">{ev.registrations} secured</span>
-                        </div>
-                      </div>
+                {/* Card Content */}
+                <div className="p-4 flex flex-col justify-between flex-1 space-y-3">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[10px] text-white/40 font-mono">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span className="truncate max-w-[140px]">
+                        {ev.zone ? ev.zone : (ev.location || "").split(",")[0]}
+                      </span>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/6 mt-auto">
-                      <Link
-                        href={`/event?id=${ev.id}`}
-                        className="text-[11px] font-medium text-white/40 hover:text-white/70 transition-colors duration-150"
-                      >
-                        View Details
-                      </Link>
+                    <h3 className="text-[15px] font-bold text-white group-hover:text-white/80 transition-colors duration-150 leading-snug line-clamp-1">
+                      {ev.title}
+                    </h3>
 
-                      {isRegistered ? (
-                        <span className="inline-flex items-center gap-1 px-4 py-1.5 bg-emerald-500/8 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold rounded-full">
-                          <Check className="h-3 w-3" /> Registered
-                        </span>
-                      ) : user ? (
-                        <button
-                          onClick={() => handleOpenRegister(ev)}
-                          suppressHydrationWarning={true}
-                          className="px-4 py-1.5 bg-[#A855F7] text-white text-[11px] font-semibold rounded-full hover:bg-[#C084FC] hover:-translate-y-px hover:shadow-md transition-all duration-150 cursor-pointer"
-                        >
-                          Secure Ticket
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            if (typeof window !== 'undefined') window.location.href = '/login';
-                          }}
-                          suppressHydrationWarning={true}
-                          className="px-4 py-1.5 bg-neutral-900 border border-dark-border text-gray-400 font-semibold text-[11px] rounded-full hover:text-white transition-all hover:border-gray-500 cursor-pointer"
-                        >
-                          Sign in to Register
-                        </button>
-                      )}
-                    </div>
+                    <p className="text-[12px] text-white/45 leading-relaxed line-clamp-2">
+                      {ev.desc}
+                    </p>
                   </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
 
-        {/* Empty State */}
-        {filteredEvents.length === 0 && (
-          <div className="text-center py-16 bg-[#111111] border border-white/6 rounded-xl text-[12px] text-white/30 space-y-2">
-            <Terminal className="h-5 w-5 text-white/20 mx-auto" />
-            <p>No events matching the current filter.</p>
+                  <div className="flex items-center justify-between border-t border-white/6 pt-3 mt-auto">
+                    <div className="flex items-center gap-1.5 text-white/40 font-mono text-[10px]">
+                      <Calendar className="h-3 w-3 shrink-0" />
+                      <span>{ev.date}</span>
+                    </div>
+
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-white/60 group-hover:text-white transition-colors">
+                      Details <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
-
-        <RegisterModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onSubmit={handleRegisterSubmit}
-        />
       </div>
     </section>
   );
