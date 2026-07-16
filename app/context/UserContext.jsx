@@ -13,7 +13,7 @@ export function UserProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Synchronize NextAuth session with UserContext state
+  // Synchronize NextAuth session with UserContext state (no localStorage fallback)
   useEffect(() => {
     // If NextAuth is still checking the session, do not proceed with auth redirects
     if (status === "loading") {
@@ -24,60 +24,26 @@ export function UserProvider({ children }) {
     if (session?.user) {
       setUserState(session.user.email);
       setIsLoading(false);
-      
+
       // Auto-redirect new users to onboarding
       if (session.user.onboardingCompleted === false && pathname !== "/onboarding") {
         router.push("/onboarding");
       }
     } else if (status === "unauthenticated") {
-      // Check for a local test session first
-      if (typeof window !== "undefined") {
-        const localSession = localStorage.getItem("user_session");
-        if (localSession) {
-          setUserState(localSession);
-          setIsLoading(false);
-          return; // Skip clearing the state
-        }
-      }
-
-      // NextAuth finished loading and confirmed no session and no local session
-      // Strictly clear any local fallback sessions to prevent stale access
       setUserState(null);
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user_session");
-        localStorage.removeItem("uncooked_user_cache");
-      }
       setIsLoading(false);
     }
   }, [session, status, pathname, router]);
 
-  const login = (email) => {
-    setUserState(email);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("user_session", email);
-    }
-  };
-
-  const signup = (email) => {
-    // In a real app, you would create the user here
-    setUserState(email);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("user_session", email);
-    }
-  };
-
   const logout = async () => {
     setUserState(null);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user_session");
-    }
-    // Also sign out of NextAuth
+    // Sign out of NextAuth
     await nextAuthSignOut({ redirect: false });
   };
 
   return (
     <UserContext.Provider
-      value={{ user, isLoading, login, signup, logout, isAuthenticated: status === "authenticated" }}
+      value={{ user, isLoading, logout, isAuthenticated: status === "authenticated" }}
     >
       {children}
     </UserContext.Provider>

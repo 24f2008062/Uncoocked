@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthToken, requireEventManager } from "@/lib/auth/guards";
 
 export async function PUT(request, { params }) {
   const { id } = await params;
   const { capacity, waitlistEnabled } = await request.json();
+
+  const token = await getAuthToken(request);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!(await requireEventManager(id, token))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   try {
     const updated = await prisma.event.update({
@@ -31,6 +40,14 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   const { id } = await params;
+
+  const token = await getAuthToken(request);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!(await requireEventManager(id, token))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   try {
     // In production, ensure cascaded deletes for registrations, analytics, etc

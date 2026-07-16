@@ -86,7 +86,7 @@ export default function EventMatrixPreview() {
   useEffect(() => {
     let isMounted = true;
     const fetchUserRegistrations = async () => {
-      const userEmail = localStorage.getItem("user_session") || "";
+      const userEmail = user || "";
       if (userEmail) {
         try {
           const res = await fetch(`/api/registrations?email=${userEmail}`);
@@ -121,7 +121,7 @@ export default function EventMatrixPreview() {
         return;
       }
 
-      const userEmail = payload.email || localStorage.getItem("user_session");
+      const userEmail = payload.email || user || "";
       const res = await fetch(`/api/registrations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -133,11 +133,6 @@ export default function EventMatrixPreview() {
       setEvents((prev) =>
         prev.map((e) => e.id === selectedEvent.id ? { ...e, registrations: e.registrations + 1 } : e)
       );
-
-      if (!localStorage.getItem("user_session")) {
-        localStorage.setItem("user_session", userEmail);
-        window.dispatchEvent(new Event("storage"));
-      }
 
       setRegisteredEventIds((prev) => [...prev, selectedEvent.id]);
       setSuccessMessage(`✓ Registered successfully for ${selectedEvent.title}!`);

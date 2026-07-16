@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '../../config/cities';
+import { getAuthToken } from "@/lib/auth/guards";
 
 const prisma = new PrismaClient({});
 
@@ -46,8 +47,13 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const data = await request.json();
-    let organizerId = data.organizerId;
+    let organizerId = token.email;
 
     if (organizerId && organizerId.includes('@')) {
       const user = await prisma.user.findUnique({ where: { email: organizerId } });
@@ -55,11 +61,6 @@ export async function POST(request) {
         organizerId = user.id;
       } else {
         organizerId = null;
-      }
-    } else if (!organizerId && data.hostEmail) {
-      const user = await prisma.user.findUnique({ where: { email: data.hostEmail } });
-      if (user) {
-        organizerId = user.id;
       }
     }
 

@@ -1,42 +1,19 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getAuthToken } from "@/lib/auth/guards";
 
 const prisma = new PrismaClient({});
 
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const eventId = searchParams.get('eventId');
-    const email = searchParams.get('email');
-
-    const requesterEmail = searchParams.get('requesterEmail');
-
-    let whereClause = {};
-
-    if (eventId) {
-      if (!requesterEmail) {
-        return NextResponse.json({ error: 'Unauthorized: missing requester' }, { status: 401 });
-      }
-      
-      // Verify requester owns or manages the event
-      const event = await prisma.event.findUnique({
-        where: { id: eventId },
-        include: { organizer: true, managers: { include: { user: true } } }
-      });
-      
-      if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
-      
-      const isOwner = event.organizer?.email === requesterEmail || event.organizerId === requesterEmail;
-      const isManager = event.managers?.some(m => m.user.email === requesterEmail);
-      
-      if (!isOwner && !isManager) {
-        return NextResponse.json({ error: 'Unauthorized: You do not own this event' }, { status: 403 });
-      }
-
-      whereClause.eventId = eventId;
-    } else if (email) {
-      whereClause.user = { email };
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const email = token.email;
+
+    const whereClause = { user: { email } };
 
     const registrations = await prisma.registration.findMany({
       where: whereClause,
@@ -64,8 +41,15 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const data = await request.json();
-    const { eventId, email, name, track, teamName, status, paymentStatus } = data;
+    const { eventId, name, track, teamName, status, paymentStatus } = data;
+
+    const email = token.email;
 
     if (!eventId || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
