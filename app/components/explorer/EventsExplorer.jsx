@@ -99,6 +99,7 @@ export default function EventsExplorer({
               placeholder="Search events, types, keywords..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
+              suppressHydrationWarning
               className="w-full bg-[#0A0A0A] border border-white/10 rounded-md text-[12px] font-medium text-white placeholder-white/30 focus:outline-none focus:border-white/20 pl-8 pr-3 py-1.5 transition-all shadow-inner"
             />
           </div>
@@ -109,6 +110,7 @@ export default function EventsExplorer({
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
+                suppressHydrationWarning
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full font-semibold text-[12px] transition-all whitespace-nowrap cursor-pointer ${
                   activeCategory === category
                     ? "bg-white text-black shadow-sm"
@@ -127,6 +129,7 @@ export default function EventsExplorer({
             <select
               value={activeZone}
               onChange={(e) => setActiveZone(e.target.value)}
+              suppressHydrationWarning
               className="appearance-none bg-[#0A0A0A] text-white/60 text-[12px] font-semibold pl-3 pr-8 py-1.5 rounded-md border border-white/10 focus:outline-none focus:border-white/20 hover:bg-white/5 transition-all cursor-pointer"
             >
               <option value="All">All Zones</option>
@@ -146,11 +149,12 @@ export default function EventsExplorer({
           
           {/* Host Event Button (Secondary) */}
           <button
-              onClick={() => router.push("/dashboard/organizer/new")}
-              className="btn-secondary whitespace-nowrap text-[12px] shrink-0"
-          >
-            Host Event
-          </button>
+    onClick={() => router.push("/dashboard/organizer/new")}
+    className="btn-secondary whitespace-nowrap text-[12px] shrink-0"
+    suppressHydrationWarning={true}
+>
+    Host Event
+</button>
         </div>
       </div>
 

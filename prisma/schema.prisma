@@ -8,11 +8,8 @@ generator client {
 }
 
 datasource db {
-
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -158,20 +155,22 @@ model UserActivity {
   @@index([eventId])
 }
 
-model EventAnalytic {
-  id              String   @id @default(uuid())
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId         String
-  date            DateTime @default(now()) // Can be used to track daily stats
-  views           Int      @default(0)
-  uniqueVisitors  Int      @default(0)
-  registrations   Int      @default(0)
-  attendance      Int      @default(0)
-  revenue         Float    @default(0)
+// prisma/schema.prisma
 
+model EventAnalytic {
+  id             String   @id @default(uuid())
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId        String
+  date           DateTime @default(now()) @db.Date // Ensures the DB stores ONLY the calendar date (YYYY-MM-DD)
+  views          Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  registrations  Int      @default(0)
+  attendance     Int      @default(0)
+  revenue        Float    @default(0)
+
+  @@unique([eventId, date]) // Ensures a single unique row for an event on any given day
   @@index([eventId])
 }
-
 model EventManager {
   id              String   @id @default(uuid())
   event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)

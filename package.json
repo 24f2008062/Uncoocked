@@ -23,13 +23,15 @@
     "pusher": "^5.3.4",
     "pusher-js": "^8.5.0",
     "qrcode.react": "^4.2.0",
+    "razorpay": "^2.9.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-easy-crop": "^6.0.2",
     "react-markdown": "^10.1.0",
     "recharts": "^3.9.0",
     "resend": "^6.17.1",
-    "sonner": "^1.5.0"
+    "sonner": "^1.5.0",
+    "stripe": "^22.3.1"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.12",

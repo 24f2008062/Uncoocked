@@ -48,9 +48,6 @@ export async function POST(request) {
         email,
         passwordHash: 'dummy',
         fullName: fullName || 'New User',
-        ...updateData,
-      },
-        fullName: fullName || 'New User',
         dob: dob || null,
         interests: interests ? JSON.stringify(interests) : '[]',
         department: department || null,
@@ -58,7 +55,8 @@ export async function POST(request) {
         bio: bio || null,
         team: team || null,
         onboardingCompleted: true,
-      }
+        ...updateData,
+      },
     });
 
     return NextResponse.json({ success: true, user });
@@ -66,6 +64,6 @@ export async function POST(request) {
     console.error('Profile API error:', error);
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
-}
+} // <-- Properly closed the POST function here
 
 export const dynamic = 'force-dynamic';

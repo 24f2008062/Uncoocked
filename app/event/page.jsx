@@ -137,6 +137,7 @@ export default function EventPage() {
               event={eventData}
               chatUserData={chatUserData}
               selectedEventId={selectedEventId}
+              userId={currentUserId} // 👈 FIXED: Passing the active user's ID here
               onBack={() => {
                 window.history.back();
               }}

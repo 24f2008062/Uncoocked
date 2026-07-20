@@ -16,7 +16,8 @@ import { toast } from "sonner";
 const EventDescription = dynamic(() => import("@/app/components/event/EventDescription"), { ssr: false });
 const RecommendedEvents = dynamic(() => import("@/app/components/event/RecommendedEvents"), { ssr: false });
 
-export default function TwinLayout({ event, onBack, chatUserData, selectedEventId }) {
+// 🛠️ FIXED: Added userId to the destructured props arguments
+export default function TwinLayout({ event, onBack, chatUserData, selectedEventId, userId }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState("amenities");
   const [localUserEmail, setLocalUserEmail] = useState(null);
@@ -57,7 +58,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
         let allRegs = [];
         if (user && isCurrentlyHosting) {
-          const res = await fetch(`/api/registrations?eventId=${event.id}&requesterEmail=${encodeURIComponent(user)}`);
+          const res = await fetch(`/api/registrations?eventId=${event.id}`);
           if (res.ok) {
             const data = await res.json();
             if (data.success) {
@@ -76,7 +77,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           setRegistrations(allRegs.length > 0 ? allRegs : userRegs);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch registrations:", err);
       }
     };
     fetchRegistrations();
@@ -85,7 +86,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
   async function handleRegister(payload) {
     if (isCurrentlyHosting) {
-      toast("Hosts are structurally restricted from registering for their own events.");
+      toast.error("Hosts are structurally restricted from registering for their own events.");
       return;
     }
     setModalOpen(false);
@@ -99,14 +100,17 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
         body: JSON.stringify({
           ...payload,
           email: user || payload.email,
-          eventId: event.id,
+          eventId: event._id || event.id, 
           status: finalStatus,
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to register");
-
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to register");
+      }
+
       if (data.success) {
         const newReg = {
           ...data.registration,
@@ -119,10 +123,11 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           setLocalTicketsSold(prev => prev + 1);
         }
         setLocalUserEmail(user || payload.email);
+        toast.success("Successfully registered!");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Registration failed. Please check logs.");
+      toast.error(err.message || "Registration failed. Please check logs.");
     }
   }
 
@@ -143,6 +148,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
         setLocalTicketsSold(prev => Math.max(0, prev - 1));
       }
       if (!user) setLocalUserEmail(null);
+      toast.success("Registration cancelled.");
     } catch (err) {
       console.error(err);
       toast.error("Failed to cancel registration.");
@@ -173,6 +179,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           title: data.bulletin.title,
           content: data.bulletin.content,
         }, ...prev]);
+        toast.success("Announcement broadcasted successfully!");
       }
     } catch (err) {
       console.error(err);
@@ -201,12 +208,8 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           </button>
         )}
 
-        {/* 70/30 Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 lg:gap-12 items-start">
-          
-          {/* Left Column (70%) - Description, Agenda, Organizer, Venue */}
           <div className="lg:col-span-6 xl:col-span-7 w-full order-2 lg:order-1 flex flex-col gap-8">
-            {/* Hero Section */}
             <div className="w-full">
               <div className="w-full h-56 md:h-64 rounded-2xl overflow-hidden border border-white/6 relative mb-6">
                 {event.bannerUrl ? (
@@ -232,10 +235,7 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
             <EventDescription event={event} />
           </div>
 
-          {/* Right Column (30%) - Registration & Bulletins & Discussion */}
           <div className="lg:col-span-4 xl:col-span-3 w-full order-1 lg:order-2 space-y-6 lg:sticky lg:top-24">
-            
-            {/* Toggle Switch */}
             <div className="bg-[#111111] p-1 rounded-lg border border-white/8 flex w-full">
               <button
                 onClick={() => setActiveSidebarTab("amenities")}
@@ -261,7 +261,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
 
             {activeSidebarTab === "amenities" ? (
               <div className="space-y-8">
-                {/* Condition Layer: Hide core registration box interface components if user is the structural host */}
                 {isCurrentlyHosting ? (
                   <div className="bg-[#111111] border border-white/8 rounded-xl p-5 text-center space-y-2 shadow-sm">
                     <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mx-auto text-white/60 text-xs font-bold">
@@ -287,7 +286,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                   />
                 )}
 
-                {/* Organizer Broadcast Tool */}
                 {user && isCurrentlyHosting && (
                   <div className="bg-[#111111] border border-white/8 rounded-xl p-4 space-y-3 shadow-sm">
                     <h3 className="text-[12px] font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-white/6 pb-2">
@@ -311,7 +309,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
                   </div>
                 )}
 
-                {/* Announcement Board - Open for Registrants OR Organizers */}
                 {(isRegistered || (user && isCurrentlyHosting)) && (
                   <div className="bg-[#111111] rounded-xl border border-white/8 p-1 shadow-sm">
                     <BulletinBoard updates={bulletins} />
@@ -347,7 +344,6 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
           </div>
         </div>
 
-        {/* Bottom Section - Recommended Events */}
         {isAuthenticated && user && (
           <div className="pt-16 border-t border-dark-border/40">
             <RecommendedEvents userEmail={user} onSelectEvent={(id) => {
@@ -355,16 +351,19 @@ export default function TwinLayout({ event, onBack, chatUserData, selectedEventI
             }} />
           </div>
         )}
-
       </div>
 
-      <RegisterModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleRegister}
-        ticketType={event.ticketType}
-        price={event.price}
-      />
+      {/* 🛠️ FIXED: Linked accurate modal state names (modalOpen and setModalOpen) */}
+     <RegisterModal 
+  open={modalOpen} 
+  onClose={() => setModalOpen(false)} 
+  onSubmit={handleRegister}
+  ticketType={event.ticketType}
+  price={event.price}
+  // Fallbacks ensure we capture unique MongoDB/Prisma object IDs, raw slug, or active states
+  eventId={selectedEventId || event.id || event._id}
+  userId={userId || user} 
+/>
     </div>
   );
 }

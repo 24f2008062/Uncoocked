@@ -1,39 +1,58 @@
+// app/api/registrations/route.js
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getToken } from 'next-auth/jwt';
 
 export async function GET(request) {
   try {
+    // 1. SECURITY: Authenticate the requester using NextAuth JWT
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const eventId = searchParams.get('eventId');
     const email = searchParams.get('email');
 
-    const requesterEmail = searchParams.get('requesterEmail');
+    // 2. SECURITY: Extract requester's email safely from the secure token
+    const requesterEmail = token.email; 
 
     let whereClause = {};
 
     if (eventId) {
-      if (!requesterEmail) {
-        return NextResponse.json({ error: 'Unauthorized: missing requester' }, { status: 401 });
-      }
-      
-      // Verify requester owns or manages the event
-      const event = await prisma.event.findUnique({
+      // Polymorphic lookup fallback for GET requests using the slug
+      let event = await prisma.event.findUnique({
         where: { id: eventId },
         include: { organizer: true, managers: { include: { user: true } } }
       });
+
+      if (!event) {
+        event = await prisma.event.findFirst({
+          where: { title: eventId },
+          include: { organizer: true, managers: { include: { user: true } } }
+        });
+      }
       
-      if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      if (!event) {
+        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      }
       
-      const isOwner = event.organizer?.email === requesterEmail || event.organizerId === requesterEmail;
+      // Ensure strict authorization comparison using safe database schemas
+      const isOwner = event.organizer?.email === requesterEmail;
       const isManager = event.managers?.some(m => m.user.email === requesterEmail);
       
       if (!isOwner && !isManager) {
         return NextResponse.json({ error: 'Unauthorized: You do not own this event' }, { status: 403 });
       }
 
-      whereClause.eventId = eventId;
+      whereClause.eventId = event.id;
     } else if (email) {
+      // Ensure users can only look up their own registrations unless they are admins
+      if (email !== requesterEmail) {
+        return NextResponse.json({ error: 'Forbidden: You can only view your own registrations' }, { status: 403 });
+      }
       whereClause.user = { email };
     }
 
@@ -64,32 +83,39 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
+    // 3. SECURITY: Authenticate the registration POST creator
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { eventId, name, track, teamName, status, paymentStatus } = data;
+    const { eventId, name, track, teamName, status } = data;
     const email = data.email || token.email;
 
     if (!eventId || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Check if event exists, if not, see if it's a mock event and seed it
+    // Dynamic resolution of both Primary Key IDs and Slugs
     let event = await prisma.event.findUnique({
       where: { id: eventId }
     });
 
     if (!event) {
+      event = await prisma.event.findFirst({
+        where: { title: eventId }
+      });
+    }
+
+    if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    // Find or create user
     let user = await prisma.user.findUnique({
       where: { email },
     });
 
+    // Automatically provision user dynamically if they don't exist
     if (!user) {
       user = await prisma.user.create({
         data: {
@@ -102,12 +128,12 @@ export async function POST(request) {
       });
     }
 
-    // Check if registration exists to prevent duplicates (although DB will also block)
+    // Defensive check to avoid unnecessary double-writes using resolved internal Event ID
     const existingRegistration = await prisma.registration.findUnique({
       where: {
         userId_eventId: {
           userId: user.id,
-          eventId: eventId,
+          eventId: event.id,
         }
       }
     });
@@ -116,12 +142,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'User is already registered for this event' }, { status: 409 });
     }
 
-    // Create registration and update analytics atomically
+    // 4. DAILY ANALYTICS COMPILATION: Target midnight of today's calendar date
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    // Write all records atomically in a database transaction
     const [registration] = await prisma.$transaction([
       prisma.registration.create({
         data: {
           userId: user.id,
-          eventId,
+          eventId: event.id,
           status: status || 'Pending',
           track,
           teamName,
@@ -131,18 +161,23 @@ export async function POST(request) {
           event: true,
         },
       }),
-      // Upsert analytics to increment registration count
+      // Upsert stats targeting specifically the compound key (eventId + date)
       prisma.eventAnalytic.upsert({
-        where: { id: `analytic-${eventId}` }, // Simplification for demo
+        where: {
+          eventId_date: {
+            eventId: event.id,
+            date: today,
+          },
+        },
         create: {
-          id: `analytic-${eventId}`,
-          eventId: eventId,
-          registrations: 1
+          eventId: event.id,
+          date: today,
+          registrations: 1,
         },
         update: {
-          registrations: { increment: 1 }
-        }
-      })
+          registrations: { increment: 1 },
+        },
+      }),
     ]);
 
     return NextResponse.json({ success: true, registration });
