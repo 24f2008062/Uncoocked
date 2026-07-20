@@ -39,6 +39,8 @@ export function UserProvider({ children }) {
     setUserState(null);
     // Sign out of NextAuth
     await nextAuthSignOut({ redirect: false });
+    // eslint-disable-next-line no-console
+    console.info(`[AUTH] ${new Date().toISOString()} logout`, { email: session?.user?.email ?? null });
   };
 
   return (

@@ -31,6 +31,8 @@ model User {
   interests       String?        // JSON serialized array of interests
   preferenceScore Float          @default(0)
   onboardingCompleted Boolean    @default(false)
+  failedLoginAttempts Int        @default(0)
+  lockedUntil       DateTime?
   createdAt       DateTime       @default(now())
   registrations   Registration[]
   activities      UserActivity[]
