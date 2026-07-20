@@ -184,10 +184,6 @@ export default function LoginPage() {
             Campus Notice: Sign in with the email and password you registered
             with.
           </div>
-          <div className="text-center text-[10px] text-gray-500 font-mono leading-normal pt-2 border-t border-dark-border/40">
-            Campus Notice: Sign in with the email and password you registered
-            with.
-          </div>
 
           <div className="text-center mt-4">
             <span className="text-xs text-gray-400">
