@@ -1,11 +1,16 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
-// Gates protected pages and the write-capable API routes.
-// Public routes (home, /event, /opportunities, contact, reviews, chat,
-// public event/registration reads) remain reachable without a session.
+// Gates protected pages. NOTE: In Next.js 16 the `middleware` convention was
+// renamed to `proxy`; this file uses the new convention so it executes.
+//
+// Rate limiting for the auth API endpoints is implemented inside the route
+// handlers themselves (app/api/auth/register/route.js and the NextAuth
+// authorize() callback) because the per-request proxy matcher is not reliably
+// honored by the current Next 16 + Turbopack build. This file keeps the
+// existing page-level session gating.
 export default withAuth(
-  function middleware() {
+  function proxy() {
     return NextResponse.next();
   },
   {

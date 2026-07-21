@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getAuthToken, requireEventManager } from "@/lib/auth/guards";
 
 const prisma = new PrismaClient({});
 
@@ -8,6 +9,14 @@ export async function PUT(request, context) {
     const params = await context.params;
     const data = await request.json();
     const eventId = params.id;
+
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!(await requireEventManager(eventId, token))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
@@ -41,6 +50,14 @@ export async function DELETE(request, context) {
   try {
     const params = await context.params;
     const eventId = params.id;
+
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!(await requireEventManager(eventId, token))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     await prisma.event.delete({
       where: { id: eventId },

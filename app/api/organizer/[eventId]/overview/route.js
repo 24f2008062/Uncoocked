@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getAuthToken, requireEventManager } from "@/lib/auth/guards";
 
 const prisma = new PrismaClient({});
 
 export async function GET(request, context) {
   try {
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const params = await context.params;
     const eventId = params.eventId;
+
+    if (!(await requireEventManager(eventId, token))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },

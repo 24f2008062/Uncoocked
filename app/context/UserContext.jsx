@@ -13,7 +13,7 @@ export function UserProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Synchronize NextAuth session with UserContext state
+  // Synchronize NextAuth session with UserContext state (no localStorage fallback)
   useEffect(() => {
     // If NextAuth is still checking the session, do not proceed with auth redirects
     if (status === "loading") {
@@ -25,28 +25,12 @@ export function UserProvider({ children }) {
     if (session?.user) {
       setUserState(session.user.email);
       setIsLoading(false);
-      
+
       // Auto-redirect new users to onboarding
       if (session.user.onboardingCompleted === false && pathname !== "/onboarding") {
-        if (typeof window !== "undefined" && localStorage.getItem("onboarding_just_completed") === "true") {
-          // Bypass redirect if user just completed onboarding to avoid NextAuth race condition
-        } else {
-          router.push("/onboarding");
-        }
+        router.push("/onboarding");
       }
     } else if (status === "unauthenticated") {
-      // No NextAuth session. Reuse a previously entered local session if one
-      // was stored; otherwise the visitor is simply signed out. Demo is just
-      // another account — it must be reached by entering its credentials, not
-      // auto-assigned.
-      if (typeof window !== "undefined") {
-        const localSession = localStorage.getItem("user_session");
-        if (localSession) {
-          setUserState(localSession);
-          setIsLoading(false);
-          return;
-        }
-      }
       setUserState(null);
       setIsLoading(false);
     }
@@ -54,11 +38,10 @@ export function UserProvider({ children }) {
 
   const logout = async () => {
     setUserState(null);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user_session");
-    }
     // Sign out of NextAuth
     await nextAuthSignOut({ redirect: false });
+    // eslint-disable-next-line no-console
+    console.info(`[AUTH] ${new Date().toISOString()} logout`, { email: session?.user?.email ?? null });
   };
 
   return (
