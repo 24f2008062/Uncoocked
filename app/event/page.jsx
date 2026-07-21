@@ -29,6 +29,11 @@ export default function EventPage() {
   };
 
   useEffect(() => {
+    // Clear temporary onboarding flag on mount
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("onboarding_just_completed");
+    }
+
     setTimeout(() => {
       loadEvents();
     }, 0);

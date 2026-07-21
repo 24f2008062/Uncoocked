@@ -76,14 +76,16 @@ export async function POST(request) {
 
     logAuthEvent("signup_success", { email });
     return NextResponse.json({ success: true });
-  } catch (error) {
-    // Never leak internal/database details to the client.
-    logAuthEvent("signup_failure", { reason: "server_error" });
-    return NextResponse.json(
-      { error: "Failed to create account" },
-      { status: 500 }
-    );
-  }
+ } catch (error) {
+  // Add this line temporarily to see the exact Prisma error in VS Code Terminal:
+  console.error("DEBUG REGISTER ERROR:", error);
+
+  logAuthEvent("signup_failure", { reason: "server_error" });
+  return NextResponse.json(
+    { error: "Failed to create account" },
+    { status: 500 }
+  );
+}
 }
 
 export const dynamic = "force-dynamic";

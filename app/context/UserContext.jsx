@@ -15,9 +15,7 @@ export function UserProvider({ children }) {
 
   // Synchronize NextAuth session with UserContext state (no localStorage fallback)
   useEffect(() => {
-    // If NextAuth is still checking the session, do not proceed with auth redirects
     if (status === "loading") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(true);
       return;
     }
@@ -26,8 +24,11 @@ export function UserProvider({ children }) {
       setUserState(session.user.email);
       setIsLoading(false);
 
-      // Auto-redirect new users to onboarding
-      if (session.user.onboardingCompleted === false && pathname !== "/onboarding") {
+      // Check if user recently saved preferences
+      const justCompleted = typeof window !== "undefined" && localStorage.getItem("onboarding_just_completed") === "true";
+
+      // Auto-redirect new users to onboarding ONLY if they haven't just completed it
+      if (session.user.onboardingCompleted === false && pathname !== "/onboarding" && !justCompleted) {
         router.push("/onboarding");
       }
     } else if (status === "unauthenticated") {

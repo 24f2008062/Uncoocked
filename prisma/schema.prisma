@@ -161,7 +161,7 @@ model EventAnalytic {
   id             String   @id @default(uuid())
   event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId        String
-  date           DateTime @default(now()) @db.Date // Ensures the DB stores ONLY the calendar date (YYYY-MM-DD)
+  date           DateTime @default(now()) // Ensures the DB stores ONLY the calendar date (YYYY-MM-DD)
   views          Int      @default(0)
   uniqueVisitors Int      @default(0)
   registrations  Int      @default(0)

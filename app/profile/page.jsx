@@ -35,7 +35,7 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
   const [github, setGithub] = useState("");
-  const [track, setTrack] = useState("Fullstack Developer");
+  const [track, setTrack] = useState("Computer Science & Tech");
   const [team, setTeam] = useState("");
   const [dob, setDob] = useState("");
   // UI States
@@ -75,45 +75,32 @@ export default function ProfilePage() {
           return;
         }
 
-        // Fetch ALL profile data from the database (single source of truth)
+        // Fetch profile data
         const profileRes = await fetch(`/api/users/profile?email=${encodeURIComponent(user)}`, { cache: "no-store" });
         const profileData = await profileRes.json();
         
         if (profileData.success && profileData.user) {
           const dbUser = profileData.user;
           if (isMounted) {
-            setFullName(profile.fullName || "");
-            setBio(profile.bio || "");
-            setGithub(profile.github || "");
-            setTrack(profile.track || "Fullstack Developer");
-            setTeam(profile.team || "");
-            if (profile.interests && profile.interests.length > 0) {
-              setSelectedInterests(profile.interests);
-            }
-            // Load fullName from DB, fallback to email prefix
             setFullName(dbUser.fullName || dbUser.name || user.split("@")[0]);
-            // Load DOB from DB
+            setBio(dbUser.bio || "");
+            setGithub(dbUser.portfolioUrl || dbUser.github || "");
+            setTrack(dbUser.department || dbUser.track || "Computer Science & Tech");
+            setTeam(dbUser.team || "");
             if (dbUser.dob) setDob(dbUser.dob);
-            // Load interests from DB
+
             if (dbUser.interests) {
               try {
-                setSelectedInterests(JSON.parse(dbUser.interests));
+                const parsed = typeof dbUser.interests === "string" ? JSON.parse(dbUser.interests) : dbUser.interests;
+                setSelectedInterests(Array.isArray(parsed) ? parsed : []);
               } catch (e) {
                 setSelectedInterests([]);
               }
             }
-            // Load other fields from DB if available
-            if (dbUser.department) setTrack(dbUser.department);
-            if (dbUser.portfolioUrl) setGithub(dbUser.portfolioUrl);
-            if (dbUser.bio) setBio(dbUser.bio);
-            if (dbUser.team) setTeam(dbUser.team);
           }
         } else {
-          // User not found in DB — fallback to email prefix
           if (isMounted) setFullName(user.split("@")[0]);
         }
-
-        // bio/team now live in the DB (see /api/users/profile).
 
         // Calculate attending count via API
         const resReg = await fetch(`/api/registrations?email=${encodeURIComponent(user)}`);
@@ -122,7 +109,7 @@ export default function ProfilePage() {
           setAttendingCount(regData.registrations.length);
         }
 
-        // Fetch hosted events count from DB (includeArchived=true to match Dashboard XP)
+        // Fetch hosted events count from DB
         const res = await fetch("/api/events?includeArchived=true");
         const data = await res.json();
         if (data.success && isMounted) {
@@ -147,7 +134,6 @@ export default function ProfilePage() {
     e.preventDefault();
     if (typeof window !== "undefined" && user) {
       try {
-        // Save ALL profile fields to the database
         const res = await fetch("/api/users/profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -163,6 +149,12 @@ export default function ProfilePage() {
           })
         });
 
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error("Profile save failed:", errData);
+          return;
+        }
+
         const payload = {
           fullName,
           bio,
@@ -173,34 +165,11 @@ export default function ProfilePage() {
           interests: selectedInterests,
         };
         localStorage.setItem(`profile_${user}`, JSON.stringify(payload));
-        // Enrich registrations in localStorage matching this email with the updated fullName/track/team
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          console.error("Profile save failed:", errData);
-          return; // Don't show success on failure
-        }
-
-        // bio/team are now persisted to the DB above.
-        const storedRegs = JSON.parse(
-          localStorage.getItem("registrations") || "[]",
-        );
-        const updatedRegs = storedRegs.map((reg) => {
-          if (reg.email === user) {
-            return {
-              ...reg,
-              name: fullName || reg.name,
-              track: track || reg.track,
-              team: team || reg.team,
-            };
-          }
-          return reg;
-        });
-        localStorage.setItem("registrations", JSON.stringify(updatedRegs));
 
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
         window.dispatchEvent(new Event("storage"));
-        setIsEditing(false); // Close edit section after saving
+        setIsEditing(false);
       } catch (err) {
         console.error("Profile save error:", err);
       }
@@ -243,7 +212,6 @@ export default function ProfilePage() {
 
   return (
     <div className="relative isolate overflow-hidden bg-black w-full min-h-[85vh] py-12 sm:py-16">
-      {/* Background neon decoration */}
       <div
         className="absolute inset-0 -z-10 transform-gpu overflow-hidden blur-3xl opacity-25 animate-pulse"
         aria-hidden="true"
@@ -258,7 +226,6 @@ export default function ProfilePage() {
       </div>
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-10">
-        {/* Page title */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold bg-neon-purple/10 text-neon-lavender border border-neon-purple/30 shadow-neon">
@@ -268,8 +235,7 @@ export default function ProfilePage() {
               Profile Settings
             </h1>
             <p className="text-xs text-gray-400 mt-1 leading-normal">
-              Customize your student credentials, social links, and coordinate
-              with campus clubs.
+              Customize your student credentials, social links, and coordinate with campus clubs.
             </p>
           </div>
           {saveSuccess && (
@@ -284,10 +250,9 @@ export default function ProfilePage() {
           <div className="bg-dark-card border border-dark-border rounded-2xl p-10 animate-pulse h-96" />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* Left side: Avatar and Stats Card */}
+            {/* Left side Card */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-neon flex flex-col items-center space-y-5">
-                {/* Big Glowing Avatar */}
                 <div className="w-24 h-24 rounded-full bg-neon-purple/15 border-2 border-neon-purple/50 flex items-center justify-center text-3xl font-black text-neon-lavender uppercase tracking-widest ring-4 ring-neon-purple/10 shadow-[0_0_30px_rgba(191,64,255,0.4)] relative group select-none">
                   {initials}
                   <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border border-dark-card animate-pulse" />
@@ -311,8 +276,7 @@ export default function ProfilePage() {
               {/* Console Metrics */}
               <div className="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-neon space-y-4 font-mono">
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider border-b border-dark-border/40 pb-2 flex items-center gap-1.5">
-                  <Activity className="h-4 w-4 text-neon-purple" /> Registration
-                  Index
+                  <Activity className="h-4 w-4 text-neon-purple" /> Registration Index
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4 text-center">
@@ -376,7 +340,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Right side: Profile Form / View Card */}
+            {/* Right side Details */}
             <div className="lg:col-span-2">
               {isEditing ? (
                 <form
@@ -401,14 +365,9 @@ export default function ProfilePage() {
                     </button>
                   </div>
 
-                  {/* Grid inputs */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {/* Full Name */}
                     <div className="space-y-1.5">
-                      <label
-                        htmlFor="profile-fullname"
-                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                      >
+                      <label htmlFor="profile-fullname" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
                         Full Display Name
                       </label>
                       <input
@@ -422,12 +381,8 @@ export default function ProfilePage() {
                       />
                     </div>
 
-                    {/* GitHub Profile */}
                     <div className="space-y-1.5">
-                      <label
-                        htmlFor="profile-github"
-                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                      >
+                      <label htmlFor="profile-github" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
                         Social Profile / Link
                       </label>
                       <div className="relative">
@@ -443,12 +398,8 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    {/* DOB Profile */}
                     <div className="space-y-1.5">
-                      <label
-                        htmlFor="profile-dob"
-                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                      >
+                      <label htmlFor="profile-dob" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
                         Date of Birth
                       </label>
                       <div className="relative">
@@ -463,12 +414,8 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    {/* Builder Track Dropdown */}
                     <div className="space-y-1.5">
-                      <label
-                        htmlFor="profile-track"
-                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                      >
+                      <label htmlFor="profile-track" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
                         Institute
                       </label>
                       <div className="relative">
@@ -479,33 +426,18 @@ export default function ProfilePage() {
                           onChange={(e) => setTrack(e.target.value)}
                           className="block w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-dark-border bg-black text-xs text-white focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple font-mono appearance-none"
                         >
-                          <option value="Computer Science & Tech">
-                            Computer Science & Tech
-                          </option>
-                          <option value="Engineering & Applied Sciences">
-                            Engineering & Applied Sciences
-                          </option>
-                          <option value="Business & Economics">
-                            Business & Economics
-                          </option>
-                          <option value="Fine Arts & Design">
-                            Fine Arts & Design
-                          </option>
-                          <option value="Humanities & Liberal Arts">
-                            Humanities & Liberal Arts
-                          </option>
-                          <option value="Natural Sciences">
-                            Natural Sciences
-                          </option>
+                          <option value="Computer Science & Tech">Computer Science & Tech</option>
+                          <option value="Engineering & Applied Sciences">Engineering & Applied Sciences</option>
+                          <option value="Business & Economics">Business & Economics</option>
+                          <option value="Fine Arts & Design">Fine Arts & Design</option>
+                          <option value="Humanities & Liberal Arts">Humanities & Liberal Arts</option>
+                          <option value="Natural Sciences">Natural Sciences</option>
                         </select>
                       </div>
                     </div>
 
-                    {/* Team Association */}
                     <div className="space-y-1.5 sm:col-span-2">
-                      <label
-                        className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                      >
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
                         Interests
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -533,12 +465,8 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Biography */}
                   <div className="space-y-1.5">
-                    <label
-                      htmlFor="profile-bio"
-                      className="block text-[10px] uppercase font-bold text-gray-400 font-mono"
-                    >
+                    <label htmlFor="profile-bio" className="block text-[10px] uppercase font-bold text-gray-400 font-mono">
                       Biography / Status Bio
                     </label>
                     <div className="relative">
@@ -554,7 +482,6 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Buttons / Save Feedback */}
                   <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-dark-border/40">
                     <button
                       type="button"
@@ -657,32 +584,38 @@ export default function ProfilePage() {
           <div className="bg-dark-card border border-dark-border rounded-2xl w-full max-w-md p-6 shadow-neon relative animate-fadeIn">
             <button 
               onClick={() => setShowRankModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-lg font-black text-white mb-1 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-neon-purple" /> Rank System Guide
-            </h3>
-            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
-              Earn XP by participating in the community! Attending events grants <span className="text-neon-purple font-bold">10 XP</span>, while hosting grants <span className="text-neon-purple font-bold">50 XP</span>.
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy className="w-5 h-5 text-neon-purple" />
+              <h3 className="text-lg font-bold text-white">Campus Rank Guide</h3>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">
+              Earn XP by attending events (+10 XP) and hosting campus events (+50 XP).
             </p>
-            
-            <div className="space-y-3">
-              {[
-                { name: "Freshman", icon: "🥉", range: "0 - 49 XP", color: "text-amber-600", bg: "bg-amber-600/10", border: "border-amber-600/30" },
-                { name: "Sophomore", icon: "🥈", range: "50 - 99 XP", color: "text-zinc-300", bg: "bg-zinc-400/10", border: "border-zinc-400/30" },
-                { name: "Junior", icon: "🥇", range: "100 - 249 XP", color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/30" },
-                { name: "Senior", icon: "🌟", range: "250 - 499 XP", color: "text-purple-400", bg: "bg-purple-400/10", border: "border-purple-400/30" },
-                { name: "Campus Legend", icon: "👑", range: "500+ XP", color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/30" },
-              ].map(r => (
-                <div key={r.name} className={`flex items-center justify-between p-3 rounded-xl border ${r.bg} ${r.border}`}>
-                  <div className={`flex items-center gap-2 text-sm font-black uppercase tracking-wider ${r.color}`}>
-                    <span className="text-lg">{r.icon}</span> {r.name}
-                  </div>
-                  <span className="text-xs font-mono font-bold text-gray-300">{r.range}</span>
-                </div>
-              ))}
+            <div className="space-y-3 font-mono text-xs">
+              <div className="flex justify-between items-center p-2 rounded bg-amber-600/10 border border-amber-600/30 text-amber-500">
+                <span>🥉 Freshman</span>
+                <span>0 - 49 XP</span>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-zinc-400/10 border border-zinc-400/30 text-zinc-300">
+                <span>🥈 Sophomore</span>
+                <span>50 - 99 XP</span>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-yellow-400/10 border border-yellow-400/30 text-yellow-400">
+                <span>🥇 Junior</span>
+                <span>100 - 249 XP</span>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-purple-400/10 border border-purple-400/30 text-purple-400">
+                <span>🌟 Senior</span>
+                <span>250 - 499 XP</span>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-emerald-400/10 border border-emerald-400/30 text-emerald-400">
+                <span>👑 Campus Legend</span>
+                <span>500+ XP</span>
+              </div>
             </div>
           </div>
         </div>
