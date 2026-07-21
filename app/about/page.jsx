@@ -52,7 +52,7 @@ export default function AboutPage() {
               </p>
               <div className="p-4 rounded-xl bg-white/3 border border-white/8 mt-4">
                 <p className="text-[13px] text-white/40 italic text-center">
-                  "Innovating the student experience, one campus at a time."
+                  &quot;Innovating the student experience, one campus at a time.&quot;
                 </p>
               </div>
             </div>

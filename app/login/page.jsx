@@ -1,60 +1,51 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const [selectedRole, setSelectedRole] = useState("organizer");
+  const getCallbackUrl = () => {
+    if (typeof window === "undefined") return "/";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("callbackUrl") || "/";
+  };
+  const expired =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("expired") === "true";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(null);
+    setIsLoading(true);
 
-    // Basic frontend validations
-    if (!email.includes("@") || !email.includes(".")) {
-      setError("Please provide a valid institutional email address.");
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    setIsLoading(false);
+
+    if (res?.error) {
+      setError("Invalid email or password.");
       return;
     }
 
-    if (password.length < 4) {
-      setError("Password must contain at least 4 characters.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const res = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (!res?.ok) {
-        setError("Credentials not verified. Please check your email and password.");
-        setLoading(false);
-        return;
-      }
-
-      router.push("/dashboard");
-    } catch (err) {
-      setError("Authentication failed. Please verify credentials.");
-      setLoading(false);
-    }
-  }
+    router.push(getCallbackUrl());
+    router.refresh();
+  };
 
   return (
     <div className="relative isolate min-h-[85vh] bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Dynamic neon gradient background */}
       <div
         className="absolute inset-0 -z-10 transform-gpu overflow-hidden blur-3xl opacity-20"
         aria-hidden="true"
@@ -69,134 +60,86 @@ export default function LoginPage() {
       </div>
 
       <div className="max-w-md w-full space-y-8 bg-dark-card border border-dark-border p-8 rounded-2xl shadow-neon relative">
-        {/* Header */}
-        <div className="text-center">
-          <Link href="/" className="inline-block mb-3">
-            <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-neon-purple to-neon-lavender bg-clip-text text-transparent neon-text-glow">
-              UNCOOKED
-            </span>
-          </Link>
+        <Link href="/" className="inline-block mb-3">
+          <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-neon-purple to-neon-lavender bg-clip-text text-transparent neon-text-glow">
+            UNCOOKED
+          </span>
+        </Link>
+        <div>
           <h2 className="text-2xl font-black text-white tracking-tight">
-            Sign In to Uncooked
+            Sign In
           </h2>
-          <p className="mt-2 text-xs text-gray-400">
-            Authorize your credentials to sign in.
+          <p className="mt-2 text-sm text-gray-400">
+            Welcome back. Enter your credentials to continue.
           </p>
         </div>
 
-        {/* Credentials Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {/* Text Inputs */}
-          <div className="space-y-4">
-            {/* Email Field */}
-            <div className="space-y-1">
-              <label
-                htmlFor="login-email"
-                className="block text-xs font-semibold text-gray-400"
-              >
-                Institutional Email Address
-              </label>
-              <input
-                id="login-email"
-                required
-                type="email"
-                placeholder="student@campus.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                className="block w-full rounded-md border border-dark-border bg-black px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple disabled:opacity-50"
-              />
-            </div>
+        {expired && (
+          <p className="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-lg px-3 py-2">
+            Your session expired. Please sign in again.
+          </p>
+        )}
 
-            {/* Password Field with show/hide toggle */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label
-                  htmlFor="login-password"
-                  className="block text-xs font-semibold text-gray-400"
-                >
-                  Password
-                </label>
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-[10px] text-neon-purple hover:text-neon-lavender focus:outline-none"
-                >
-                  {showPassword ? "Hide password" : "Show password"}
-                </button>
-              </div>
-              <input
-                id="login-password"
-                required
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                className="block w-full rounded-md border border-dark-border bg-black px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-neon-purple focus:border-neon-purple disabled:opacity-50"
-              />
-            </div>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-xs font-semibold text-gray-300 mb-1"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg bg-black/40 border border-dark-border px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple"
+              placeholder="you@campus.edu"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-xs font-semibold text-gray-300 mb-1"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg bg-black/40 border border-dark-border px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple"
+              placeholder="••••••••"
+            />
           </div>
 
-          {/* Validation Feedback Messages */}
-          {error && (
-            <div className="text-[10px] text-red-400 bg-red-950/20 border border-red-800/40 p-2.5 rounded-md">
-              ⚠️ {error}
-            </div>
-          )}
+          {error && <p className="text-xs text-red-400">{error}</p>}
 
-          {/* Submit Trigger */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-2.5 bg-neon-purple text-white font-bold text-xs rounded-md hover:bg-neon-purple/95 transition-all shadow-neon hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
+            disabled={isLoading}
+            className="w-full btn-primary text-[13px] py-2.5 font-bold disabled:opacity-50"
           >
-            {loading ? (
-              <>
-                <svg
-                  className="animate-spin h-3.5 w-3.5 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                <span>Validating credentials...</span>
-              </>
-            ) : (
-              <span>Authorize & Sign In</span>
-            )}
+            {isLoading ? "Signing in..." : "Sign In"}
           </button>
-
-          <div className="text-center text-[10px] text-gray-500 font-mono leading-normal pt-2 border-t border-dark-border/40">
-            Campus Notice: Sign in with the email and password you registered
-            with.
-          </div>
-
-          <div className="text-center mt-4">
-            <span className="text-xs text-gray-400">
-              Don&apos;t have an account?{" "}
-            </span>
-            <Link
-              href="/signup"
-              className="text-xs text-neon-purple hover:text-neon-lavender font-semibold transition-colors"
-            >
-              Sign Up
-            </Link>
-          </div>
         </form>
+
+        <p className="text-center text-xs text-gray-500">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/signup"
+            className="text-neon-purple hover:text-neon-lavender font-semibold"
+          >
+            Create one
+          </Link>
+        </p>
       </div>
     </div>
   );

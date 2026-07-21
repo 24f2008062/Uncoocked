@@ -5,6 +5,7 @@ import { Save, Image as ImageIcon, History, Eye, Layout } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import ImageCropper from "@/app/components/ui/ImageCropper";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function ContentEditorPage({ params }) {
   const unwrappedParams = use(params);
@@ -51,7 +52,7 @@ export default function ContentEditorPage({ params }) {
     setLastSaved("Saving...");
     setTimeout(() => {
       setLastSaved(new Date().toLocaleTimeString());
-      alert("Event content published successfully!");
+      toast.success("Event content published successfully!");
     }, 1000);
   };
 

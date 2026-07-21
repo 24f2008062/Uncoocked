@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
@@ -34,7 +35,7 @@ export default function ContactPage() {
     } catch (error) {
       console.error(error);
       setStatus("error");
-      alert("Failed to send your message. Please try again later.");
+      toast.error("Failed to send your message. Please try again later.");
     }
   }
 

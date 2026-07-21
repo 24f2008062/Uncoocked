@@ -6,7 +6,8 @@ import { useSession } from "next-auth/react";
 import { useUser } from "@/app/context/UserContext";
 import Link from "next/link";
 import TicketModal from "@/app/components/event/TicketModal";
-import { mockEvents } from "@/app/components/explorer/EventsExplorer";
+import { toast } from "sonner";
+import { mergeWithMockEvents } from "@/lib/mockData";
 import {
   Calendar,
   MapPin,
@@ -84,24 +85,26 @@ export default function DashboardPage() {
         // 1. Fetch Events from Backend
         const res = await fetch("/api/events?includeArchived=true");
         const data = await res.json();
-        
-        let fetchedEvents = [];
-        if (data.success) {
-          fetchedEvents = data.events;
-        }
 
-        // Format dates for display
-        fetchedEvents = fetchedEvents.map(ev => ({
-          ...ev,
-          dateStr: ev.date, // keep original date string
-          date: new Date(ev.date).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }),
-          ts: new Date(ev.date).getTime()
-        }));
+        const fetchedEvents = Array.isArray(data?.events) ? data.events : [];
 
-        setAllEvents(fetchedEvents);
+        // Merge DB events with the mock fallback (deduped by id), then format.
+        const combinedEvents = mergeWithMockEvents(fetchedEvents).map((ev) => {
+          const d = ev.dateISO ? new Date(ev.dateISO) : new Date(ev.date);
+          const valid = !isNaN(d.getTime());
+          return {
+            ...ev,
+            dateStr: ev.date, // keep original date string
+            date: valid
+              ? d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+              : ev.date,
+            ts: valid ? d.getTime() : 0,
+          };
+        });
+        setAllEvents(combinedEvents);
 
         // Filter Hosted Events
-        const hosted = fetchedEvents.filter((ev) => ev.organizer?.email === user || ev.organizerId === user);
+        const hosted = combinedEvents.filter((ev) => ev.organizer?.email === user || ev.organizerId === user);
         setHostedEvents(hosted);
 
         // 2. Fetch user's registrations from API
@@ -194,7 +197,7 @@ export default function DashboardPage() {
         await loadDashboardData();
       } catch (err) {
         console.error(err);
-        alert("Failed to delete event. Please check the logs.");
+        toast.error("Failed to delete event. Please check the logs.");
       }
     }
   };
@@ -220,7 +223,7 @@ export default function DashboardPage() {
       await loadDashboardData();
     } catch (err) {
       console.error(err);
-      alert("Failed to post announcement. Please check logs.");
+      toast.error("Failed to post announcement. Please check logs.");
     }
   };
 
@@ -235,27 +238,24 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="min-h-[80vh] bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-6 bg-[#111111] border border-white/8 p-8 rounded-2xl text-center shadow-sm">
-          <span className="text-4xl block">🚫</span>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
-            Access Denied
-          </h2>
-          <p className="text-[13px] text-white/45 leading-relaxed">
-            Please sign in to your campus account to access this dashboard.
-          </p>
-          <div className="flex flex-col gap-3">
+      <div className="bg-black w-full min-h-[60vh] py-16 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl">
+          <div className="bg-[#111111] border border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+            <span className="text-4xl shrink-0">🔐</span>
+            <div className="flex-1 space-y-1">
+              <h2 className="text-lg font-semibold text-white">
+                You need to sign in
+              </h2>
+              <p className="text-[13px] text-white/45 leading-relaxed">
+                Sign in to your campus account to view your registered and
+                hosted events.
+              </p>
+            </div>
             <Link
               href="/login"
-              className="w-full py-2 bg-[#A855F7] text-white text-[13px] font-semibold rounded-lg hover:bg-[#C084FC] transition-colors duration-150"
+              className="shrink-0 px-5 py-2.5 bg-[#A855F7] text-white text-[13px] font-semibold rounded-lg hover:bg-[#C084FC] transition-colors duration-150"
             >
-              Sign In to Campus Account
-            </Link>
-            <Link
-              href="/"
-              className="text-[13px] text-white/35 hover:text-white/70 transition-colors duration-150"
-            >
-              Back to Home
+              Sign In
             </Link>
           </div>
         </div>

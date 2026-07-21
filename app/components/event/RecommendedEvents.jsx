@@ -28,6 +28,7 @@ export default function RecommendedEvents({ userEmail, onSelectEvent }) {
 
   useEffect(() => {
     if (userEmail) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchRecommendations();
     }
   }, [userEmail]);
@@ -124,10 +125,7 @@ export default function RecommendedEvents({ userEmail, onSelectEvent }) {
                   </span>
                 </div>
               )}
-              {/* Badge */}
-              <div className="absolute top-2 left-2 bg-[#111111]/90 backdrop-blur-md text-[9px] font-bold text-white/70 px-2 py-0.5 rounded-md border border-white/10">
-                {Math.round(ev.recommendationScore || 0)}% Match
-              </div>
+              {/* Badge removed */}
               <button 
                 onClick={(e) => { e.stopPropagation(); handleSaveEvent(ev.id); }}
                 className="absolute top-2 right-2 p-1 bg-[#111111]/90 backdrop-blur-md rounded-md border border-white/10 text-white/30 hover:text-white transition-colors"

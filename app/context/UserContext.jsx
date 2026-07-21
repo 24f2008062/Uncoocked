@@ -17,6 +17,7 @@ export function UserProvider({ children }) {
   useEffect(() => {
     // If NextAuth is still checking the session, do not proceed with auth redirects
     if (status === "loading") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(true);
       return;
     }

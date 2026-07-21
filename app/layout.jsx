@@ -6,6 +6,8 @@ import { UserProvider } from "@/app/context/UserContext";
 import { NextAuthProvider } from "@/app/context/NextAuthProvider";
 import SessionMonitor from "@/app/components/dashboard/SessionMonitor";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +41,14 @@ export default function RootLayout({ children }) {
             <Footer />
           </UserProvider>
         </NextAuthProvider>
+        <Toaster theme="dark" position="bottom-right" richColors />
         <SpeedInsights />
+        
+        {/* Safely injects the Razorpay Checkout SDK globally without slowing down initial page loads */}
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

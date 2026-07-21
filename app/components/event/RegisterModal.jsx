@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function RegisterModal({
   open,
   onClose,
-  onSubmit,
+  onSubmit, // We will still call this after a successful payment to notify the UI
   ticketType,
   price,
+  eventId,   // Pass these down or read them from your route if needed
+  userId     // Pass these down or read them from your route if needed
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,13 +17,93 @@ export default function RegisterModal({
   const [university, setUniversity] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Dynamically load Razorpay SDK script when modal opens
+  useEffect(() => {
+    if (open) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      document.body.appendChild(script);
+      return () => {
+        document.body.removeChild(script);
+      };
+    }
+  }, [open]);
+
   if (!open) return null;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
+
     try {
-      await onSubmit({ name, email, phone, university });
+      // 1. Hit our Checkout API endpoint to create the Order
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventId: eventId, 
+          userId: userId,
+          // You can also pass teamName or track here if needed
+        }),
+      });
+
+      const checkoutData = await res.json();
+      if (!res.ok) throw new Error(checkoutData.error || "Failed to initiate registration");
+
+      // 2. Short-circuit if it's a Free Event
+      if (checkoutData.isFree) {
+        alert("Registration Successful!");
+        if (onSubmit) await onSubmit({ name, email, phone, university });
+        onClose();
+        window.location.reload();
+        return;
+      }
+
+      // 3. Open the secure Razorpay Checkout overlay for Paid Events
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: checkoutData.amount,
+        currency: "INR",
+        name: "Event Registration",
+        description: "Complete your payment to confirm your seat",
+        order_id: checkoutData.orderId,
+        handler: async function (response) {
+          // 4. Send payment tokens back to our server verification endpoint
+          const verifyRes = await fetch("/api/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              registrationId: checkoutData.registrationId,
+            }),
+          });
+
+          const verifyData = await verifyRes.json();
+          if (verifyRes.ok && verifyData.success) {
+            alert("Payment Verified! Registration Complete.");
+            if (onSubmit) await onSubmit({ name, email, phone, university });
+            onClose();
+            window.location.reload();
+          } else {
+            alert(verifyData.error || "Payment verification failed.");
+          }
+        },
+        prefill: {
+          name: name,
+          email: email,
+          contact: phone,
+        },
+        theme: { color: "#ffffff" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (err) {
+      alert(err.message || "Something went wrong during checkout.");
     } finally {
       setLoading(false);
     }
@@ -29,7 +111,6 @@ export default function RegisterModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Semi-transparent backdrop blur */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
@@ -42,7 +123,7 @@ export default function RegisterModal({
           </h3>
           <p className="text-sm text-zinc-400 mt-1">
             {ticketType === "Paid"
-              ? `Enter your details to pay ₹${price} and secure your ticket.`
+              ? `Enter your details to proceed to secure payment of ₹${price}.`
               : "Please provide your details to reserve a free ticket."}
           </p>
         </div>
@@ -54,12 +135,9 @@ export default function RegisterModal({
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label
-                htmlFor="modal-name"
-                className="block text-sm font-medium text-zinc-300"
-              >
+              <label htmlFor="modal-name" className="block text-sm font-medium text-zinc-300">
                 Full name
               </label>
               <input
@@ -72,10 +150,7 @@ export default function RegisterModal({
             </div>
 
             <div>
-              <label
-                htmlFor="modal-email"
-                className="block text-sm font-medium text-zinc-300"
-              >
+              <label htmlFor="modal-email" className="block text-sm font-medium text-zinc-300">
                 Email address
               </label>
               <input
@@ -89,10 +164,7 @@ export default function RegisterModal({
             </div>
 
             <div>
-              <label
-                htmlFor="modal-phone"
-                className="block text-sm font-medium text-zinc-300"
-              >
+              <label htmlFor="modal-phone" className="block text-sm font-medium text-zinc-300">
                 Phone number
               </label>
               <input
@@ -106,10 +178,7 @@ export default function RegisterModal({
             </div>
 
             <div>
-              <label
-                htmlFor="modal-university"
-                className="block text-sm font-medium text-zinc-300"
-              >
+              <label htmlFor="modal-university" className="block text-sm font-medium text-zinc-300">
                 University / Institution
               </label>
               <input
@@ -122,65 +191,7 @@ export default function RegisterModal({
             </div>
           </div>
 
-          {ticketType === "Paid" && (
-            <div className="pt-4 mt-4 border-t border-zinc-800/80">
-              <h4 className="text-sm font-medium text-white tracking-tight mb-4">
-                Payment information
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="card-number"
-                    className="block text-sm font-medium text-zinc-300"
-                  >
-                    Card number
-                  </label>
-                  <input
-                    id="card-number"
-                    required
-                    type="text"
-                    placeholder="0000 0000 0000 0000"
-                    className="mt-1.5 block w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400 transition-colors"
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label
-                      htmlFor="card-expiry"
-                      className="block text-sm font-medium text-zinc-300"
-                    >
-                      Expiry
-                    </label>
-                    <input
-                      id="card-expiry"
-                      required
-                      type="text"
-                      placeholder="MM/YY"
-                      className="mt-1.5 block w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400 transition-colors"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label
-                      htmlFor="card-cvc"
-                      className="block text-sm font-medium text-zinc-300"
-                    >
-                      CVC
-                    </label>
-                    <input
-                      id="card-cvc"
-                      required
-                      type="text"
-                      placeholder="123"
-                      className="mt-1.5 block w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400 transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-end gap-3 pt-4">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800/80">
             <button
               type="button"
               onClick={onClose}
@@ -196,7 +207,7 @@ export default function RegisterModal({
               {loading
                 ? "Processing..."
                 : ticketType === "Paid"
-                  ? `Pay ₹${price}`
+                  ? `Proceed to Pay ₹${price}`
                   : "Confirm reservation"}
             </button>
           </div>
