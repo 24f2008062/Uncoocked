@@ -39,8 +39,12 @@ export function UserProvider({ children }) {
 
   const logout = async () => {
     setUserState(null);
-    // Sign out of NextAuth
-    await nextAuthSignOut({ redirect: false });
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("uncooked_user_cache");
+      localStorage.removeItem("onboarding_just_completed");
+    }
+    // Sign out of NextAuth and redirect immediately to login page
+    await nextAuthSignOut({ callbackUrl: "/login" });
     // eslint-disable-next-line no-console
     console.info(`[AUTH] ${new Date().toISOString()} logout`, { email: session?.user?.email ?? null });
   };

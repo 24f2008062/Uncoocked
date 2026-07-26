@@ -42,6 +42,7 @@ export const authOptions = {
             onboardingCompleted: true,
             failedLoginAttempts: true,
             lockedUntil: true,
+            emailVerified: true,
           },
         });
 
@@ -93,6 +94,7 @@ export const authOptions = {
           email: user.email,
           name: user.fullName || user.name,
           onboardingCompleted: user.onboardingCompleted,
+          emailVerified: Boolean(user.emailVerified),
         };
       },
     }),
@@ -140,10 +142,14 @@ export const authOptions = {
       if (user) {
         token.sub = user.id;
         token.onboardingCompleted = user.onboardingCompleted;
+        token.emailVerified = Boolean(user.emailVerified);
       }
 
       if (trigger === "update" && session?.onboardingCompleted !== undefined) {
         token.onboardingCompleted = session.onboardingCompleted;
+      }
+      if (trigger === "update" && session?.emailVerified !== undefined) {
+        token.emailVerified = session.emailVerified;
       }
 
       return token;
@@ -152,6 +158,7 @@ export const authOptions = {
       if (session.user) {
         session.user.id = token.sub;
         session.user.onboardingCompleted = token.onboardingCompleted;
+        session.user.emailVerified = token.emailVerified;
       }
       return session;
     },
