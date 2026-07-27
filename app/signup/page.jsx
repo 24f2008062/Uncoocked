@@ -33,7 +33,7 @@ export default function SignupPage() {
       }
 
       setIsLoading(false);
-      router.push(`/check-email?email=${encodeURIComponent(email)}`);
+      router.push("/login");
     } catch {
       setError("Something went wrong. Please try again.");
       setIsLoading(false);

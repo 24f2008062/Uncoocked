@@ -67,9 +67,6 @@ export async function POST(request) {
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!token.emailVerified) {
-      return NextResponse.json({ error: 'Please verify your email address before creating events.' }, { status: 403 });
-    }
     if (!organizerId) {
       organizerId = token.email;
     }
