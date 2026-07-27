@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, isStrongPassword } from "@/lib/password";
 import { logAuthEvent } from "@/lib/auth/log";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
-
-
+import { generateVerificationToken } from "@/lib/auth/verificationToken";
+import { sendEmail } from "@/lib/email";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request) {
@@ -64,17 +64,56 @@ export async function POST(request) {
     }
 
     const passwordHash = await hashPassword(password);
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
         fullName: fullName || "New User",
         onboardingCompleted: false,
-        emailVerified: new Date(),
         failedLoginAttempts: 0,
         lockedUntil: null,
       },
     });
+
+    const token = generateVerificationToken(user);
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXTAUTH_URL ||
+      request.headers.get("origin") ||
+      "http://localhost:3000";
+    const verifyUrl = `${baseUrl.replace(/\/$/, "")}/api/auth/verify-email?token=${token}`;
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("\n========================================================");
+      console.log("✉️ LOCAL DEV VERIFICATION LINK for:", user.email);
+      console.log(verifyUrl);
+      console.log("========================================================\n");
+    }
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Verify Your Email - UNCOOKED",
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; background: #111; padding: 24px; border-radius: 12px; border: 1px solid #333; color: #fff;">
+            <h2 style="color: #A855F7; margin-top: 0;">Verify Your Email Address</h2>
+            <p style="color: #ccc;">Welcome to UNCOOKED! Please verify your email address (<strong>${user.email}</strong>) to confirm your inbox access and unlock protected campus event features.</p>
+            <p style="color: #ccc;">Click the button below to verify your email. This link is valid for <strong>24 hours</strong>:</p>
+            <p style="margin: 28px 0;">
+              <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: #A855F7; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;">Verify Email</a>
+            </p>
+            <p style="color: #999; font-size: 13px;">If the button above does not work, copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; font-size: 13px;"><a href="${verifyUrl}" style="color: #C084FC;">${verifyUrl}</a></p>
+            <hr style="border: 0; border-top: 1px solid #222; margin: 24px 0;" />
+            <p style="font-size: 12px; color: #666;">Note: This system verifies email ownership to ensure inbox access; it does not evaluate personal trustworthiness. If you did not create an account on UNCOOKED, you can safely ignore this email.</p>
+          </div>
+        `,
+      });
+      logAuthEvent("verification_email_sent", { email: user.email });
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      logAuthEvent("verification_email_send_failure", { email: user.email });
+    }
 
     logAuthEvent("signup_success", { email });
     return NextResponse.json({ success: true, email });

@@ -103,8 +103,18 @@ function VerifyEmailContent() {
           )}
 
           {successMsg ? (
-            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
-              {successMsg}
+            <div className="space-y-3">
+              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
+                {successMsg}
+              </div>
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-left">
+                <p className="text-xs text-amber-300 font-semibold flex items-center gap-1.5">
+                  <span>⚠️</span> Don&apos;t see the email?
+                </p>
+                <p className="text-[11px] text-amber-200/80 mt-1">
+                  Please check your <strong className="text-amber-200">Spam</strong>, <strong className="text-amber-200">Junk</strong>, or <strong className="text-amber-200">Promotions</strong> folder!
+                </p>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleResend} className="space-y-4">

@@ -88,6 +88,9 @@ export async function POST(request) {
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (!token.emailVerified) {
+      return NextResponse.json({ error: 'Please verify your email address before registering for events.' }, { status: 403 });
+    }
 
     const { eventId, name, track, teamName, status } = data;
     const email = data.email || token.email;

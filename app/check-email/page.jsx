@@ -30,6 +30,14 @@ function CheckEmailContent() {
         <p className="mt-4 text-xs text-gray-400 leading-relaxed">
           Please click the link in that email to confirm your inbox access and complete your account setup. This link will expire in 24 hours.
         </p>
+        <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-left">
+          <p className="text-xs text-amber-300 font-semibold flex items-center gap-1.5">
+            <span>⚠️</span> Don&apos;t see the email?
+          </p>
+          <p className="text-[11px] text-amber-200/80 mt-1">
+            Please check your <strong className="text-amber-200">Spam</strong>, <strong className="text-amber-200">Junk</strong>, or <strong className="text-amber-200">Promotions</strong> folder!
+          </p>
+        </div>
       </div>
 
       <div className="space-y-3 pt-2">

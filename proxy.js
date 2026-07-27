@@ -10,7 +10,24 @@ import { NextResponse } from "next/server";
 // honored by the current Next 16 + Turbopack build. This file keeps the
 // existing page-level session gating.
 export default withAuth(
-  function proxy() {
+  function proxy(req) {
+    const token = req.nextauth?.token;
+    if (token && !token.emailVerified) {
+      const path = req.nextUrl.pathname;
+      if (
+        path.startsWith("/dashboard/organizer") ||
+        path.startsWith("/onboarding") ||
+        path.startsWith("/profile") ||
+        path.startsWith("/api/organizer")
+      ) {
+        return NextResponse.redirect(
+          new URL(
+            `/verify-email?notice=unverified&email=${encodeURIComponent(token.email || "")}`,
+            req.url
+          )
+        );
+      }
+    }
     return NextResponse.next();
   },
   {
