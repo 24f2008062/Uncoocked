@@ -8,11 +8,8 @@ generator client {
 }
 
 datasource db {
-
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -33,13 +30,13 @@ model User {
   team            String?
   preferenceScore Float          @default(0)
   onboardingCompleted Boolean    @default(false)
+  failedLoginAttempts Int        @default(0)
+  lockedUntil       DateTime?
   createdAt       DateTime       @default(now())
   registrations   Registration[]
   activities      UserActivity[]
   organizedEvents Event[]        @relation("OrganizedEvents")
   managedEvents   EventManager[]
-  accounts        Account[]
-  sessions        Session[]
 }
 
 model Event {
@@ -158,20 +155,22 @@ model UserActivity {
   @@index([eventId])
 }
 
-model EventAnalytic {
-  id              String   @id @default(uuid())
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId         String
-  date            DateTime @default(now()) // Can be used to track daily stats
-  views           Int      @default(0)
-  uniqueVisitors  Int      @default(0)
-  registrations   Int      @default(0)
-  attendance      Int      @default(0)
-  revenue         Float    @default(0)
+// prisma/schema.prisma
 
+model EventAnalytic {
+  id             String   @id @default(uuid())
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId        String
+  date           DateTime @default(now()) // Ensures the DB stores ONLY the calendar date (YYYY-MM-DD)
+  views          Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  registrations  Int      @default(0)
+  attendance     Int      @default(0)
+  revenue        Float    @default(0)
+
+  @@unique([eventId, date]) // Ensures a single unique row for an event on any given day
   @@index([eventId])
 }
-
 model EventManager {
   id              String   @id @default(uuid())
   event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -208,43 +207,6 @@ model EventActivityLog {
   timestamp       DateTime @default(now())
 
   @@index([eventId])
-}
-
-// NextAuth Models
-
-model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
 }
 
 model ChatMessage {

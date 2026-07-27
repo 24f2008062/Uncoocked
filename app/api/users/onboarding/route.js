@@ -1,15 +1,24 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getAuthToken } from "@/lib/auth/guards";
 
 const prisma = new PrismaClient({});
 
 export async function POST(request) {
   try {
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { email, interests, fullName, dob } = body;
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+    if (token.email !== email) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const interestsToSave = Array.isArray(interests) ? interests : [];

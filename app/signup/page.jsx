@@ -32,21 +32,8 @@ export default function SignupPage() {
         return;
       }
 
-      const signInRes = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (signInRes?.error) {
-        setError("Account created, but sign-in failed. Please log in.");
-        setIsLoading(false);
-        router.push("/login");
-        return;
-      }
-
-      router.push("/onboarding");
-      router.refresh();
+      setIsLoading(false);
+      router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch {
       setError("Something went wrong. Please try again.");
       setIsLoading(false);

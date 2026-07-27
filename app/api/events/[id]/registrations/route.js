@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthToken, requireEventManager } from "@/lib/auth/guards";
 
 export async function GET(request, { params }) {
   const { id } = await params;
+
+  const token = await getAuthToken(request);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!(await requireEventManager(id, token))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   
   try {
     const registrations = await prisma.registration.findMany({
@@ -37,6 +46,14 @@ export async function PUT(request, { params }) {
   const { id } = await params;
   const { registrationId, action } = await request.json(); // action: 'approve', 'reject', 'checkin'
 
+  const token = await getAuthToken(request);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!(await requireEventManager(id, token))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  
   try {
     let updateData = {};
     if (action === 'approve') updateData = { status: 'Confirmed' };

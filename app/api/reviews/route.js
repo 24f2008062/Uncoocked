@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { getAuthToken } from "@/lib/auth/guards";
 
 const prisma = new PrismaClient();
 
@@ -19,16 +20,23 @@ export async function GET() {
 // 2. POST: Submit a new review
 export async function POST(req) {
   try {
-    const { userName, userEmail, rating, comment } = await req.json();
+    const token = await getAuthToken(req);
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { userName, rating, comment } = await req.json();
 
     if (!userName || !rating || !comment) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const userEmail = token.email;
+
     const newReview = await prisma.review.create({
       data: {
         userName,
-        userEmail: userEmail || "anonymous@student.com",
+        userEmail,
         rating: parseInt(rating),
         comment,
       },

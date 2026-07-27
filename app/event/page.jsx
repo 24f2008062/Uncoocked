@@ -29,6 +29,11 @@ export default function EventPage() {
   };
 
   useEffect(() => {
+    // Clear temporary onboarding flag on mount
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("onboarding_just_completed");
+    }
+
     setTimeout(() => {
       loadEvents();
     }, 0);
@@ -137,6 +142,7 @@ export default function EventPage() {
               event={eventData}
               chatUserData={chatUserData}
               selectedEventId={selectedEventId}
+              userId={currentUserId} // 👈 FIXED: Passing the active user's ID here
               onBack={() => {
                 window.history.back();
               }}

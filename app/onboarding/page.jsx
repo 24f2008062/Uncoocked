@@ -52,48 +52,48 @@ export default function OnboardingPage() {
   };
 
   const submitOnboarding = async (interests) => {
+  try {
+    const email = typeof user === "string" ? user : user?.email;
+    
+    let fullName = undefined;
+    let dob = undefined;
+    
     try {
-      // 1. Await the API request fully before redirecting
-      const email = typeof user === "string" ? user : user?.email;
-      
-      let fullName = undefined;
-      let dob = undefined;
-      
-      try {
-        if (typeof window !== "undefined") {
-          const storedProfileStr = localStorage.getItem(`profile_${email}`);
-          if (storedProfileStr) {
-            const profile = JSON.parse(storedProfileStr);
-            fullName = profile.fullName;
-            dob = profile.dob;
-          }
+      if (typeof window !== "undefined") {
+        const storedProfileStr = localStorage.getItem(`profile_${email}`);
+        if (storedProfileStr) {
+          const profile = JSON.parse(storedProfileStr);
+          fullName = profile.fullName;
+          dob = profile.dob;
         }
-      } catch (e) {
-        console.warn("Failed to load profile from localStorage", e);
       }
-
-      await fetch("/api/users/onboarding", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, interests, fullName, dob })
-      });
-      
-      // 2. Trigger NextAuth update asynchronously (if authenticated)
-      if (status === "authenticated" && typeof update === "function") {
-         try {
-           const p = update({ onboardingCompleted: true });
-           if (p && p.catch) p.catch(() => {});
-         } catch(e) {}
-      }
-
-      // 3. Guarantee redirection AFTER successful save
-      navigateToEvent();
-    } catch (err) {
-      console.warn("API call failed", err);
-      // Still navigate even on failure to avoid trapping the user
-      navigateToEvent();
+    } catch (e) {
+      console.warn("Failed to load profile from localStorage", e);
     }
-  };
+
+    // 1. Post to database
+    await fetch("/api/users/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, interests, fullName, dob })
+    });
+    
+    // 2. AWAIT NextAuth session update so the token updates FIRST
+    if (status === "authenticated" && typeof update === "function") {
+      try {
+        await update({ onboardingCompleted: true });
+      } catch (e) {
+        console.error("Failed to update session:", e);
+      }
+    }
+
+    // 3. Now navigate to events safely
+    navigateToEvent();
+  } catch (err) {
+    console.warn("API call failed", err);
+    navigateToEvent();
+  }
+};
 
   const handleSave = () => {
     setIsSaving(true);

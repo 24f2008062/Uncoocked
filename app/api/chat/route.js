@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Pusher from "pusher";
 import { prisma } from "@/lib/prisma";
+import { getAuthToken } from "@/lib/auth/guards";
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID,
@@ -13,7 +14,14 @@ const pusher = new Pusher({
 // 1. POST route: Save and broadcast a message (Security: Check Organizer Scam Guard)
 export async function POST(req) {
   try {
-    const { eventId, userName, userEmail, message } = await req.json();
+    const token = await getAuthToken(req);
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { eventId, userName, message } = await req.json();
+
+    const userEmail = token.email;
 
     if (!message || !eventId || !userEmail) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -112,11 +120,15 @@ export async function GET(req) {
 // 3. DELETE route: Unsend a specific chat message
 export async function DELETE(req) {
   try {
+    const token = await getAuthToken(req);
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const messageId = searchParams.get("messageId");
-    const userEmail = searchParams.get("userEmail");
 
-    if (!messageId || !userEmail) {
+    if (!messageId) {
       return NextResponse.json({ error: "Missing required tracking parameters" }, { status: 400 });
     }
 
@@ -127,6 +139,8 @@ export async function DELETE(req) {
     if (!existingMessage) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 });
     }
+
+    const userEmail = token.email;
 
     if (existingMessage.userEmail !== userEmail) {
       return NextResponse.json({ error: "Unauthorized to unsend this message" }, { status: 403 });

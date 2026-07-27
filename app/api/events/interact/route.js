@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getAuthToken } from "@/lib/auth/guards";
 
 const prisma = new PrismaClient({});
 
 export async function POST(request) {
   try {
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { email, eventId, interactionType } = body; // VIEW, SAVE, REGISTER
+    const { eventId, interactionType } = body; // VIEW, SAVE, REGISTER
+    const email = token.email;
 
     if (!email || !eventId || !interactionType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

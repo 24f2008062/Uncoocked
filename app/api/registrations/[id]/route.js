@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getAuthToken, requireEventManager } from "@/lib/auth/guards";
 
 const prisma = new PrismaClient({});
 
 export async function DELETE(request, context) {
   try {
+    const token = await getAuthToken(request);
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const params = await context.params;
     const id = params.id;
 
@@ -18,6 +24,13 @@ export async function DELETE(request, context) {
     }
 
     const eventId = registration.eventId;
+
+    const isOwner = registration.userId === token.sub;
+    const isManager = await requireEventManager(eventId, token);
+
+    if (!isOwner && !isManager) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     await prisma.$transaction([
       prisma.registration.delete({
