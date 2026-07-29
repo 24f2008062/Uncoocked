@@ -50,11 +50,30 @@ export async function GET(request) {
     const registrations = await prisma.registration.findMany({
       where: whereClause,
       include: {
-        user: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            fullName: true,
+            email: true,
+            image: true,
+            role: true,
+            department: true,
+            clubAssociation: true,
+          },
+        },
         event: {
           include: {
-            organizer: true
-          }
+            organizer: {
+              select: {
+                id: true,
+                name: true,
+                fullName: true,
+                image: true,
+                role: true,
+              },
+            },
+          },
         },
         ticketTier: true,
         coupon: true,
@@ -145,7 +164,16 @@ export async function POST(request) {
           teamName,
         },
         include: {
-          user: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              fullName: true,
+              email: true,
+              image: true,
+              role: true,
+            },
+          },
           event: true,
         },
       }),
