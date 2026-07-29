@@ -7,7 +7,7 @@ import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(request) {
   try {
-    const rl = rateLimit(`reset-password:${getClientIp(request)}`, {
+    const rl = await rateLimit(`reset-password:${getClientIp(request)}`, {
       limit: 5,
       windowMs: 60 * 1000,
     });

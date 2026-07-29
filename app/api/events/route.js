@@ -38,7 +38,15 @@ export async function GET(request) {
         bulletinUpdates: {
           orderBy: { postedAt: 'desc' }
         },
-        organizer: true,
+        organizer: {
+          select: {
+            id: true,
+            name: true,
+            fullName: true,
+            image: true,
+            role: true,
+          },
+        },
         _count: {
           select: { registrations: true }
         }
@@ -88,18 +96,33 @@ export async function POST(request) {
       }
     }
 
+    // Input validation
+    if (!data.title || data.title.trim().length < 3) {
+      return NextResponse.json({ error: 'Title must be at least 3 characters long.' }, { status: 400 });
+    }
+    if (!data.location || data.location.trim().length < 3 || data.location.toLowerCase().includes('no address')) {
+      return NextResponse.json({ error: 'Please provide a valid event location.' }, { status: 400 });
+    }
+    if (!data.description || data.description.trim().length < 10) {
+      return NextResponse.json({ error: 'Description must be at least 10 characters long.' }, { status: 400 });
+    }
+
+    const eventId = data.id && !data.id.startsWith('hosted-ev-')
+      ? data.id
+      : `ev-${crypto.randomUUID()}`;
+
     const newEvent = await prisma.event.create({
       data: {
-        id: data.id,
-        title: data.title,
-        type: data.type,
+        id: eventId,
+        title: data.title.trim(),
+        type: data.type || 'Other',
         date: data.date && !isNaN(new Date(data.date).getTime()) ? new Date(data.date) : new Date(),
-        location: data.location,
+        location: data.location.trim(),
         zone: data.zone || null,
         city: data.city || DEFAULT_CITY,
         state: data.state || DEFAULT_STATE,
         country: data.country || DEFAULT_COUNTRY,
-        description: data.description,
+        description: data.description.trim(),
         bannerUrl: data.bannerUrl,
         googleMapsUrl: data.googleMapsUrl,
         ticketType: data.ticketType || "Free",

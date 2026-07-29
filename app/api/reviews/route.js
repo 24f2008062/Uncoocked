@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { getAuthToken } from "@/lib/auth/guards";
-
-const prisma = new PrismaClient();
 
 // 1. GET: Fetch all student reviews to display
 export async function GET() {
   try {
     const reviews = await prisma.review.findMany({
+      select: {
+        id: true,
+        userName: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json({ success: true, reviews }, { status: 200 });
@@ -42,7 +47,8 @@ export async function POST(req) {
       },
     });
 
-    return NextResponse.json({ success: true, review: newReview }, { status: 201 });
+    const { userEmail: _, ...safeReview } = newReview;
+    return NextResponse.json({ success: true, review: safeReview }, { status: 201 });
   } catch (error) {
     console.error("Post Review Error:", error);
     return NextResponse.json({ error: "Failed to submit review" }, { status: 500 });

@@ -22,24 +22,15 @@ export async function GET(request) {
     let whereClause = {};
 
     if (eventId) {
-      // Polymorphic lookup fallback for GET requests using the slug
-      let event = await prisma.event.findUnique({
+      const event = await prisma.event.findUnique({
         where: { id: eventId },
         include: { organizer: true, managers: { include: { user: true } } }
       });
 
       if (!event) {
-        event = await prisma.event.findFirst({
-          where: { title: eventId },
-          include: { organizer: true, managers: { include: { user: true } } }
-        });
-      }
-      
-      if (!event) {
         return NextResponse.json({ error: 'Event not found' }, { status: 404 });
       }
       
-      // Ensure strict authorization comparison using safe database schemas
       const isOwner = event.organizer?.email === requesterEmail;
       const isManager = event.managers?.some(m => m.user.email === requesterEmail);
       
@@ -99,16 +90,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Dynamic resolution of both Primary Key IDs and Slugs
-    let event = await prisma.event.findUnique({
+    // Look up event by ID only
+    const event = await prisma.event.findUnique({
       where: { id: eventId }
     });
-
-    if (!event) {
-      event = await prisma.event.findFirst({
-        where: { title: eventId }
-      });
-    }
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });

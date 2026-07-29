@@ -18,7 +18,7 @@ export const authOptions = {
       },
       async authorize(credentials, req) {
         // Per-IP rate limit on credential attempts (10 / minute).
-        const rl = rateLimit(`login:${getClientIp(req)}`, {
+        const rl = await rateLimit(`login:${getClientIp(req)}`, {
           limit: 10,
           windowMs: 60 * 1000,
         });
