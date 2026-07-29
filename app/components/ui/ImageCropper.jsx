@@ -13,6 +13,7 @@ export default function ImageCropper({ onCropCompleteCallback, currentImageUrl }
   const [preview, setPreview] = useState(currentImageUrl || "");
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreview(currentImageUrl || "");
   }, [currentImageUrl]);
 

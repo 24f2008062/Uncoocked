@@ -7,6 +7,7 @@ import { CITY_ZONES } from "@/app/config/cities";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import ImageCropper from "@/app/components/ui/ImageCropper";
+import { toast } from "sonner";
 
 const BANNER_PRESETS = [
   {
@@ -117,7 +118,7 @@ function HostEventForm() {
   const handleHostNewEvent = async (e) => {
     e.preventDefault();
     if (!user) {
-      alert("You must be logged in to host an event.");
+      toast("You must be logged in to host an event.");
       return;
     }
 
@@ -158,14 +159,14 @@ function HostEventForm() {
 
       if (!res.ok) throw new Error("Failed to save event to database");
       
-      alert(`Successfully ${isEditing ? 'updated' : 'launched'} event: ${newTitle}`);
+      toast.success(`Successfully ${isEditing ? 'updated' : 'launched'} event: ${newTitle}`);
 
       // Redirect back to dashboard
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
       console.error(err);
-      alert("Failed to save event. Please check the logs.");
+      toast.error("Failed to save event. Please check the logs.");
     } finally {
       setSubmitting(false);
     }

@@ -33,10 +33,12 @@ export default function RegistrationCard({
       return formatDistanceToNow(eventDate, { addSuffix: true });
     };
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTimeLeft(calculateTimeLeft());
     
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTimeLeft(calculateTimeLeft());
     }, 60000); // update every minute
     
     return () => clearInterval(timer);

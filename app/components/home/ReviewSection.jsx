@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@/app/context/UserContext";
+import { toast } from "sonner";
 
 export default function ReviewSection() {
   const { user } = useUser();
@@ -54,7 +55,7 @@ export default function ReviewSection() {
       }
     } catch (err) {
       console.error("Failed to submit review:", err);
-      alert("Could not post your review right now.");
+      toast.error("Could not post your review right now.");
     } finally {
       setSubmitting(false);
     }
@@ -140,7 +141,7 @@ export default function ReviewSection() {
                       </div>
                     </div>
                     <p className="text-[11px] text-white/75 font-normal leading-relaxed h-[44px] overflow-y-auto break-words select-none pr-1">
-                      "{rev.comment}"
+                      &quot;{rev.comment}&quot;
                     </p>
                   </div>
                   

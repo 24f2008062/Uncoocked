@@ -33,5 +33,7 @@ export const config = {
     "/dashboard/organizer/:path*",
     "/profile/:path*",
     "/onboarding/:path*",
+    "/api/users/:path*",
+    "/api/organizer/:path*",
   ],
 };

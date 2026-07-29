@@ -5,6 +5,7 @@ import { X, Calendar, MapPin, Hash, Download } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { toPng } from "html-to-image";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 
 export default function TicketModal({
   open,
@@ -21,6 +22,7 @@ export default function TicketModal({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -28,7 +30,7 @@ export default function TicketModal({
 
   const handleDownload = async () => {
     if (!ticketRef.current) {
-      alert("Ticket is not ready to download yet.");
+      toast.error("Ticket is not ready to download yet.");
       return;
     }
     
@@ -57,7 +59,7 @@ export default function TicketModal({
 
     } catch (err) {
       console.error("Download Error:", err);
-      alert(`Failed to download ticket: ${err.message || "Unknown error"}. Please try again or take a screenshot.`);
+      toast.error(`Failed to download ticket: ${err.message || "Unknown error"}. Please try again or take a screenshot.`);
     } finally {
       setIsDownloading(false);
     }

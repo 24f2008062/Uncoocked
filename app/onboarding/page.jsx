@@ -19,7 +19,8 @@ export default function OnboardingPage() {
   const { user, isLoading: isContextLoading } = useUser();
   const { update, status } = useSession();
   const [selectedInterests, setSelectedInterests] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
   // If no mock user session is active, go to login
   useEffect(() => {
@@ -36,35 +37,72 @@ export default function OnboardingPage() {
     );
   };
 
-  const handleSave = async () => {
-    setLoading(true);
+  const navigateToEvent = () => {
+    // Attempt local storage flag for bounce protection
     try {
-      const res = await fetch("/api/users/onboarding", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: user || "demo@campus.edu",
-          interests: selectedInterests
-        })
-      });
-      if (res.ok) {
-        // Update the NextAuth session so it knows onboarding is complete
-        if (status === "authenticated") {
-          try {
-            await update({ onboardingCompleted: true });
-          } catch (e) {
-            console.error("Session update failed", e);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("onboarding_just_completed", "true");
+      }
+    } catch(e) {}
+    
+    // Force native browser redirect unconditionally
+    if (typeof window !== "undefined") {
+      window.location.href = "/event";
+    }
+  };
+
+  const submitOnboarding = async (interests) => {
+    try {
+      // 1. Await the API request fully before redirecting
+      const email = typeof user === "string" ? user : user?.email;
+      
+      let fullName = undefined;
+      let dob = undefined;
+      
+      try {
+        if (typeof window !== "undefined") {
+          const storedProfileStr = localStorage.getItem(`profile_${email}`);
+          if (storedProfileStr) {
+            const profile = JSON.parse(storedProfileStr);
+            fullName = profile.fullName;
+            dob = profile.dob;
           }
         }
-        router.push("/event");
-      } else {
-        console.error("Failed to save interests");
+      } catch (e) {
+        console.warn("Failed to load profile from localStorage", e);
       }
+
+      await fetch("/api/users/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, interests, fullName, dob })
+      });
+      
+      // 2. Trigger NextAuth update asynchronously (if authenticated)
+      if (status === "authenticated" && typeof update === "function") {
+         try {
+           const p = update({ onboardingCompleted: true });
+           if (p && p.catch) p.catch(() => {});
+         } catch(e) {}
+      }
+
+      // 3. Guarantee redirection AFTER successful save
+      navigateToEvent();
     } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.warn("API call failed", err);
+      // Still navigate even on failure to avoid trapping the user
+      navigateToEvent();
     }
+  };
+
+  const handleSave = () => {
+    setIsSaving(true);
+    submitOnboarding(selectedInterests);
+  };
+
+  const handleSkip = () => {
+    setIsSkipping(true);
+    submitOnboarding([]);
   };
 
   if (isContextLoading || !user) return null; // Prevent flicker
@@ -106,19 +144,19 @@ export default function OnboardingPage() {
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-8 border-t border-dark-border/50">
           <button
-            onClick={() => router.push("/event")}
-            disabled={loading}
+            onClick={handleSkip}
+            disabled={isSaving || isSkipping}
             className="w-full sm:w-auto px-6 py-3 bg-zinc-900 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all"
           >
-            Skip for now
+            {isSkipping ? "Skipping..." : "Skip for now"}
           </button>
           
           <button
             onClick={handleSave}
-            disabled={loading || selectedInterests.length === 0}
+            disabled={isSaving || isSkipping || selectedInterests.length === 0}
             className="w-full sm:w-auto px-8 py-3 bg-neon-purple text-white text-sm font-bold rounded-xl hover:bg-neon-purple/90 transition-all shadow-neon disabled:opacity-50 disabled:scale-100"
           >
-            {loading ? "Saving..." : "Save Preferences"}
+            {isSaving ? "Saving..." : (selectedInterests.length === 0 ? "Select interests to save" : "Save Preferences")}
           </button>
         </div>
       </motion.div>

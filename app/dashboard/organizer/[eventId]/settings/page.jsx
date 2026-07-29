@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Save, AlertTriangle, Shield, Bell, Users, Globe, Edit3, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SettingsPage({ params }) {
   const unwrappedParams = use(params);
@@ -38,7 +39,7 @@ export default function SettingsPage({ params }) {
 
   const handleSave = (e) => {
     e.preventDefault();
-    alert("Settings saved successfully!");
+    toast.success("Settings saved successfully!");
   };
 
   const handleAddManager = (e) => {
@@ -64,13 +65,13 @@ export default function SettingsPage({ params }) {
         body: JSON.stringify({ archived: true })
       });
       if(res.ok) {
-        alert("Event successfully archived.");
+        toast.success("Event successfully archived.");
         router.push("/dashboard");
       } else {
-        alert("Failed to archive event.");
+        toast.error("Failed to archive event.");
       }
     } catch (e) {
-      alert("Error archiving event.");
+      toast.error("Error archiving event.");
     } finally {
       setActionLoading(false);
     }
@@ -82,13 +83,13 @@ export default function SettingsPage({ params }) {
     try {
       const res = await fetch(`/api/events/${eventId}/complete`, { method: 'POST' });
       if(res.ok) {
-        alert("Event marked as completed.");
+        toast.success("Event marked as completed.");
         router.push("/dashboard");
       } else {
-        alert("Failed to mark event as completed.");
+        toast.error("Failed to mark event as completed.");
       }
     } catch (e) {
-      alert("Error completing event.");
+      toast.error("Error completing event.");
     } finally {
       setActionLoading(false);
     }
@@ -100,13 +101,13 @@ export default function SettingsPage({ params }) {
     try {
       const res = await fetch(`/api/events/${eventId}`, { method: 'DELETE' });
       if(res.ok) {
-        alert("Event permanently deleted.");
+        toast.success("Event permanently deleted.");
         router.push("/dashboard");
       } else {
-        alert("Failed to delete event.");
+        toast.error("Failed to delete event.");
       }
     } catch (e) {
-      alert("Error deleting event.");
+      toast.error("Error deleting event.");
     } finally {
       setActionLoading(false);
     }
