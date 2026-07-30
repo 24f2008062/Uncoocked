@@ -83,15 +83,20 @@ Once logged in, you will be taken to your **Personal Dashboard**, which serves a
 ## 4. Feature Guide
 
 ### Hosting an Event (Organizer Role)
-**Purpose**: Create a new event and publish it to the public Explorer.
+**Purpose**: Complete one-time host verification and publish new campus events to the public Explorer.
 **Step-by-Step Instructions**:
-1. From your Dashboard, click **Host New Event**.
-2. Fill in the **Event Title**, **Category** (e.g., Hackathon, Fest), and **Date and Time**.
-3. *Note: Location is currently locked to Lucknow.* 
-4. Upload an **Event Banner** using the built-in image cropper, or select a preset image.
-5. Set the **Ticket Type** (Free or Paid). If Paid, set the price in Rupees (₹).
-6. Set the **Capacity** (maximum number of attendees) and toggle whether you want to enable a Waitlist.
-7. Click **Publish & Host Event**.
+1. From your Dashboard or navigation bar, click **Host Event**.
+2. *First-time Hosts*: If you have not applied for verification, you will automatically be directed to the **Host Verification Application Form**. Fill in your organization/club details, designation, planned event summary, and attach supporting credentials.
+3. *Application Review*: Your request will enter `PENDING` state for Super Admin review. You can track status at `/host-verification/status`.
+4. *Approved Hosts*: Once your status is `APPROVED`, clicking **Host Event** takes you directly to the **Event Creation Console**.
+5. Fill in the **Event Title**, **Category** (e.g., Hackathon, Fest), and **Date and Time**.
+6. Upload an **Event Banner** using the built-in image cropper, or select a preset image.
+7. Set the **Ticket Type** (Free or Paid). If Paid, set the price in Rupees (₹).
+8. Set the **Capacity** (maximum attendees) and toggle whether to enable a Waitlist.
+9. Click **Publish & Host Event**.
+
+> [!TIP]
+> For full details on application states, re-submissions, and Super Admin review procedures, see the comprehensive [Host Verification User Manual](file:///c:/uncooked/Uncoocked/HOST_VERIFICATION_USER_MANUAL.md).
 
 ### Organizer Command Center
 **Purpose**: Manage your live event.
