@@ -161,7 +161,7 @@ model EventAnalytic {
   id             String   @id @default(uuid())
   event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId        String
-  date           DateTime @default(now()) @db.Date // Ensures the DB stores ONLY the calendar date (YYYY-MM-DD)
+  date           DateTime @default(now()) // Ensures the DB stores date
   views          Int      @default(0)
   uniqueVisitors Int      @default(0)
   registrations  Int      @default(0)
@@ -227,4 +227,37 @@ model Review {
   rating    Int
   comment   String
   createdAt DateTime @default(now())
+}
+
+model HostVerification {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  status           String    @default("NOT_APPLIED")
+  // Possible status values: NOT_APPLIED | PENDING | UNDER_REVIEW | NEEDS_MORE_INFORMATION | APPROVED | REJECTED | SUSPENDED
+  orgName          String?
+  clubName         String?
+  applicantRole    String?
+  eventDescription String?
+  portfolioUrl     String?
+  documents        String?   // JSON array of document URLs / base64 info
+  notes            String?   // Feedback or reason provided by admin
+  submittedAt      DateTime?
+  reviewedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  auditLogs        HostVerificationAuditLog[]
+}
+
+model HostVerificationAuditLog {
+  id                 String           @id @default(cuid())
+  hostVerificationId String
+  hostVerification   HostVerification @relation(fields: [hostVerificationId], references: [id], onDelete: Cascade)
+  oldStatus          String?
+  newStatus          String
+  changedBy          String?          // User ID or admin identifier
+  reason             String?
+  timestamp          DateTime         @default(now())
+
+  @@index([hostVerificationId])
 }

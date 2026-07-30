@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useUser } from "@/app/context/UserContext";
+import { useHostVerificationRedirect } from "@/app/hooks/useHostVerificationRedirect";
 import Link from "next/link";
 import TicketModal from "@/app/components/event/TicketModal";
 import { toast } from "sonner";
@@ -155,8 +156,10 @@ export default function DashboardPage() {
     }
   };
 
+  const handleHostEvent = useHostVerificationRedirect();
+
   const handleOpenHostModal = () => {
-    router.push("/dashboard/organizer/new");
+    handleHostEvent();
   };
 
   const handleCompleteEvent = async (eventId) => {
@@ -293,10 +296,10 @@ export default function DashboardPage() {
   const username = session?.user?.name || (user ? user.split("@")[0] : "Guest");
 
   const now = new Date().getTime();
-  
+
   const activeAttendingEvents = attendingEvents.filter(ev => ev.status !== "Completed");
   const historyAttendingEvents = attendingEvents.filter(ev => ev.status === "Completed");
-  
+
   const activeHostedEvents = hostedEvents.filter(ev => ev.status !== "Completed");
   const historyHostedEvents = hostedEvents.filter(ev => ev.status === "Completed");
 
@@ -404,7 +407,7 @@ export default function DashboardPage() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Header Block */}
-        <DashboardHeader 
+        <DashboardHeader
           username={username}
           attendingCount={attendingEvents.length}
           hostedCount={hostedEvents.length}
@@ -589,11 +592,10 @@ export default function DashboardPage() {
                                 [hev.id]: !prev[hev.id],
                               }))
                             }
-                            className={`flex-1 py-1.5 px-2.5 rounded-lg border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
-                              isAnnounceExpanded
+                            className={`flex-1 py-1.5 px-2.5 rounded-lg border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${isAnnounceExpanded
                                 ? "bg-[#A855F7]/10 border-[#A855F7]/30 text-[#C084FC]"
                                 : "bg-[#1a1a1a] border-white/8 text-white/40 hover:text-white/70 hover:border-white/16"
-                            }`}
+                              }`}
                           >
                             <Megaphone className="h-3.5 w-3.5" />
                             <span>Announce</span>
@@ -658,7 +660,7 @@ export default function DashboardPage() {
                                 Announcement History
                               </span>
                               {!hev.bulletinUpdates ||
-                              hev.bulletinUpdates.length === 0 ? (
+                                hev.bulletinUpdates.length === 0 ? (
                                 <p className="text-[11px] text-white/30 italic">
                                   No announcements published yet.
                                 </p>
@@ -735,21 +737,19 @@ export default function DashboardPage() {
             <div className="flex border-b border-white/8 mb-5">
               <button
                 onClick={() => setHistoryTab("attended")}
-                className={`pb-3 px-4 text-[12px] font-semibold border-b-2 transition-colors duration-150 ${
-                  historyTab === "attended"
+                className={`pb-3 px-4 text-[12px] font-semibold border-b-2 transition-colors duration-150 ${historyTab === "attended"
                     ? "border-[#A855F7] text-white"
                     : "border-transparent text-white/35 hover:text-white/60"
-                }`}
+                  }`}
               >
                 Attended ({historyAttendingEvents.length})
               </button>
               <button
                 onClick={() => setHistoryTab("hosted")}
-                className={`pb-3 px-4 text-[12px] font-semibold border-b-2 transition-colors duration-150 ${
-                  historyTab === "hosted"
+                className={`pb-3 px-4 text-[12px] font-semibold border-b-2 transition-colors duration-150 ${historyTab === "hosted"
                     ? "border-[#A855F7] text-white"
                     : "border-transparent text-white/35 hover:text-white/60"
-                }`}
+                  }`}
               >
                 Hosted ({historyHostedEvents.length})
               </button>

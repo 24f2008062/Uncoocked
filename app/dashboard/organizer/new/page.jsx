@@ -112,8 +112,24 @@ function HostEventForm() {
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/login?callbackUrl=/dashboard/organizer/new");
+      return;
     }
-  }, [isLoading, user, router]);
+
+    if (user && !isEditing) {
+      // Check host verification status
+      fetch("/api/host-verification/status")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status !== "APPROVED") {
+            toast.error("Host verification is required before creating events.");
+            router.push("/host-verification/status");
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to verify host status:", err);
+        });
+    }
+  }, [isLoading, user, router, isEditing]);
 
   const handleHostNewEvent = async (e) => {
     e.preventDefault();

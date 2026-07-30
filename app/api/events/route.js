@@ -64,8 +64,30 @@ export async function POST(request) {
 
     // Require an authenticated session; the organizer is the caller.
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token) {
+    if (!token?.sub) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Task 11: Protect backend event creation - require APPROVED host verification
+    const [hostVerification, callerUser] = await Promise.all([
+      prisma.hostVerification.findUnique({
+        where: { userId: token.sub },
+        select: { status: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: token.sub },
+        select: { role: true },
+      }),
+    ]);
+
+    const isApprovedHost = hostVerification?.status === 'APPROVED';
+    const isAdmin = callerUser?.role === 'Admin';
+
+    if (!isApprovedHost && !isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden: You must be an APPROVED host to create campus events.' },
+        { status: 403 }
+      );
     }
     if (!organizerId) {
       organizerId = token.email;
