@@ -186,19 +186,19 @@ export default function ContactPage() {
                 <span>Support: </span>
                 <br />
                 <a
-                  href="mailto:support@uncooked.edu"
+                  href="mailto:support@uncooked.in"
                   className="text-neon-purple hover:underline font-semibold"
                 >
-                  support@uncooked.edu
+                  support@uncooked.in
                 </a>
                 <br />
                 <span>Partnerships: </span>
                 <br />
                 <a
-                  href="mailto:sponsors@uncooked.edu"
+                  href="mailto:sponsors@uncooked.in"
                   className="text-neon-purple hover:underline font-semibold"
                 >
-                  sponsors@uncooked.edu
+                  sponsors@uncooked.in
                 </a>
               </p>
             </div>
