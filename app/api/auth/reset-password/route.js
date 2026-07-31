@@ -4,6 +4,7 @@ import { verifyResetToken } from "@/lib/auth/resetToken";
 import { hashPassword, isStrongPassword } from "@/lib/password";
 import { logAuthEvent } from "@/lib/auth/log";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { verifyCaptcha } from "@/lib/captcha";
 
 export async function POST(request) {
   try {
@@ -19,6 +20,12 @@ export async function POST(request) {
     }
 
     const body = await request.json();
+    if (body.turnstileToken || body.captchaToken) {
+      const captchaValid = await verifyCaptcha(body.turnstileToken || body.captchaToken, getClientIp(request));
+      if (!captchaValid) {
+        return NextResponse.json({ error: "Captcha verification failed. Please try again." }, { status: 400 });
+      }
+    }
     const token = typeof body.token === "string" ? body.token : "";
     const password = typeof body.password === "string" ? body.password : "";
     const confirmPassword =

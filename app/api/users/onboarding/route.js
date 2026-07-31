@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getAuthToken } from "@/lib/auth/guards";
+import { sanitizeUser } from "@/lib/auth/serializer";
 
 const prisma = new PrismaClient({});
 
@@ -41,7 +42,7 @@ export async function POST(request) {
       }
     });
 
-    return NextResponse.json({ success: true, user });
+    return NextResponse.json({ success: true, user: sanitizeUser(user) });
   } catch (error) {
     console.error('Onboarding API error:', error);
     return NextResponse.json({ error: 'Failed to complete onboarding' }, { status: 500 });

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
 import { logAuthEvent } from "@/lib/auth/log";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { verifyCaptcha } from "@/lib/captcha";
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -15,6 +16,7 @@ export const authOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        turnstileToken: { label: "Turnstile Token", type: "text" },
       },
       async authorize(credentials, req) {
         // Per-IP rate limit on credential attempts (10 / minute).
@@ -30,6 +32,14 @@ export const authOptions = {
         const email = credentials?.email?.toLowerCase().trim();
         const password = credentials?.password;
         if (!email || !password) return null;
+
+        if (credentials?.turnstileToken) {
+          const captchaValid = await verifyCaptcha(credentials.turnstileToken, getClientIp(req));
+          if (!captchaValid) {
+            logAuthEvent("login_captcha_failed", { ip: getClientIp(req) });
+            return null;
+          }
+        }
 
         const user = await prisma.user.findUnique({
           where: { email },
@@ -53,6 +63,10 @@ export const authOptions = {
         }
 
         if (!user || !user.passwordHash) {
+          if (user && user.passwordHash === null) {
+            logAuthEvent("login_blocked_reset_required", { email });
+            throw new Error("For your security, please use 'Forgot Password' to set a new password.");
+          }
           // Generic failure: do not disclose whether the account exists.
           logAuthEvent("login_failure", { email, reason: "invalid_credentials" });
           return null;

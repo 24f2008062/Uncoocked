@@ -4,6 +4,7 @@ import { generateResetToken } from "@/lib/auth/resetToken";
 import { sendEmail } from "@/lib/email";
 import { logAuthEvent } from "@/lib/auth/log";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { verifyCaptcha } from "@/lib/captcha";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,6 +22,12 @@ export async function POST(request) {
     }
 
     const body = await request.json();
+    if (body.turnstileToken || body.captchaToken) {
+      const captchaValid = await verifyCaptcha(body.turnstileToken || body.captchaToken, getClientIp(request));
+      if (!captchaValid) {
+        return NextResponse.json({ error: "Captcha verification failed. Please try again." }, { status: 400 });
+      }
+    }
     const email = typeof body.email === "string" ? body.email.toLowerCase().trim() : "";
 
     if (!email || !EMAIL_RE.test(email)) {

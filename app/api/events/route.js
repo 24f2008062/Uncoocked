@@ -38,7 +38,16 @@ export async function GET(request) {
         bulletinUpdates: {
           orderBy: { postedAt: 'desc' }
         },
-        organizer: true,
+        organizer: {
+          select: {
+            id: true,
+            name: true,
+            fullName: true,
+            image: true,
+            clubAssociation: true,
+            portfolioUrl: true,
+          },
+        },
         _count: {
           select: { registrations: true }
         }

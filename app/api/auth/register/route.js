@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, isStrongPassword } from "@/lib/password";
 import { logAuthEvent } from "@/lib/auth/log";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { verifyCaptcha } from "@/lib/captcha";
 import { generateVerificationToken } from "@/lib/auth/verificationToken";
 import { sendEmail } from "@/lib/email";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,6 +23,12 @@ export async function POST(request) {
     }
 
     const body = await request.json();
+    if (body.turnstileToken || body.captchaToken) {
+      const captchaValid = await verifyCaptcha(body.turnstileToken || body.captchaToken, getClientIp(request));
+      if (!captchaValid) {
+        return NextResponse.json({ error: "Captcha verification failed. Please try again." }, { status: 400 });
+      }
+    }
     const email = typeof body.email === "string" ? body.email.toLowerCase().trim() : "";
     const password = typeof body.password === "string" ? body.password : "";
     const fullName = typeof body.fullName === "string" ? body.fullName.trim() : "";

@@ -11,7 +11,8 @@ export default function LoginPage() {
   const getCallbackUrl = () => {
     if (typeof window === "undefined") return "/";
     const params = new URLSearchParams(window.location.search);
-    return params.get("callbackUrl") || "/";
+    const url = params.get("callbackUrl") || "/";
+    return url.startsWith("/") && !url.startsWith("//") ? url : "/";
   };
   const expired =
     typeof window !== "undefined" &&
