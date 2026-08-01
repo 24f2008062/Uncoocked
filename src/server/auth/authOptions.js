@@ -1,4 +1,3 @@
-import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/server/db/prisma";
 import { verifyPassword } from "@/server/auth/password";
@@ -48,6 +47,7 @@ export const authOptions = {
             email: true,
             fullName: true,
             name: true,
+            role: true,
             passwordHash: true,
             onboardingCompleted: true,
             failedLoginAttempts: true,
@@ -107,6 +107,7 @@ export const authOptions = {
           id: user.id,
           email: user.email,
           name: user.fullName || user.name,
+          role: user.role,
           onboardingCompleted: user.onboardingCompleted,
           emailVerified: Boolean(user.emailVerified),
         };
@@ -155,6 +156,7 @@ export const authOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.sub = user.id;
+        token.role = user.role;
         token.onboardingCompleted = user.onboardingCompleted;
         token.emailVerified = Boolean(user.emailVerified);
       }
@@ -171,6 +173,7 @@ export const authOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub;
+        session.user.role = token.role;
         session.user.onboardingCompleted = token.onboardingCompleted;
         session.user.emailVerified = token.emailVerified;
       }

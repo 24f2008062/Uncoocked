@@ -12,8 +12,27 @@ import { NextResponse } from "next/server";
 export default withAuth(
   function proxy(req) {
     const token = req.nextauth?.token;
+    const path = req.nextUrl.pathname;
+
+    // Super Admin gating for /admin pages and /api/admin endpoints.
+    if (path.startsWith("/admin") || path.startsWith("/api/admin")) {
+      if (!token || token.role !== "SUPER_ADMIN") {
+        if (path.startsWith("/api/admin")) {
+          return NextResponse.json(
+            { error: "Forbidden: Super Admin access required." },
+            { status: 403 }
+          );
+        }
+        // Not signed in at all: send to login. Signed in but wrong role:
+        // send back to the regular dashboard rather than looping on /login.
+        return NextResponse.redirect(
+          new URL(token ? "/dashboard" : "/login", req.url)
+        );
+      }
+      return NextResponse.next();
+    }
+
     if (token && !token.emailVerified) {
-      const path = req.nextUrl.pathname;
       if (
         path.startsWith("/dashboard/organizer") ||
         path.startsWith("/onboarding") ||
@@ -52,5 +71,7 @@ export const config = {
     "/onboarding/:path*",
     "/api/users/:path*",
     "/api/organizer/:path*",
+    "/admin/:path*",
+    "/api/admin/:path*",
   ],
 };

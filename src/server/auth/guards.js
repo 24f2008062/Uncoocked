@@ -21,3 +21,26 @@ export async function requireEventManager(eventId, token) {
   });
   return Boolean(mgr);
 }
+
+// Throws if the request's authenticated user is not a SUPER_ADMIN. Re-fetches
+// the role from the database rather than trusting the JWT alone, so a role
+// change takes effect immediately rather than waiting for the token to
+// refresh. Returns the fresh user record ({ id, role }) on success.
+export async function requireSuperAdmin(request) {
+  const token = await getAuthToken(request);
+
+  if (!token?.sub) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: token.sub },
+    select: { id: true, role: true },
+  });
+
+  if (!user || user.role !== "SUPER_ADMIN") {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return user;
+}

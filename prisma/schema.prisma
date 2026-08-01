@@ -8,8 +8,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -18,6 +19,7 @@ model User {
   name            String?
   fullName        String?
   email           String?        @unique
+  notifications   Notification[]
   emailVerified   DateTime?
   image           String?
   passwordHash    String?
@@ -37,6 +39,7 @@ model User {
   activities      UserActivity[]
   organizedEvents Event[]        @relation("OrganizedEvents")
   managedEvents   EventManager[]
+  hostApplication HostApplication?
 }
 
 model Event {
@@ -227,4 +230,84 @@ model Review {
   rating    Int
   comment   String
   createdAt DateTime @default(now())
+}
+enum Role {
+  USER
+  ORGANIZER
+  SUPER_ADMIN
+}
+
+enum HostApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  NEEDS_MORE_INFORMATION
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model HostApplication {
+  id               String                @id @default(cuid())
+  userId           String                @unique
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Applicant & Org details
+  organizationName String
+  organizationType String                // e.g., "College", "Club", "Startup"
+  organizationEmail String?
+  website          String?
+  address          String?
+  description      String?
+
+  // Status tracking
+  status           HostApplicationStatus @default(PENDING)
+  assignedAdminId  String?
+  rejectionReason  String?
+  infoRequestedReason String?
+
+  // KYC / Supporting Documents
+  kycProvider      String?
+  kycReferenceId   String?
+  kycStatus        String?
+  documentUrls     Json?                 // Secured references to storage
+
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  notes            AdminNote[]
+  auditLogs        AuditLog[]
+}
+
+model AdminNote {
+  id            String          @id @default(cuid())
+  applicationId String
+  application   HostApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  adminId       String
+  note          String
+  createdAt     DateTime        @default(now())
+}
+
+model AuditLog {
+  id            String           @id @default(cuid())
+  applicationId String?
+  application   HostApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  adminId       String
+  action        String           // e.g., "APPLICATION_APPROVED", "KYC_VIEWED"
+  previousStatus HostApplicationStatus?
+  newStatus     HostApplicationStatus?
+  reason        String?
+  ipAddress     String?
+  timestamp     DateTime         @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("SYSTEM")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

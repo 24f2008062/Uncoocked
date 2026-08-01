@@ -3,17 +3,20 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
 
   const getCallbackUrl = () => {
-    if (typeof window === "undefined") return "/";
+    if (typeof window === "undefined") return null;
     const params = new URLSearchParams(window.location.search);
-    const url = params.get("callbackUrl") || "/";
-    return url.startsWith("/") && !url.startsWith("//") ? url : "/";
+    const url = params.get("callbackUrl");
+    if (!url) return null;
+    // Guard against open-redirect via a protocol-relative "//" URL.
+    return url.startsWith("/") && !url.startsWith("//") ? url : null;
   };
+
   const expired =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("expired") === "true";
@@ -34,14 +37,30 @@ export default function LoginPage() {
       redirect: false,
     });
 
-    setIsLoading(false);
-
     if (res?.error) {
+      setIsLoading(false);
       setError("Invalid email or password.");
       return;
     }
 
-    router.push(getCallbackUrl());
+    // Retrieve fresh session to determine user role
+    const session = await getSession();
+
+    setIsLoading(false);
+
+    const callbackUrl = getCallbackUrl();
+
+    if (callbackUrl) {
+      // Respect explicit callback URL if present
+      router.push(callbackUrl);
+    } else if (session?.user?.role === "SUPER_ADMIN") {
+      // Admin redirect
+      router.push("/admin/dashboard");
+    } else {
+      // Standard user redirect
+      router.push("/dashboard");
+    }
+
     router.refresh();
   };
 
