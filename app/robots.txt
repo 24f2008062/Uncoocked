@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /api/
+
+Sitemap: https://uncooked-final-portal.vercel.app/sitemap.xml
