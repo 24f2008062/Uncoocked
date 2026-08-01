@@ -32,11 +32,15 @@ const getTypeStyle = (type) => {
 
 export default function EventMatrixPreview() {
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     const loadEvents = async () => {
       try {
+        setLoading(true);
+        setError(false);
         const res = await fetch("/api/events", { cache: "no-store" });
         const data = await res.json();
         if (data.success && isMounted) {
@@ -47,9 +51,14 @@ export default function EventMatrixPreview() {
               date: fmtDate(e.date),
             }))
           );
+        } else if (isMounted) {
+          setError(true);
         }
       } catch (err) {
         console.error(err);
+        if (isMounted) setError(true);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
     loadEvents();
@@ -81,7 +90,15 @@ export default function EventMatrixPreview() {
         </div>
 
         {/* Events Grid — same card style as the Events page */}
-        {events.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16 bg-[#111111] border border-white/6 rounded-xl text-[12px] text-white/40 font-mono animate-pulse">
+            Loading events matrix...
+          </div>
+        ) : error ? (
+          <div className="text-center py-16 bg-[#111111] border border-white/6 rounded-xl text-[12px] text-red-400/80">
+            Failed to load events. Please refresh to try again.
+          </div>
+        ) : events.length === 0 ? (
           <div className="text-center py-16 bg-[#111111] border border-white/6 rounded-xl text-[12px] text-white/30">
             No upcoming events right now.
           </div>

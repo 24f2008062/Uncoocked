@@ -71,17 +71,12 @@ export async function POST(req) {
 // 2. GET route: Load message feeds (Security: Check Organizer Lock)
 export async function GET(req) {
   try {
-    const token = await getAuthToken(req);
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(req.url);
     const eventId = searchParams.get("eventId");
-    const userEmail = token.email;
+    const userEmail = searchParams.get("userEmail");
 
-    if (!eventId) {
-      return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+    if (!eventId || !userEmail) {
+      return NextResponse.json({ error: "Event ID and User Email tracking required" }, { status: 400 });
     }
 
     // Anti-Scam Guard Check: Deny host access to history logs

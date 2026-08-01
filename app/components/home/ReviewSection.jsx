@@ -33,6 +33,7 @@ export default function ReviewSection() {
     setSubmitting(true);
     const reviewPayload = {
       userName: user?.fullName || user?.name || "Student Attendee",
+      userEmail: user?.email || (typeof user === "string" ? user : "anonymous@student.com"),
       rating,
       comment: comment.trim(),
     };

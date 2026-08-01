@@ -18,29 +18,52 @@ export default function EventsExplorer({
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeZone, setActiveZone] = useState("All");
 
-  // Extract unique categories from events
+  // Extract unique categories/types from events
   const categories = useMemo(() => {
-    const types = new Set(events.map((e) => e.type));
-    return ["All", ...Array.from(types)];
+    const set = new Set();
+    events.forEach((e) => {
+      if (e.type) set.add(e.type);
+      if (e.category) set.add(e.category);
+    });
+    return ["All", ...Array.from(set)];
   }, [events]);
 
-  // Filter events based on search query, category, and zone in real-time
+  // Current time captured in state to keep memo pure
+  const [now] = useState(() => Date.now());
+
+  // Filter and sort events based on search query, category, and zone in real-time
   const filteredEvents = useMemo(() => {
-    return events.filter((ev) => {
+    const list = events.filter((ev) => {
       const matchCategory =
-        activeCategory === "All" || ev.type === activeCategory;
+        activeCategory === "All" ||
+        ev.type?.toLowerCase() === activeCategory.toLowerCase() ||
+        ev.category?.toLowerCase() === activeCategory.toLowerCase();
       const matchZone =
-        activeZone === "All" || ev.zone === activeZone;
+        activeZone === "All" ||
+        (ev.zone && ev.zone.toLowerCase() === activeZone.toLowerCase());
       const matchText = searchQuery.toLowerCase().trim();
       const matchSearch =
-        ev.title.toLowerCase().includes(matchText) ||
-        ev.type.toLowerCase().includes(matchText) ||
-        ev.description.toLowerCase().includes(matchText) ||
-        ev.location.toLowerCase().includes(matchText) ||
+        !matchText ||
+        (ev.title && ev.title.toLowerCase().includes(matchText)) ||
+        (ev.type && ev.type.toLowerCase().includes(matchText)) ||
+        (ev.category && ev.category.toLowerCase().includes(matchText)) ||
+        (ev.description && ev.description.toLowerCase().includes(matchText)) ||
+        (ev.location && ev.location.toLowerCase().includes(matchText)) ||
         (ev.zone && ev.zone.toLowerCase().includes(matchText));
       return matchCategory && matchZone && matchSearch;
     });
-  }, [events, searchQuery, activeCategory, activeZone]);
+
+    // Sort upcoming events first, followed by past events
+    return list.sort((a, b) => {
+      const timeA = new Date(a.date).getTime() || 0;
+      const timeB = new Date(b.date).getTime() || 0;
+      const isPastA = timeA < now;
+      const isPastB = timeB < now;
+      if (isPastA && !isPastB) return 1;
+      if (!isPastA && isPastB) return -1;
+      return timeA - timeB;
+    });
+  }, [events, searchQuery, activeCategory, activeZone, now]);
 
   // Framer Motion staggered transition configurations
   const containerVariants = {
@@ -210,12 +233,17 @@ export default function EventsExplorer({
                   </div>
                 )}
                 {/* Category Tag overlaid on the banner */}
-                <div className="absolute top-3 left-3">
+                <div className="absolute top-3 left-3 flex items-center gap-1.5">
                   <span
                     className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${getTypeStyle(ev.type)}`}
                   >
                     {ev.type}
                   </span>
+                  {new Date(ev.date).getTime() < now && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                      Ended
+                    </span>
+                  )}
                 </div>
               </div>
 

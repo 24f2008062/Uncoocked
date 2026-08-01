@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,7 +11,8 @@ export default function LoginPage() {
   const getCallbackUrl = () => {
     if (typeof window === "undefined") return "/";
     const params = new URLSearchParams(window.location.search);
-    return params.get("callbackUrl") || "/";
+    const url = params.get("callbackUrl") || "/";
+    return url.startsWith("/") && !url.startsWith("//") ? url : "/";
   };
   const expired =
     typeof window !== "undefined" &&
@@ -20,7 +20,6 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -117,27 +116,17 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <div className="relative">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg bg-black/40 border border-dark-border px-3 py-2.5 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                aria-label="Toggle password visibility"
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg bg-black/40 border border-dark-border px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple"
+              placeholder="••••••••"
+            />
           </div>
 
           {error && <p className="text-xs text-red-400">{error}</p>}

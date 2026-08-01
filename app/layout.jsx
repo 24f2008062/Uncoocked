@@ -6,7 +6,6 @@ import { UserProvider } from "@/app/context/UserContext";
 import { NextAuthProvider } from "@/app/context/NextAuthProvider";
 import SessionMonitor from "@/app/components/dashboard/SessionMonitor";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import Script from "next/script";
 
@@ -44,7 +43,6 @@ export default function RootLayout({ children }) {
         </NextAuthProvider>
         <Toaster theme="dark" position="bottom-right" richColors />
         <SpeedInsights />
-        <Analytics />
         
         {/* Safely injects the Razorpay Checkout SDK globally without slowing down initial page loads */}
         <Script

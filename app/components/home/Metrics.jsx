@@ -1,42 +1,65 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, Calendar, Award, CheckCircle } from "lucide-react";
 import CountUp from "@/app/components/ui/CountUp";
 
 export default function Metrics() {
+  const [counts, setCounts] = useState({
+    students: 0,
+    activeEvents: 0,
+    clubs: 0,
+    registrations: 0,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.stats && isMounted) {
+          setCounts(data.stats);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const stats = [
     {
       id: 1,
-      name: "Students Online",
-      value: 1240,
-      suffix: "+",
+      name: "Students Registered",
+      value: counts.students,
+      suffix: "",
       icon: Users,
-      desc: "Active campus students & attendees",
+      desc: "Verified campus students",
     },
     {
       id: 2,
       name: "Active Events",
-      value: 52,
+      value: counts.activeEvents,
       suffix: "",
       icon: Calendar,
-      desc: "Fests, workshops, dandiya nights & hackathons",
+      desc: "Upcoming fests, workshops & hackathons",
     },
     {
       id: 3,
-      name: "Clubs Active",
-      value: 148,
+      name: "Clubs & Societies",
+      value: counts.clubs,
       suffix: "",
       icon: Award,
-      desc: "Student clubs and societies active",
+      desc: "Active student clubs & organizations",
     },
     {
       id: 4,
-      name: "Registrations",
-      value: 8900,
-      suffix: "+",
+      name: "Total Registrations",
+      value: counts.registrations,
+      suffix: "",
       icon: CheckCircle,
-      desc: "Total bookings & entries saved",
+      desc: "Verified event registrations",
     },
   ];
 

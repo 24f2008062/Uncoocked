@@ -22,15 +22,24 @@ export async function GET(request) {
     let whereClause = {};
 
     if (eventId) {
-      const event = await prisma.event.findUnique({
+      // Polymorphic lookup fallback for GET requests using the slug
+      let event = await prisma.event.findUnique({
         where: { id: eventId },
         include: { organizer: true, managers: { include: { user: true } } }
       });
 
       if (!event) {
+        event = await prisma.event.findFirst({
+          where: { title: eventId },
+          include: { organizer: true, managers: { include: { user: true } } }
+        });
+      }
+      
+      if (!event) {
         return NextResponse.json({ error: 'Event not found' }, { status: 404 });
       }
       
+      // Ensure strict authorization comparison using safe database schemas
       const isOwner = event.organizer?.email === requesterEmail;
       const isManager = event.managers?.some(m => m.user.email === requesterEmail);
       
@@ -51,29 +60,14 @@ export async function GET(request) {
       where: whereClause,
       include: {
         user: {
-          select: {
-            id: true,
-            name: true,
-            fullName: true,
-            email: true,
-            image: true,
-            role: true,
-            department: true,
-            clubAssociation: true,
-          },
+          select: { id: true, name: true, fullName: true, email: true, department: true, clubAssociation: true, image: true }
         },
         event: {
           include: {
             organizer: {
-              select: {
-                id: true,
-                name: true,
-                fullName: true,
-                image: true,
-                role: true,
-              },
-            },
-          },
+              select: { id: true, name: true, fullName: true, email: true, clubAssociation: true, image: true }
+            }
+          }
         },
         ticketTier: true,
         coupon: true,
@@ -109,10 +103,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Look up event by ID only
-    const event = await prisma.event.findUnique({
+    // Dynamic resolution of both Primary Key IDs and Slugs
+    let event = await prisma.event.findUnique({
       where: { id: eventId }
     });
+
+    if (!event) {
+      event = await prisma.event.findFirst({
+        where: { title: eventId }
+      });
+    }
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
@@ -165,14 +165,7 @@ export async function POST(request) {
         },
         include: {
           user: {
-            select: {
-              id: true,
-              name: true,
-              fullName: true,
-              email: true,
-              image: true,
-              role: true,
-            },
+            select: { id: true, name: true, fullName: true, email: true, department: true, clubAssociation: true, image: true }
           },
           event: true,
         },

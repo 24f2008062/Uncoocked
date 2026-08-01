@@ -37,8 +37,7 @@ export default function RegistrationCard({
     setTimeLeft(calculateTimeLeft());
     
     const timer = setInterval(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTimeLeft(calculateTimeLeft());
+      setTimeLeft(calculateTimeLeft());
     }, 60000); // update every minute
     
     return () => clearInterval(timer);

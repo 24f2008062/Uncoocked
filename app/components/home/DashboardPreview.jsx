@@ -1,8 +1,31 @@
 "use client";
 
-import { Calendar, Users, Send, CheckCircle, Radio, Settings, Terminal } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, Users, Send, CheckCircle, Settings, Terminal } from "lucide-react";
 
 export default function DashboardPreview() {
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/events")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.events) && isMounted) {
+          setEvents(data.events.slice(0, 2));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const displayEvents = events.length > 0 ? events : [
+    { title: "Campus Innovation Hackathon 2026", location: "Tech Hub Building", date: "June 20, 2026", status: "Active" },
+    { title: "Generative AI & LLM Workshop", location: "Tech Lab 102", date: "July 2, 2026", status: "Upcoming" },
+  ];
+
   return (
     <section className="py-12 relative w-full border-t border-white/6">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
@@ -24,11 +47,11 @@ export default function DashboardPreview() {
           <div className="flex flex-wrap justify-between items-center px-4 py-3 border-b border-white/6 gap-3 font-mono text-[10px] text-white/35">
             <div className="flex items-center gap-2 text-white/60 font-semibold">
               <Terminal className="h-3.5 w-3.5 text-white/30" />
-              <span>STUDENT_CONSOLE_WORKSPACE // HOME_DASHBOARD</span>
+              <span>STUDENT_CONSOLE_WORKSPACE // DEMO_PREVIEW</span>
             </div>
             <div className="flex items-center gap-4">
-              <span>DB_REFRESH: OK</span>
-              <span>STABILITY: 100%</span>
+              <span>STATUS: READY</span>
+              <span>LIVE_SYNC: OK</span>
               <Settings className="h-3 w-3 text-white/25 cursor-pointer hover:text-white/50 transition-colors duration-150" />
             </div>
           </div>
@@ -40,36 +63,33 @@ export default function DashboardPreview() {
               {/* Attending Events */}
               <div className="bg-[#0A0A0A] border border-white/6 rounded-xl p-4 space-y-3 flex-1">
                 <h3 className="text-[11px] font-semibold text-white/50 uppercase tracking-wider flex items-center gap-2 border-b border-white/6 pb-2 font-mono">
-                  <Calendar className="h-3 w-3 text-white/30" /> Attending Events
+                  <Calendar className="h-3 w-3 text-white/30" /> Featured Campus Events
                 </h3>
                 <div className="space-y-2 font-mono text-[11px]">
-                  {[
-                    { title: "Annual Cultural Fest 2026",       meta: "Starts in 3 days · Venue: Main Arena",     badge: "Active",    badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-                    { title: "Grand Dandiya Festive Night 2026", meta: "Starts in 28 days · Venue: Auditorium Hall", badge: "Upcoming", badgeClass: "bg-white/5 text-white/40 border-white/8" },
-                  ].map(({ title, meta, badge, badgeClass }) => (
-                    <div key={title} className="flex items-center justify-between p-3 bg-[#111111] border border-white/6 rounded-lg hover:border-white/12 transition-colors duration-150">
+                  {displayEvents.map((ev, idx) => (
+                    <div key={ev.id || idx} className="flex items-center justify-between p-3 bg-[#111111] border border-white/6 rounded-lg hover:border-white/12 transition-colors duration-150">
                       <div>
-                        <span className="block text-[11px] font-semibold text-white/80">{title}</span>
-                        <span className="text-[10px] text-white/30 mt-0.5 block">{meta}</span>
+                        <span className="block text-[11px] font-semibold text-white/80">{ev.title}</span>
+                        <span className="text-[10px] text-white/30 mt-0.5 block">{ev.location} · {new Date(ev.date).toLocaleDateString()}</span>
                       </div>
-                      <span className={`text-[10px] border px-2 py-0.5 rounded-full font-semibold ${badgeClass}`}>{badge}</span>
+                      <span className="text-[10px] border px-2 py-0.5 rounded-full font-semibold bg-emerald-500/10 text-emerald-400 border-emerald-500/20">{ev.status || "Active"}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Registration Trends */}
+              {/* Registration Management */}
               <div className="bg-[#0A0A0A] border border-white/6 rounded-xl p-4 space-y-3">
                 <h3 className="text-[11px] font-semibold text-white/50 uppercase tracking-wider flex items-center gap-2 border-b border-white/6 pb-2 font-mono">
-                  <Users className="h-3 w-3 text-white/30" /> Real-time Registrations
+                  <Users className="h-3 w-3 text-white/30" /> Management Tools
                 </h3>
                 <div className="space-y-2 font-mono text-[11px]">
                   <div className="flex items-center justify-between p-3 bg-[#111111] border border-white/6 rounded-lg hover:border-white/12 transition-colors duration-150">
                     <div>
-                      <span className="block text-[11px] font-semibold text-white/80">Generative AI & LLM Workshop</span>
-                      <span className="text-[10px] text-white/30 mt-0.5 block">145 Attendees Registered</span>
+                      <span className="block text-[11px] font-semibold text-white/80">Organizer Control & QR Check-ins</span>
+                      <span className="text-[10px] text-white/30 mt-0.5 block">Scan badges, issue digital passes, track analytics</span>
                     </div>
-                    <span className="text-[10px] bg-[#A855F7]/10 text-[#C084FC] border border-[#A855F7]/20 px-2 py-0.5 rounded-full font-semibold">Organizer</span>
+                    <span className="text-[10px] bg-[#A855F7]/10 text-[#C084FC] border border-[#A855F7]/20 px-2 py-0.5 rounded-full font-semibold">Console</span>
                   </div>
                 </div>
               </div>
@@ -77,22 +97,24 @@ export default function DashboardPreview() {
 
             {/* Right column */}
             <div className="lg:col-span-5 space-y-3 flex flex-col">
-              {/* Guest List */}
+              {/* Feature Highlights */}
               <div className="bg-[#0A0A0A] border border-white/6 rounded-xl p-4 space-y-3 flex-1">
                 <h3 className="text-[11px] font-semibold text-white/50 uppercase tracking-wider flex items-center gap-2 border-b border-white/6 pb-2 font-mono">
-                  <Users className="h-3 w-3 text-white/30" /> Live Attendee Guest List
+                  <Users className="h-3 w-3 text-white/30" /> Attendee Directory Features
                 </h3>
-                <div className="space-y-0 font-mono text-[10px] text-white/40 max-h-36 overflow-hidden">
-                  {[
-                    ["John Doe (john@campus.edu)",  "CS & Tech"],
-                    ["Alice Smith (alice@campus.edu)", "Engineering"],
-                    ["Bob Johnson (bob@campus.edu)",  "Fine Arts & Design"],
-                  ].map(([name, dept]) => (
-                    <div key={name} className="flex items-center justify-between py-2 border-b border-white/5">
-                      <span>{name}</span>
-                      <span className="text-white/60 font-semibold">{dept}</span>
-                    </div>
-                  ))}
+                <div className="space-y-2 font-mono text-[10px] text-white/40">
+                  <div className="py-1.5 border-b border-white/5 flex justify-between">
+                    <span>Verified Email Verification</span>
+                    <span className="text-emerald-400 font-semibold">Active</span>
+                  </div>
+                  <div className="py-1.5 border-b border-white/5 flex justify-between">
+                    <span>Department & Club Match</span>
+                    <span className="text-emerald-400 font-semibold">Active</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span>Live Anti-Scam Shield</span>
+                    <span className="text-emerald-400 font-semibold">Active</span>
+                  </div>
                 </div>
               </div>
 
@@ -105,13 +127,13 @@ export default function DashboardPreview() {
                   <input
                     disabled
                     suppressHydrationWarning={true}
-                    placeholder="Title: e.g. Pizza Room update"
+                    placeholder="Title: e.g. Room allocation update"
                     className="block w-full rounded-lg border border-white/8 bg-[#111111] px-3 py-2 text-[10px] text-white/50 placeholder:text-white/20 focus:outline-none"
                   />
                   <textarea
                     disabled
                     rows={2}
-                    placeholder="Enter update logs to broadcast..."
+                    placeholder="Enter update logs to broadcast to attendees..."
                     className="block w-full rounded-lg border border-white/8 bg-[#111111] px-3 py-2 text-[10px] text-white/50 placeholder:text-white/20 focus:outline-none resize-none"
                   />
                   <button

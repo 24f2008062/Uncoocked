@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import TwinLayout from "@/app/components/layout/TwinLayout";
 import EventsExplorer from "@/app/components/explorer/EventsExplorer";
-import { mockEvents, mergeWithMockEvents } from "@/lib/mockData";
+import { mockEvents } from "@/lib/mockData";
 import RecommendedEvents from "@/app/components/event/RecommendedEvents";
 import { useUser } from "@/app/context/UserContext";
 
 export default function EventPage() {
-  const { user, isAuthenticated } = useUser();
+  const { user } = useUser();
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [allEvents, setAllEvents] = useState([]);
@@ -18,7 +18,8 @@ export default function EventPage() {
       const res = await fetch("/api/events", { cache: "no-store" });
       const data = await res.json();
       if (data.success && Array.isArray(data.events)) {
-        setAllEvents(mergeWithMockEvents(data.events));
+        // If DB has events, use them; only fallback to mock if DB is empty
+        setAllEvents(data.events.length > 0 ? data.events : mockEvents);
       } else {
         setAllEvents(mockEvents);
       }

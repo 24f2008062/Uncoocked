@@ -2,20 +2,19 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getToken } from 'next-auth/jwt';
 import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '../../config/cities';
-
-// Events change rarely; cache the read so repeat page loads don't pay the
-// ~3s DB round-trip on every request. Invalidate on create/update.
-const EVENTS_CACHE_TTL_MS = 60_000;
-let eventsCache = { at: 0, data: null };
+import { getCachedEvents, setCachedEvents, invalidateEventsCache } from '@/lib/eventsCache';
+import { validateAndSanitizeEventData } from '@/lib/eventSanitizer';
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const includeArchived = searchParams.get('includeArchived') === 'true';
+    const typeFilter = searchParams.get('type');
+    const categoryFilter = searchParams.get('category');
+    const zoneFilter = searchParams.get('zone');
 
-    const cached = eventsCache.data && Date.now() - eventsCache.at < EVENTS_CACHE_TTL_MS
-      ? eventsCache.data
-      : null;
+    const cacheKey = `events:${includeArchived}:${typeFilter || ''}:${categoryFilter || ''}:${zoneFilter || ''}`;
+    const cached = getCachedEvents(cacheKey);
     if (cached) {
       return NextResponse.json({ success: true, events: cached, cached: true });
     }
@@ -29,7 +28,19 @@ export async function GET(request) {
       whereClause.status = 'Active';
     }
 
-    const events = await prisma.event.findMany({
+    if (typeFilter && typeFilter !== 'All') {
+      whereClause.type = typeFilter;
+    }
+
+    if (categoryFilter && categoryFilter !== 'All') {
+      whereClause.category = categoryFilter;
+    }
+
+    if (zoneFilter && zoneFilter !== 'All') {
+      whereClause.zone = zoneFilter;
+    }
+
+    const rawEvents = await prisma.event.findMany({
       where: whereClause,
       orderBy: {
         date: 'asc'
@@ -44,7 +55,8 @@ export async function GET(request) {
             name: true,
             fullName: true,
             image: true,
-            role: true,
+            clubAssociation: true,
+            portfolioUrl: true,
           },
         },
         _count: {
@@ -53,7 +65,15 @@ export async function GET(request) {
       }
     });
 
-    eventsCache = { at: Date.now(), data: events };
+    const events = rawEvents.map((ev) => ({
+      ...ev,
+      category: ev.category || ev.type,
+      bannerUrl: ev.bannerUrl && ev.bannerUrl.startsWith("data:image")
+        ? "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&auto=format&fit=crop&q=60"
+        : ev.bannerUrl,
+    }));
+
+    setCachedEvents(cacheKey, events);
 
     return NextResponse.json({
       success: true,
@@ -67,73 +87,62 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const data = await request.json();
-    let organizerId = data.organizerId;
-
-    // Require an authenticated session; the organizer is the caller.
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized: Please log in first.' }, { status: 401 });
     }
     if (!token.emailVerified) {
       return NextResponse.json({ error: 'Please verify your email address before creating events.' }, { status: 403 });
     }
-    if (!organizerId) {
-      organizerId = token.email;
+
+    const rawData = await request.json();
+    const validation = validateAndSanitizeEventData(rawData);
+
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { error: validation.errors.join(' ') },
+        { status: 400 }
+      );
     }
 
-    if (organizerId && organizerId.includes('@')) {
-      const user = await prisma.user.findUnique({ where: { email: organizerId } });
-      if (user) {
-        organizerId = user.id;
-      }
-    } else if (!organizerId && data.hostEmail) {
-      const user = await prisma.user.findUnique({ where: { email: data.hostEmail } });
-      if (user) {
-        organizerId = user.id;
-      } else {
-        organizerId = data.hostEmail;
-      }
+    const sanitized = validation.sanitized;
+
+    let organizerId = token.sub;
+    if (!organizerId && token.email) {
+      const user = await prisma.user.findUnique({ where: { email: token.email } });
+      if (user) organizerId = user.id;
     }
 
-    // Input validation
-    if (!data.title || data.title.trim().length < 3) {
-      return NextResponse.json({ error: 'Title must be at least 3 characters long.' }, { status: 400 });
-    }
-    if (!data.location || data.location.trim().length < 3 || data.location.toLowerCase().includes('no address')) {
-      return NextResponse.json({ error: 'Please provide a valid event location.' }, { status: 400 });
-    }
-    if (!data.description || data.description.trim().length < 10) {
-      return NextResponse.json({ error: 'Description must be at least 10 characters long.' }, { status: 400 });
-    }
-
-    const eventId = data.id && !data.id.startsWith('hosted-ev-')
-      ? data.id
-      : `ev-${crypto.randomUUID()}`;
+    const eventId = rawData.id && typeof rawData.id === 'string'
+      ? rawData.id.trim()
+      : `ev-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
 
     const newEvent = await prisma.event.create({
       data: {
         id: eventId,
-        title: data.title.trim(),
-        type: data.type || 'Other',
-        date: data.date && !isNaN(new Date(data.date).getTime()) ? new Date(data.date) : new Date(),
-        location: data.location.trim(),
-        zone: data.zone || null,
-        city: data.city || DEFAULT_CITY,
-        state: data.state || DEFAULT_STATE,
-        country: data.country || DEFAULT_COUNTRY,
-        description: data.description.trim(),
-        bannerUrl: data.bannerUrl,
-        googleMapsUrl: data.googleMapsUrl,
-        ticketType: data.ticketType || "Free",
-        price: data.price ? parseFloat(data.price) : 0,
-        capacity: data.capacity ? parseInt(data.capacity) : 100,
-        waitlistEnabled: data.waitlistEnabled ?? true,
+        title: sanitized.title,
+        type: sanitized.type,
+        category: sanitized.category,
+        tags: sanitized.tags,
+        keywords: sanitized.keywords,
+        date: sanitized.date,
+        location: sanitized.location,
+        zone: sanitized.zone,
+        city: sanitized.city || DEFAULT_CITY,
+        state: sanitized.state || DEFAULT_STATE,
+        country: sanitized.country || DEFAULT_COUNTRY,
+        description: sanitized.description,
+        bannerUrl: sanitized.bannerUrl,
+        googleMapsUrl: sanitized.googleMapsUrl,
+        ticketType: sanitized.ticketType,
+        price: sanitized.price,
+        capacity: sanitized.capacity,
+        waitlistEnabled: sanitized.waitlistEnabled,
         organizerId: organizerId || null,
       },
     });
 
-    eventsCache = { at: 0, data: null };
+    invalidateEventsCache();
 
     return NextResponse.json({
       success: true,

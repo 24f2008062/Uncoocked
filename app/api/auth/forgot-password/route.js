@@ -4,12 +4,13 @@ import { generateResetToken } from "@/lib/auth/resetToken";
 import { sendEmail } from "@/lib/email";
 import { logAuthEvent } from "@/lib/auth/log";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { verifyCaptcha } from "@/lib/captcha";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request) {
   try {
-    const rl = await rateLimit(`forgot-password:${getClientIp(request)}`, {
+    const rl = rateLimit(`forgot-password:${getClientIp(request)}`, {
       limit: 5,
       windowMs: 60 * 1000,
     });
@@ -21,6 +22,12 @@ export async function POST(request) {
     }
 
     const body = await request.json();
+    if (body.turnstileToken || body.captchaToken) {
+      const captchaValid = await verifyCaptcha(body.turnstileToken || body.captchaToken, getClientIp(request));
+      if (!captchaValid) {
+        return NextResponse.json({ error: "Captcha verification failed. Please try again." }, { status: 400 });
+      }
+    }
     const email = typeof body.email === "string" ? body.email.toLowerCase().trim() : "";
 
     if (!email || !EMAIL_RE.test(email)) {
@@ -36,6 +43,13 @@ export async function POST(request) {
       const baseUrl =
         process.env.NEXTAUTH_URL || request.headers.get("origin") || "http://localhost:3000";
       const resetUrl = `${baseUrl.replace(/\/$/, "")}/reset-password/${token}`;
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("\n========================================================");
+        console.log("🔗 LOCAL DEV RESET LINK for:", user.email);
+        console.log(resetUrl);
+        console.log("========================================================\n");
+      }
 
       try {
         await sendEmail({

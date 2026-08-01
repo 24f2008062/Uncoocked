@@ -1,18 +1,48 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Bell, Terminal } from "lucide-react";
 
 export default function BulletinFeed() {
-  const items = [
-    { text: "🤖 AI & LLM Workshop: Student check-in opens in 1 hour",         time: "Just now", type: "system" },
-    { text: "🤝 Dandiya Festive Night: Entry gates open at 6:00 PM",           time: "12m ago",  type: "event" },
-    { text: "🚀 Cultural Fest: Stage rehearsals scheduled for Main Arena",      time: "35m ago",  type: "active" },
-    { text: "📚 Founder Meetup: Networking session registrations closing soon", time: "1h ago",   type: "system" },
-    { text: "🏆 Awards Room: Cultural Fest contest winner guest list posted",   time: "2h ago",   type: "event" },
-  ];
+  const [bulletins, setBulletins] = useState([]);
 
-  const duplicatedItems = [...items, ...items, ...items];
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/events")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.events) && isMounted) {
+          const updates = [];
+          data.events.forEach((ev) => {
+            if (Array.isArray(ev.bulletinUpdates)) {
+              ev.bulletinUpdates.forEach((bu) => {
+                updates.push({
+                  text: `📢 ${ev.title}: ${bu.title} - ${bu.content}`,
+                  time: bu.date || bu.postedAt ? new Date(bu.postedAt || bu.date).toLocaleDateString() : "Recent",
+                });
+              });
+            }
+          });
+          if (updates.length > 0) {
+            setBulletins(updates);
+          } else {
+            // Generate clean dynamic updates directly from live events
+            const derived = data.events.slice(0, 4).map((ev) => ({
+              text: `📢 ${ev.title}: Registrations active for campus students`,
+              time: ev.date ? new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Upcoming",
+            }));
+            setBulletins(derived);
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const itemsToDisplay = bulletins;
 
   return (
     <section className="py-12 relative w-full border-t border-white/6">
@@ -24,8 +54,7 @@ export default function BulletinFeed() {
             Campus Broadcast Bulletins
           </h2>
           <p className="text-[13px] text-white/45 max-w-md mx-auto leading-relaxed">
-            A simulated live-feed of official organizer updates, timeline
-            announcements, and log entries as they are broadcasted.
+            Real-time feed of official organizer updates, timeline announcements, and event logs.
           </p>
         </div>
 
@@ -41,32 +70,22 @@ export default function BulletinFeed() {
           </div>
 
           {/* Scrolling area */}
-          <div className="flex-1 relative overflow-hidden">
-            <motion.div
-              animate={{ y: [0, -380] }}
-              transition={{ ease: "linear", duration: 28, repeat: Infinity }}
-              className="space-y-2 pt-3 pb-12 px-4 cursor-default select-none"
-            >
-              {duplicatedItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white/3 border border-white/6 rounded-lg px-3 py-2.5 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors duration-150 font-mono text-[11px]"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Terminal className="h-3 w-3 text-white/25 shrink-0" />
-                    <span className="text-white/60 leading-relaxed">{item.text}</span>
-                  </div>
-                  <span className="text-[10px] text-white/30 shrink-0 font-medium">
-                    {item.time}
-                  </span>
+          <div className="flex-1 relative overflow-y-auto no-scrollbar p-3 space-y-2">
+            {itemsToDisplay.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-white/3 border border-white/6 rounded-lg px-3 py-2.5 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors duration-150 font-mono text-[11px]"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Terminal className="h-3 w-3 text-white/25 shrink-0" />
+                  <span className="text-white/60 leading-relaxed">{item.text}</span>
                 </div>
-              ))}
-            </motion.div>
+                <span className="text-[10px] text-white/30 shrink-0 font-medium">
+                  {item.time}
+                </span>
+              </div>
+            ))}
           </div>
-
-          {/* Fade overlays */}
-          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#111111] to-transparent pointer-events-none z-10" />
-          <div className="absolute inset-x-0 top-[53px] h-8 bg-gradient-to-b from-[#111111] to-transparent pointer-events-none z-10" />
         </div>
       </div>
     </section>

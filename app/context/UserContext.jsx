@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
@@ -16,7 +17,6 @@ export function UserProvider({ children }) {
   // Synchronize NextAuth session with UserContext state (no localStorage fallback)
   useEffect(() => {
     if (status === "loading") {
-      setIsLoading(true);
       return;
     }
 
@@ -45,7 +45,6 @@ export function UserProvider({ children }) {
     }
     // Sign out of NextAuth and redirect immediately to login page
     await nextAuthSignOut({ callbackUrl: "/login" });
-    // eslint-disable-next-line no-console
     console.info(`[AUTH] ${new Date().toISOString()} logout`, { email: session?.user?.email ?? null });
   };
 
