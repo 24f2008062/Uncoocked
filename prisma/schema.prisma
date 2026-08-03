@@ -8,9 +8,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -40,6 +39,8 @@ model User {
   organizedEvents Event[]        @relation("OrganizedEvents")
   managedEvents   EventManager[]
   hostApplication HostApplication?
+
+  @@index([role])
 }
 
 model Event {
@@ -80,6 +81,10 @@ model Event {
   analytics       EventAnalytic[]
   managers        EventManager[]
   activityLogs    EventActivityLog[]
+
+  @@index([status])
+  @@index([archived])
+  @@index([organizerId])
 }
 
 model TicketTier {
@@ -158,29 +163,28 @@ model UserActivity {
   @@index([eventId])
 }
 
-// prisma/schema.prisma
-
 model EventAnalytic {
   id             String   @id @default(uuid())
   event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId        String
-  date           DateTime @default(now()) // Ensures the DB stores ONLY the calendar date (YYYY-MM-DD)
+  date           DateTime @default(now())
   views          Int      @default(0)
   uniqueVisitors Int      @default(0)
   registrations  Int      @default(0)
   attendance     Int      @default(0)
   revenue        Float    @default(0)
 
-  @@unique([eventId, date]) // Ensures a single unique row for an event on any given day
+  @@unique([eventId, date])
   @@index([eventId])
 }
+
 model EventManager {
   id              String   @id @default(uuid())
   event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
-  role            String   @default("Admin") // Owner, Admin, Moderator
+  role            String   @default("Admin")
   addedAt         DateTime @default(now())
 
   @@unique([eventId, userId])
@@ -191,11 +195,11 @@ model RegistrationLog {
   id              String   @id @default(uuid())
   registration    Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   registrationId  String
-  action          String   // Status Change, Check In
+  action          String
   oldStatus       String?
   newStatus       String?
   timestamp       DateTime @default(now())
-  performedBy     String?  // User ID who performed the action
+  performedBy     String?
 
   @@index([registrationId])
 }
@@ -204,9 +208,9 @@ model EventActivityLog {
   id              String   @id @default(uuid())
   event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         String
-  action          String   // e.g., "Updated Content", "Changed Settings"
+  action          String
   details         String?
-  performedBy     String   // User ID
+  performedBy     String
   timestamp       DateTime @default(now())
 
   @@index([eventId])
@@ -214,13 +218,11 @@ model EventActivityLog {
 
 model ChatMessage {
   id        String   @id @default(uuid())
-  eventId   String   // Links the chat message to a specific event page
-  userName  String   // Name of the student who sent it
-  userEmail String   // To identify them uniquely
+  eventId   String
+  userName  String
+  userEmail String
   message   String
   createdAt DateTime @default(now())
-
-  // If you have an Event model in your schema, you can optionally link them here
 }
 
 model Review {
@@ -231,51 +233,37 @@ model Review {
   comment   String
   createdAt DateTime @default(now())
 }
-enum Role {
-  USER
-  ORGANIZER
-  SUPER_ADMIN
-}
-
-enum HostApplicationStatus {
-  PENDING
-  UNDER_REVIEW
-  NEEDS_MORE_INFORMATION
-  APPROVED
-  REJECTED
-  SUSPENDED
-}
 
 model HostApplication {
   id               String                @id @default(cuid())
   userId           String                @unique
   user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Applicant & Org details
   organizationName String
-  organizationType String                // e.g., "College", "Club", "Startup"
+  organizationType String
   organizationEmail String?
   website          String?
   address          String?
   description      String?
 
-  // Status tracking
-  status           HostApplicationStatus @default(PENDING)
+  status           String                @default("PENDING")
   assignedAdminId  String?
   rejectionReason  String?
   infoRequestedReason String?
 
-  // KYC / Supporting Documents
   kycProvider      String?
   kycReferenceId   String?
   kycStatus        String?
-  documentUrls     Json?                 // Secured references to storage
+  documentUrls     String?
 
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
 
   notes            AdminNote[]
   auditLogs        AuditLog[]
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model AdminNote {
@@ -285,6 +273,8 @@ model AdminNote {
   adminId       String
   note          String
   createdAt     DateTime        @default(now())
+
+  @@index([applicationId])
 }
 
 model AuditLog {
@@ -292,12 +282,15 @@ model AuditLog {
   applicationId String?
   application   HostApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
   adminId       String
-  action        String           // e.g., "APPLICATION_APPROVED", "KYC_VIEWED"
-  previousStatus HostApplicationStatus?
-  newStatus     HostApplicationStatus?
+  action        String
+  previousStatus String?
+  newStatus     String?
   reason        String?
   ipAddress     String?
   timestamp     DateTime         @default(now())
+
+  @@index([action])
+  @@index([timestamp])
 }
 
 model Notification {
@@ -310,4 +303,7 @@ model Notification {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
 }

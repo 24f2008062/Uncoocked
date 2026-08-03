@@ -9,31 +9,41 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || undefined;
     const search = searchParams.get("search") || "";
+    const sortBy = searchParams.get("sortBy") || "createdAt_desc";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const skip = (page - 1) * limit;
 
     const where = {
-      ...(status ? { status } : {}),
+      ...(status && status !== "ALL" ? { status } : {}),
       ...(search
         ? {
             OR: [
+              { organizationName: { contains: search, mode: "insensitive" } },
               { user: { name: { contains: search, mode: "insensitive" } } },
+              { user: { fullName: { contains: search, mode: "insensitive" } } },
               { user: { email: { contains: search, mode: "insensitive" } } },
             ],
           }
         : {}),
     };
 
+    let orderBy = { createdAt: "desc" };
+    if (sortBy === "createdAt_asc") {
+      orderBy = { createdAt: "asc" };
+    } else if (sortBy === "orgName_asc") {
+      orderBy = { organizationName: "asc" };
+    }
+
     const [applications, total] = await Promise.all([
       prisma.hostApplication.findMany({
         where,
         include: {
           user: {
-            select: { id: true, name: true, email: true, image: true },
+            select: { id: true, name: true, fullName: true, email: true, image: true },
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take: limit,
       }),
@@ -48,7 +58,7 @@ export async function GET(request) {
           total,
           page,
           limit,
-          totalPages: Math.ceil(total / limit),
+          totalPages: Math.ceil(total / limit) || 1,
         },
       },
       { status: 200 }

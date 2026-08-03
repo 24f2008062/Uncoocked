@@ -1,0 +1,261 @@
+import { prisma } from "@/server/db/prisma";
+
+export const HOST_APPLICATION_STATUS = {
+  PENDING: "PENDING",
+  UNDER_REVIEW: "UNDER_REVIEW",
+  NEEDS_MORE_INFORMATION: "NEEDS_MORE_INFORMATION",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+  SUSPENDED: "SUSPENDED",
+};
+
+// State transition rules: Map of current status -> allowed next statuses
+const VALID_TRANSITIONS = {
+  PENDING: ["UNDER_REVIEW", "APPROVED", "REJECTED", "NEEDS_MORE_INFORMATION"],
+  UNDER_REVIEW: ["APPROVED", "REJECTED", "NEEDS_MORE_INFORMATION"],
+  NEEDS_MORE_INFORMATION: ["PENDING", "UNDER_REVIEW", "REJECTED"],
+  APPROVED: ["SUSPENDED"],
+  SUSPENDED: ["APPROVED"],
+  REJECTED: ["PENDING"], // Rejected applicants may submit a new application
+};
+
+/**
+ * Reusable eligibility checker: Determines whether a user is authorized to create/host events.
+ * Returns true if user is SUPER_ADMIN or holds ORGANIZER role with an APPROVED HostApplication.
+ */
+export async function isUserEligibleToHost(userId) {
+  if (!userId) return false;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true },
+  });
+
+  if (!user) return false;
+  if (user.role === "SUPER_ADMIN") return true;
+  if (user.role !== "ORGANIZER") return false;
+
+  const application = await prisma.hostApplication.findUnique({
+    where: { userId: user.id },
+    select: { status: true },
+  });
+
+  return application?.status === HOST_APPLICATION_STATUS.APPROVED;
+}
+
+/**
+ * Submits a new host application or updates a resubmitted application for a user.
+ * Enforces single active application per user rule.
+ */
+export async function createHostApplication(userId, applicationData) {
+  if (!userId) throw new Error("User ID is required");
+
+  const { organizationName, organizationType } = applicationData;
+  if (!organizationName?.trim() || !organizationType?.trim()) {
+    throw new Error("Organization name and organization type are required");
+  }
+
+  const existingApp = await prisma.hostApplication.findUnique({
+    where: { userId },
+  });
+
+  if (existingApp) {
+    if (
+      existingApp.status === HOST_APPLICATION_STATUS.PENDING ||
+      existingApp.status === HOST_APPLICATION_STATUS.UNDER_REVIEW ||
+      existingApp.status === HOST_APPLICATION_STATUS.APPROVED
+    ) {
+      throw new Error(`An active host application already exists with status: ${existingApp.status}`);
+    }
+
+    // Allow updating existing application if in NEEDS_MORE_INFORMATION or REJECTED status
+    if (
+      existingApp.status === HOST_APPLICATION_STATUS.NEEDS_MORE_INFORMATION ||
+      existingApp.status === HOST_APPLICATION_STATUS.REJECTED
+    ) {
+      return prisma.hostApplication.update({
+        where: { id: existingApp.id },
+        data: {
+          organizationName: organizationName.trim(),
+          organizationType: organizationType.trim(),
+          organizationEmail: applicationData.organizationEmail?.trim() || null,
+          website: applicationData.website?.trim() || null,
+          address: applicationData.address?.trim() || null,
+          description: applicationData.description?.trim() || null,
+          documentUrls: applicationData.documentUrls
+            ? JSON.stringify(applicationData.documentUrls)
+            : existingApp.documentUrls,
+          status: HOST_APPLICATION_STATUS.PENDING,
+          rejectionReason: null,
+          infoRequestedReason: null,
+        },
+      });
+    }
+  }
+
+  return prisma.hostApplication.create({
+    data: {
+      userId,
+      organizationName: organizationName.trim(),
+      organizationType: organizationType.trim(),
+      organizationEmail: applicationData.organizationEmail?.trim() || null,
+      website: applicationData.website?.trim() || null,
+      address: applicationData.address?.trim() || null,
+      description: applicationData.description?.trim() || null,
+      documentUrls: applicationData.documentUrls ? JSON.stringify(applicationData.documentUrls) : null,
+      status: HOST_APPLICATION_STATUS.PENDING,
+    },
+  });
+}
+
+/**
+ * Retrieves host application details by user ID.
+ */
+export async function getHostApplicationByUserId(userId) {
+  if (!userId) return null;
+  return prisma.hostApplication.findUnique({
+    where: { userId },
+    include: {
+      notes: { orderBy: { createdAt: "desc" } },
+      auditLogs: { orderBy: { timestamp: "desc" } },
+    },
+  });
+}
+
+/**
+ * Retrieves host application details by application ID.
+ */
+export async function getHostApplicationById(applicationId) {
+  if (!applicationId) return null;
+  return prisma.hostApplication.findUnique({
+    where: { id: applicationId },
+    include: {
+      user: {
+        select: { id: true, name: true, fullName: true, email: true, role: true, createdAt: true },
+      },
+      notes: { orderBy: { createdAt: "desc" } },
+      auditLogs: { orderBy: { timestamp: "desc" } },
+    },
+  });
+}
+
+/**
+ * Process admin review actions (APPROVE, REJECT, REQUEST_INFO, SUSPEND, REINSTATE).
+ * Enforces valid state machine transitions and updates user role atomically.
+ */
+export async function processReviewAction(applicationId, adminId, action, notes) {
+  const existingApp = await prisma.hostApplication.findUnique({
+    where: { id: applicationId },
+    select: { id: true, status: true, userId: true, organizationName: true },
+  });
+
+  if (!existingApp) throw new Error("Application not found");
+
+  let nextStatus;
+  let targetUserRole = null;
+
+  switch (action) {
+    case "APPROVE":
+      nextStatus = HOST_APPLICATION_STATUS.APPROVED;
+      targetUserRole = "ORGANIZER";
+      break;
+    case "REJECT":
+      nextStatus = HOST_APPLICATION_STATUS.REJECTED;
+      break;
+    case "REQUEST_INFO":
+      nextStatus = HOST_APPLICATION_STATUS.NEEDS_MORE_INFORMATION;
+      break;
+    case "SUSPEND":
+      nextStatus = HOST_APPLICATION_STATUS.SUSPENDED;
+      targetUserRole = "USER";
+      break;
+    case "REINSTATE":
+      nextStatus = HOST_APPLICATION_STATUS.APPROVED;
+      targetUserRole = "ORGANIZER";
+      break;
+    default:
+      throw new Error(`Invalid review action: ${action}`);
+  }
+
+  // Enforce valid status transition
+  const allowedNext = VALID_TRANSITIONS[existingApp.status] || [];
+  if (!allowedNext.includes(nextStatus)) {
+    throw new Error(`Invalid status transition from ${existingApp.status} to ${nextStatus}`);
+  }
+
+  // Perform database updates inside transaction
+  return prisma.$transaction(async (tx) => {
+    const updatedApp = await tx.hostApplication.update({
+      where: { id: applicationId },
+      data: {
+        status: nextStatus,
+        ...(action === "REJECT" && { rejectionReason: notes || null }),
+        ...(action === "REQUEST_INFO" && { infoRequestedReason: notes || null }),
+      },
+    });
+
+    if (targetUserRole) {
+      await tx.user.update({
+        where: { id: existingApp.userId },
+        data: { role: targetUserRole },
+      });
+    }
+
+    if (notes) {
+      await tx.adminNote.create({
+        data: {
+          applicationId,
+          adminId,
+          note: notes,
+        },
+      });
+    }
+
+    await tx.auditLog.create({
+      data: {
+        action: `APPLICATION_${action}`,
+        applicationId,
+        adminId,
+        previousStatus: existingApp.status,
+        newStatus: nextStatus,
+        reason: notes || null,
+      },
+    });
+
+    let notificationTitle = "";
+    let notificationMessage = "";
+
+    if (action === "APPROVE") {
+      notificationTitle = "Host Application Approved! 🎉";
+      notificationMessage = `Congratulations! Your application for "${existingApp.organizationName || "your organization"}" has been approved. You can now host events.`;
+    } else if (action === "REJECT") {
+      notificationTitle = "Host Application Update";
+      notificationMessage = `Your host application for "${existingApp.organizationName || "your organization"}" was not approved.${notes ? ` Reason: ${notes}` : ""}`;
+    } else if (action === "REQUEST_INFO") {
+      notificationTitle = "Action Required: Additional Info Needed";
+      notificationMessage = `We need more details regarding your host application for "${existingApp.organizationName || "your organization"}".${notes ? ` Details: ${notes}` : ""}`;
+    } else if (action === "SUSPEND") {
+      notificationTitle = "Host Account Suspended";
+      notificationMessage = `Your host status for "${existingApp.organizationName || "your organization"}" has been suspended.${notes ? ` Reason: ${notes}` : ""}`;
+    } else if (action === "REINSTATE") {
+      notificationTitle = "Host Account Reinstated";
+      notificationMessage = `Your host status for "${existingApp.organizationName || "your organization"}" has been reinstated. You may now create and host events again.`;
+    }
+
+    if (notificationTitle && notificationMessage) {
+      try {
+        await tx.notification.create({
+          data: {
+            userId: existingApp.userId,
+            title: notificationTitle,
+            message: notificationMessage,
+          },
+        });
+      } catch (err) {
+        console.error("Failed to create notification:", err);
+      }
+    }
+
+    return updatedApp;
+  });
+}
