@@ -1,16 +1,48 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
+      router.replace(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
+    } else if (session?.user?.role !== "SUPER_ADMIN") {
+      router.replace("/dashboard");
+    }
+  }, [session, status, pathname, router]);
 
   const navItems = [
     { label: "Dashboard", href: "/admin/dashboard" },
     { label: "Applications Queue", href: "/admin/applications" },
     { label: "Audit Logs", href: "/admin/audit-logs" },
   ];
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="space-y-2 text-center">
+          <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-xs text-gray-400 font-mono">Verifying admin permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated" || session?.user?.role !== "SUPER_ADMIN") {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-xs text-gray-400 font-mono">Redirecting...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">

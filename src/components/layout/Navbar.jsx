@@ -7,10 +7,12 @@ import { useSession } from "next-auth/react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
 import { toast } from "sonner";
+import { Bell } from "lucide-react";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
   const { user, logout } = useUser();
   const { data: session } = useSession();
@@ -19,12 +21,22 @@ export default function Navbar() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-  }, []);
+
+    if (user) {
+      fetch("/api/notifications?limit=1")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) setUnreadCount(data.unreadCount || 0);
+        })
+        .catch(() => {});
+    }
+  }, [user]);
 
   const links = [
     { name: "Home", href: "/" },
     { name: "Events", href: "/event" },
     { name: "Opportunities", href: "/opportunities" },
+    { name: "Host an Event", href: "/host/apply" },
     { name: "Dashboard", href: "/dashboard" },
   ];
 
@@ -74,11 +86,25 @@ export default function Navbar() {
               </nav>
 
               {/* Auth */}
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 {mounted && user ? (
-                  <div className="relative">
-                    <button
-                      onClick={() => setProfileOpen(!profileOpen)}
+                  <>
+                    <Link
+                      href="/notifications"
+                      className="relative p-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/70 hover:text-white transition-all flex items-center justify-center"
+                      title="Notifications"
+                    >
+                      <Bell className="w-3.5 h-3.5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 text-black text-[9px] font-extrabold rounded-full flex items-center justify-center">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </Link>
+
+                    <div className="relative">
+                      <button
+                        onClick={() => setProfileOpen(!profileOpen)}
                       className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 py-1 pl-1.5 pr-3 hover:border-white/20 hover:bg-white/8 transition-all duration-150 cursor-pointer focus:outline-none"
                     >
                       <div className="w-5 h-5 rounded-full bg-[#1a1a1a] border border-white/15 text-[9px] font-bold text-white/80 flex items-center justify-center uppercase">
@@ -121,6 +147,8 @@ export default function Navbar() {
                             {[
                               { href: "/profile", label: "My Profile" },
                               { href: "/dashboard", label: "Dashboard" },
+                              { href: "/host/apply", label: "Host an Event" },
+                              { href: "/host/status", label: "Host Status" },
                               { href: "/opportunities", label: "Opportunities" },
                               { href: "/about", label: "About Uncooked" },
                             ].map(({ href, label }) => (
@@ -151,6 +179,7 @@ export default function Navbar() {
                       </>
                     )}
                   </div>
+                </>
                 ) : (
                   <Link
                     href="/login"

@@ -4,6 +4,7 @@ import { getToken } from 'next-auth/jwt';
 import { ACTIVE_CITIES, DEFAULT_CITY, DEFAULT_STATE, DEFAULT_COUNTRY } from '@/config/cities';
 import { getCachedEvents, setCachedEvents, invalidateEventsCache } from '@/server/services/eventsCacheService';
 import { validateAndSanitizeEventData } from '@/server/services/eventSanitizerService';
+import { isUserEligibleToHost } from '@/server/services/hostVerificationService';
 
 export async function GET(request) {
   try {
@@ -94,6 +95,16 @@ export async function POST(request) {
     if (!token.emailVerified) {
       return NextResponse.json({ error: 'Please verify your email address before creating events.' }, { status: 403 });
     }
+
+    // Verify host/organizer eligibility using centralized host verification service
+    const isEligible = await isUserEligibleToHost(token.sub);
+    if (!isEligible) {
+      return NextResponse.json(
+        { error: 'Forbidden: Only verified event hosts and organizers can create events.' },
+        { status: 403 }
+      );
+    }
+
 
     const rawData = await request.json();
     const validation = validateAndSanitizeEventData(rawData);

@@ -19,6 +19,10 @@ export async function GET(request) {
       ...(search
         ? {
             OR: [
+              { reason: { contains: search, mode: "insensitive" } },
+              { action: { contains: search, mode: "insensitive" } },
+              { previousStatus: { contains: search, mode: "insensitive" } },
+              { newStatus: { contains: search, mode: "insensitive" } },
               { application: { organizationName: { contains: search, mode: "insensitive" } } },
             ],
           }
@@ -51,6 +55,7 @@ export async function GET(request) {
     if (error.message === "UNAUTHORIZED") {
       return NextResponse.json({ error: "Forbidden: Super Admin access required" }, { status: 403 });
     }
+    console.error("GET Audit Logs Error:", error);
     return NextResponse.json({ error: "Failed to fetch audit logs" }, { status: 500 });
   }
 }
