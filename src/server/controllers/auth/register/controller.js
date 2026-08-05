@@ -6,6 +6,7 @@ import { rateLimit, getClientIp } from "@/server/middleware/rateLimit";
 import { verifyCaptcha } from "@/server/middleware/captcha";
 import { generateVerificationToken } from "@/server/auth/verificationToken";
 import { sendEmail } from "@/server/services/emailService";
+import { getBaseUrl } from "@/server/utils/baseUrl";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request) {
@@ -83,12 +84,9 @@ export async function POST(request) {
     });
 
     const token = generateVerificationToken(user);
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXTAUTH_URL ||
-      request.headers.get("origin") ||
-      "http://localhost:3000";
-    const verifyUrl = `${baseUrl.replace(/\/$/, "")}/api/auth/verify-email?token=${token}`;
+    const baseUrl = getBaseUrl(request);
+    const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
+
 
     if (process.env.NODE_ENV === "development") {
       console.log("\n========================================================");
