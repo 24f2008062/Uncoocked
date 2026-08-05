@@ -4,6 +4,7 @@ import { verifyVerificationToken, generateVerificationToken } from "@/server/aut
 import { sendEmail } from "@/server/services/emailService";
 import { logAuthEvent } from "@/server/auth/log";
 import { rateLimit, getClientIp } from "@/server/middleware/rateLimit";
+import { getBaseUrl } from "@/server/utils/baseUrl";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -11,11 +12,8 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXTAUTH_URL ||
-      request.headers.get("origin") ||
-      "http://localhost:3000";
+    const baseUrl = getBaseUrl(request);
+
 
     if (!token) {
       return NextResponse.redirect(
@@ -45,11 +43,7 @@ export async function GET(request) {
     return NextResponse.redirect(new URL("/verify-email?status=success", baseUrl));
   } catch (error) {
     console.error("Verify email GET route error:", error);
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXTAUTH_URL ||
-      request.headers.get("origin") ||
-      "http://localhost:3000";
+    const baseUrl = getBaseUrl(request);
     return NextResponse.redirect(
       new URL("/verify-email?error=" + encodeURIComponent("Server error during verification."), baseUrl)
     );
@@ -82,12 +76,9 @@ export async function POST(request) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (user && !user.emailVerified) {
       const token = generateVerificationToken(user);
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL ||
-        process.env.NEXTAUTH_URL ||
-        request.headers.get("origin") ||
-        "http://localhost:3000";
-      const verifyUrl = `${baseUrl.replace(/\/$/, "")}/api/auth/verify-email?token=${token}`;
+      const baseUrl = getBaseUrl(request);
+      const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
+
 
       if (process.env.NODE_ENV === "development") {
         console.log("\n========================================================");

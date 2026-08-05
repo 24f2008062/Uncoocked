@@ -5,8 +5,10 @@ import { sendEmail } from "@/server/services/emailService";
 import { logAuthEvent } from "@/server/auth/log";
 import { rateLimit, getClientIp } from "@/server/middleware/rateLimit";
 import { verifyCaptcha } from "@/server/middleware/captcha";
+import { getBaseUrl } from "@/server/utils/baseUrl";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 
 export async function POST(request) {
   try {
@@ -40,9 +42,9 @@ export async function POST(request) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
       const token = generateResetToken(user);
-      const baseUrl =
-        process.env.NEXTAUTH_URL || request.headers.get("origin") || "http://localhost:3000";
-      const resetUrl = `${baseUrl.replace(/\/$/, "")}/reset-password/${token}`;
+      const baseUrl = getBaseUrl(request);
+      const resetUrl = `${baseUrl}/reset-password/${token}`;
+
 
       if (process.env.NODE_ENV === "development") {
         console.log("\n========================================================");
