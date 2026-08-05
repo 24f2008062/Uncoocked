@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { mockEvents } from '../lib/mockData.js';
-import { hashPassword } from '../lib/password.js';
+import { mockEvents } from '../src/lib/mockData.js';
+import { hashPassword } from '../src/server/auth/password.js';
 
 const prisma = new PrismaClient();
 

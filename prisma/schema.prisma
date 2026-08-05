@@ -8,16 +8,19 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
   id              String         @id @default(cuid())
   role            String         @default("User")
+  permissions     String?        // JSON array: ["USERS_READ", "HOSTS_REVIEW", "EVENTS_MODERATE", etc.]
   name            String?
   fullName        String?
   email           String?        @unique
+  notifications   Notification[]
   emailVerified   DateTime?
   image           String?
   passwordHash    String?
@@ -37,6 +40,10 @@ model User {
   activities      UserActivity[]
   organizedEvents Event[]        @relation("OrganizedEvents")
   managedEvents   EventManager[]
+  hostApplication HostApplication?
+  supportTickets  SupportTicket[]
+
+  @@index([role])
 }
 
 model Event {
@@ -77,6 +84,10 @@ model Event {
   analytics       EventAnalytic[]
   managers        EventManager[]
   activityLogs    EventActivityLog[]
+
+  @@index([status])
+  @@index([archived])
+  @@index([organizerId])
 }
 
 model TicketTier {
@@ -155,29 +166,28 @@ model UserActivity {
   @@index([eventId])
 }
 
-// prisma/schema.prisma
-
 model EventAnalytic {
   id             String   @id @default(uuid())
   event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId        String
-  date           DateTime @default(now()) // Ensures the DB stores ONLY the calendar date (YYYY-MM-DD)
+  date           DateTime @default(now())
   views          Int      @default(0)
   uniqueVisitors Int      @default(0)
   registrations  Int      @default(0)
   attendance     Int      @default(0)
   revenue        Float    @default(0)
 
-  @@unique([eventId, date]) // Ensures a single unique row for an event on any given day
+  @@unique([eventId, date])
   @@index([eventId])
 }
+
 model EventManager {
   id              String   @id @default(uuid())
   event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
-  role            String   @default("Admin") // Owner, Admin, Moderator
+  role            String   @default("Admin")
   addedAt         DateTime @default(now())
 
   @@unique([eventId, userId])
@@ -188,11 +198,11 @@ model RegistrationLog {
   id              String   @id @default(uuid())
   registration    Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   registrationId  String
-  action          String   // Status Change, Check In
+  action          String
   oldStatus       String?
   newStatus       String?
   timestamp       DateTime @default(now())
-  performedBy     String?  // User ID who performed the action
+  performedBy     String?
 
   @@index([registrationId])
 }
@@ -201,9 +211,9 @@ model EventActivityLog {
   id              String   @id @default(uuid())
   event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         String
-  action          String   // e.g., "Updated Content", "Changed Settings"
+  action          String
   details         String?
-  performedBy     String   // User ID
+  performedBy     String
   timestamp       DateTime @default(now())
 
   @@index([eventId])
@@ -211,13 +221,11 @@ model EventActivityLog {
 
 model ChatMessage {
   id        String   @id @default(uuid())
-  eventId   String   // Links the chat message to a specific event page
-  userName  String   // Name of the student who sent it
-  userEmail String   // To identify them uniquely
+  eventId   String
+  userName  String
+  userEmail String
   message   String
   createdAt DateTime @default(now())
-
-  // If you have an Event model in your schema, you can optionally link them here
 }
 
 model Review {
@@ -228,3 +236,161 @@ model Review {
   comment   String
   createdAt DateTime @default(now())
 }
+
+model HostApplication {
+  id               String                @id @default(cuid())
+  userId           String                @unique
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  organizationName String
+  organizationType String
+  organizationEmail String?
+  website          String?
+  address          String?
+  description      String?
+
+  status           String                @default("PENDING")
+  assignedAdminId  String?
+  rejectionReason  String?
+  infoRequestedReason String?
+
+  kycProvider      String?
+  kycReferenceId   String?
+  kycStatus        String?
+  documentUrls     String?
+
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  notes            AdminNote[]
+  auditLogs        AuditLog[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AdminNote {
+  id            String          @id @default(cuid())
+  applicationId String
+  application   HostApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  adminId       String
+  note          String
+  createdAt     DateTime        @default(now())
+
+  @@index([applicationId])
+}
+
+model AuditLog {
+  id            String           @id @default(cuid())
+  applicationId String?
+  application   HostApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  adminId       String
+  action        String
+  previousStatus String?
+  newStatus     String?
+  reason        String?
+  ipAddress     String?
+  timestamp     DateTime         @default(now())
+
+  @@index([action])
+  @@index([timestamp])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("SYSTEM")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+}
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  type        String   @default("BOOLEAN")
+  description String?
+  updatedBy   String
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([key])
+}
+
+model SystemTelemetrySnapshot {
+  id            String   @id @default(cuid())
+  cpuUsagePct   Float
+  memUsagePct   Float
+  apiLatencyP95 Int
+  dbLatencyMs   Int
+  activeUsers   Int      @default(0)
+  errorRatePct  Float    @default(0)
+  timestamp     DateTime @default(now())
+
+  @@index([timestamp])
+}
+
+model PlatformIncident {
+  id           String    @id @default(cuid())
+  title        String
+  severity     String    // SEV1_CRITICAL, SEV2_MAJOR, SEV3_MINOR
+  status       String    // INVESTIGATING, IDENTIFIED, MONITORING, RESOLVED
+  summary      String
+  affectedArea String    // PAYMENTS, HOSTING, EVENTS, AUTH
+  declaredBy   String
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([severity])
+  @@index([status, severity])
+  @@index([createdAt])
+}
+
+model SupportTicket {
+  id              String          @id @default(cuid())
+  subject         String
+  category        String          // ACCOUNT, HOSTING, EVENT, PAYMENT, GENERAL
+  priority        String          @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status          String          @default("OPEN") // OPEN, IN_PROGRESS, WAITING_ON_USER, RESOLVED, CLOSED
+
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  assignedAdminId String?
+  eventId         String?
+  hostAppId       String?
+
+  messages        TicketMessage[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([userId])
+  @@index([userId, status])
+  @@index([category, priority])
+}
+
+
+model TicketMessage {
+  id         String        @id @default(cuid())
+  ticketId   String
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId   String
+  isInternal Boolean       @default(false)
+  content    String
+  createdAt  DateTime      @default(now())
+
+  @@index([ticketId])
+}
+
+
+
