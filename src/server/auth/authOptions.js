@@ -167,6 +167,12 @@ export const authOptions = {
       if (trigger === "update" && session?.emailVerified !== undefined) {
         token.emailVerified = session.emailVerified;
       }
+      if (trigger === "update" && session?.role !== undefined) {
+        token.role = session.role;
+      }
+      if (trigger === "update" && session?.permissions !== undefined) {
+        token.permissions = session.permissions;
+      }
 
       return token;
     },

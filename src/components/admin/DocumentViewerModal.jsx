@@ -116,6 +116,8 @@ export default function DocumentViewerModal({
             <iframe
               src={docUrl}
               title={docTitle}
+              sandbox="allow-scripts allow-same-origin"
+              referrerPolicy="no-referrer"
               className="w-full h-[65vh] rounded-lg border border-neutral-800 bg-white"
             />
           ) : (
@@ -123,6 +125,8 @@ export default function DocumentViewerModal({
               <iframe
                 src={docUrl}
                 title={docTitle}
+                sandbox="allow-scripts allow-same-origin"
+                referrerPolicy="no-referrer"
                 className="w-full h-full border-0"
               />
             </div>

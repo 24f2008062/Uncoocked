@@ -22,6 +22,10 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (targetUser.role === "SUPER_ADMIN" || targetUser.id === admin.id) {
+      return NextResponse.json({ error: "Super Admin accounts cannot be suspended or locked out" }, { status: 403 });
+    }
+
     const isSuspending = action === "SUSPEND";
 
     const updatedUser = await prisma.$transaction(async (tx) => {

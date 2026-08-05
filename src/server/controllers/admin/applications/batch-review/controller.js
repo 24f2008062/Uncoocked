@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/server/auth/guards";
 import { processReviewAction } from "@/server/services/hostVerificationService";
+import { withAdminRateLimit } from "@/server/middleware/rateLimit";
 
-export async function POST(request) {
+export const POST = withAdminRateLimit(async function POST(request) {
   try {
     const admin = await requireSuperAdmin(request);
     const { applicationIds, action, notes } = await request.json();
@@ -40,4 +41,4 @@ export async function POST(request) {
     }
     return NextResponse.json({ error: error.message || "Batch review action failed" }, { status: 500 });
   }
-}
+});

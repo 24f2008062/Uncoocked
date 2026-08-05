@@ -27,12 +27,12 @@ export async function GET(request) {
       ...(search
         ? {
             OR: [
-              { title: { contains: search, mode: "insensitive" } },
-              { description: { contains: search, mode: "insensitive" } },
-              { category: { contains: search, mode: "insensitive" } },
-              { location: { contains: search, mode: "insensitive" } },
-              { organizer: { name: { contains: search, mode: "insensitive" } } },
-              { organizer: { email: { contains: search, mode: "insensitive" } } },
+              { title: { contains: search } },
+              { description: { contains: search } },
+              { category: { contains: search } },
+              { location: { contains: search } },
+              { organizer: { name: { contains: search } } },
+              { organizer: { email: { contains: search } } },
             ],
           }
         : {}),

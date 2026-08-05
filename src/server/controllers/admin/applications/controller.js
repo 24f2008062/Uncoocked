@@ -19,10 +19,10 @@ export async function GET(request) {
       ...(search
         ? {
             OR: [
-              { organizationName: { contains: search, mode: "insensitive" } },
-              { user: { name: { contains: search, mode: "insensitive" } } },
-              { user: { fullName: { contains: search, mode: "insensitive" } } },
-              { user: { email: { contains: search, mode: "insensitive" } } },
+              { organizationName: { contains: search } },
+              { user: { name: { contains: search } } },
+              { user: { fullName: { contains: search } } },
+              { user: { email: { contains: search } } },
             ],
           }
         : {}),

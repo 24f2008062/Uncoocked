@@ -22,6 +22,9 @@ export default function AdminLayout({ children }) {
   const navItems = [
     { label: "Dashboard", href: "/admin/dashboard" },
     { label: "Applications Queue", href: "/admin/applications" },
+    { label: "Users", href: "/admin/users" },
+    { label: "Events", href: "/admin/events" },
+    { label: "Analytics", href: "/admin/analytics" },
     { label: "Audit Logs", href: "/admin/audit-logs" },
   ];
 
@@ -48,20 +51,20 @@ export default function AdminLayout({ children }) {
     <div className="min-h-screen bg-black text-white">
       {/* Top Admin Navigation Header */}
       <header className="border-b border-neutral-800 bg-neutral-950/80 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/admin/dashboard" className="text-lg font-black tracking-wider text-amber-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 sm:gap-8 overflow-x-auto no-scrollbar">
+            <Link href="/admin/dashboard" className="text-lg font-black tracking-wider text-amber-500 shrink-0">
               UNCOOKED <span className="text-xs font-bold text-white uppercase bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30">Admin</span>
             </Link>
 
-            <nav className="flex items-center gap-1">
+            <nav className="flex items-center gap-1 shrink-0">
               {navItems.map((item) => {
                 const isActive = pathname.startsWith(item.href);
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
                       isActive ? "bg-neutral-800 text-white" : "text-gray-400 hover:text-white hover:bg-neutral-900"
                     }`}
                   >
@@ -72,7 +75,7 @@ export default function AdminLayout({ children }) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-xs text-gray-400 font-mono">Super Admin Console</span>
           </div>

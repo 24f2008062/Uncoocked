@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/server/db/prisma";
 import { requireSuperAdmin } from "@/server/auth/guards";
+import { withAdminRateLimit } from "@/server/middleware/rateLimit";
+import { createNotification } from "@/server/services/notificationService";
 
-export async function POST(request) {
+export const POST = withAdminRateLimit(async function POST(request) {
   try {
     const admin = await requireSuperAdmin(request);
     const { eventIds, action, reason } = await request.json();
@@ -55,6 +57,15 @@ export async function POST(request) {
           }),
         ]);
 
+        if (event.organizerId) {
+          await createNotification({
+            userId: event.organizerId,
+            title: "Event Moderation Update",
+            message: `Your event "${event.title}" status has been updated to ${updatedStatus}${updatedArchived ? " (Archived)" : ""}.`,
+            type: "MODERATION",
+          }).catch(() => null);
+        }
+
         processed.push(id);
       } catch (err) {
         errors.push({ id, error: err.message });
@@ -75,4 +86,4 @@ export async function POST(request) {
     console.error("POST Batch Event Moderation Error:", error);
     return NextResponse.json({ error: "Batch event moderation failed" }, { status: 500 });
   }
-}
+});

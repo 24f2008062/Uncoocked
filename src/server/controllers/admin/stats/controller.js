@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/server/db/prisma";
 import { requireSuperAdmin } from "@/server/auth/guards";
+import { getSystemHealthStatus } from "@/server/services/systemMonitoringService";
 
 export async function GET(request) {
   try {
@@ -10,12 +11,7 @@ export async function GET(request) {
 
     const [
       totalApplications,
-      pendingCount,
-      underReviewCount,
-      approvedCount,
-      rejectedCount,
-      needsInfoCount,
-      suspendedCount,
+      statusGroups,
       totalUsers,
       totalOrganizers,
       activeEvents,
@@ -23,14 +19,14 @@ export async function GET(request) {
       completedEvents,
       recentActivity,
       pendingWorkItems,
+      activeIncidentsCount,
+      systemHealth,
     ] = await Promise.all([
       prisma.hostApplication.count(),
-      prisma.hostApplication.count({ where: { status: "PENDING" } }),
-      prisma.hostApplication.count({ where: { status: "UNDER_REVIEW" } }),
-      prisma.hostApplication.count({ where: { status: "APPROVED" } }),
-      prisma.hostApplication.count({ where: { status: "REJECTED" } }),
-      prisma.hostApplication.count({ where: { status: "NEEDS_MORE_INFORMATION" } }),
-      prisma.hostApplication.count({ where: { status: "SUSPENDED" } }),
+      prisma.hostApplication.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
       prisma.user.count(),
       prisma.user.count({ where: { role: { in: ["ORGANIZER", "SUPER_ADMIN"] } } }),
       prisma.event.count({ where: { status: "Active", archived: false } }),
@@ -58,7 +54,23 @@ export async function GET(request) {
           user: { select: { id: true, name: true, fullName: true, email: true } },
         },
       }),
+      prisma.platformIncident.count({
+        where: { status: { in: ["INVESTIGATING", "IDENTIFIED", "MONITORING"] } },
+      }).catch(() => 0),
+      getSystemHealthStatus().catch(() => null),
     ]);
+
+    const statusMap = statusGroups.reduce((acc, curr) => {
+      acc[curr.status] = curr._count._all;
+      return acc;
+    }, {});
+
+    const pendingCount = statusMap["PENDING"] || 0;
+    const underReviewCount = statusMap["UNDER_REVIEW"] || 0;
+    const approvedCount = statusMap["APPROVED"] || 0;
+    const rejectedCount = statusMap["REJECTED"] || 0;
+    const needsInfoCount = statusMap["NEEDS_MORE_INFORMATION"] || 0;
+    const suspendedCount = statusMap["SUSPENDED"] || 0;
 
     const approvalRate = totalApplications > 0 ? ((approvedCount / totalApplications) * 100).toFixed(1) : "0.0";
     const rejectionRate = totalApplications > 0 ? ((rejectedCount / totalApplications) * 100).toFixed(1) : "0.0";
@@ -82,6 +94,8 @@ export async function GET(request) {
         approvalRate,
         rejectionRate,
         verificationQueueSize,
+        activeIncidentsCount,
+        systemHealth,
       },
       recentActivity,
       pendingWorkItems,

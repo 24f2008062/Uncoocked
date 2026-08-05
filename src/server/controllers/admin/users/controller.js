@@ -23,11 +23,11 @@ export async function GET(request) {
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { fullName: { contains: search, mode: "insensitive" } },
-              { email: { contains: search, mode: "insensitive" } },
-              { clubAssociation: { contains: search, mode: "insensitive" } },
-              { department: { contains: search, mode: "insensitive" } },
+              { name: { contains: search } },
+              { fullName: { contains: search } },
+              { email: { contains: search } },
+              { clubAssociation: { contains: search } },
+              { department: { contains: search } },
             ],
           }
         : {}),

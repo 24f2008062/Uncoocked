@@ -35,7 +35,7 @@ export async function requireSuperAdmin(request) {
 
   const user = await prisma.user.findUnique({
     where: { id: token.sub },
-    select: { id: true, role: true },
+    select: { id: true, role: true, permissions: true },
   });
 
   if (!user || user.role !== "SUPER_ADMIN") {
@@ -44,3 +44,33 @@ export async function requireSuperAdmin(request) {
 
   return user;
 }
+
+// Verifies that the user has a specific granular permission OR is SUPER_ADMIN
+export async function requirePermission(request, requiredPermission) {
+  const token = await getAuthToken(request);
+
+  if (!token?.sub) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: token.sub },
+    select: { id: true, role: true, permissions: true },
+  });
+
+  if (!user) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (user.role === "SUPER_ADMIN") {
+    return user;
+  }
+
+  const userPermissions = user.permissions ? JSON.parse(user.permissions) : [];
+  if (!Array.isArray(userPermissions) || !userPermissions.includes(requiredPermission)) {
+    throw new Error("FORBIDDEN_PERMISSION");
+  }
+
+  return user;
+}
+

@@ -23,6 +23,14 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (targetUser.id === admin.id && newRole !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Self-demotion is forbidden. Super Admins cannot revoke their own role." }, { status: 400 });
+    }
+
+    if (targetUser.role === "SUPER_ADMIN" && targetUser.id !== admin.id) {
+      return NextResponse.json({ error: "Forbidden: Cannot modify another Super Admin's role" }, { status: 403 });
+    }
+
     const previousRole = targetUser.role;
 
     const updatedUser = await prisma.$transaction(async (tx) => {

@@ -19,11 +19,11 @@ export async function GET(request) {
       ...(search
         ? {
             OR: [
-              { reason: { contains: search, mode: "insensitive" } },
-              { action: { contains: search, mode: "insensitive" } },
-              { previousStatus: { contains: search, mode: "insensitive" } },
-              { newStatus: { contains: search, mode: "insensitive" } },
-              { application: { organizationName: { contains: search, mode: "insensitive" } } },
+              { reason: { contains: search } },
+              { action: { contains: search } },
+              { previousStatus: { contains: search } },
+              { newStatus: { contains: search } },
+              { application: { organizationName: { contains: search } } },
             ],
           }
         : {}),

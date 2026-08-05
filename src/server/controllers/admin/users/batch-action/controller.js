@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/server/db/prisma";
 import { requireSuperAdmin } from "@/server/auth/guards";
+import { withAdminRateLimit } from "@/server/middleware/rateLimit";
 
-export async function POST(request) {
+export const POST = withAdminRateLimit(async function POST(request) {
   try {
     const admin = await requireSuperAdmin(request);
     const { userIds, action, reason } = await request.json();
@@ -26,6 +27,11 @@ export async function POST(request) {
         });
 
         if (!user) continue;
+
+        if (user.role === "SUPER_ADMIN" || user.id === admin.id) {
+          errors.push({ userId, error: "Cannot perform bulk actions on Super Admin or self account" });
+          continue;
+        }
 
         if (action === "SUSPEND" || action === "REACTIVATE") {
           const isSuspending = action === "SUSPEND";
@@ -88,4 +94,4 @@ export async function POST(request) {
     console.error("POST Batch User Action Error:", error);
     return NextResponse.json({ error: "Batch user action failed" }, { status: 500 });
   }
-}
+});

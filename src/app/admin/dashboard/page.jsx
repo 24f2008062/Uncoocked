@@ -157,7 +157,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Operational System Health Metrics Banner */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
         <div>
           <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider block">Total Applications</span>
           <span className="text-2xl font-black text-white">{stats.totalApplications ?? 0}</span>
@@ -173,6 +173,24 @@ export default function AdminDashboardPage() {
         <div>
           <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider block">Queue Size</span>
           <span className="text-2xl font-black text-amber-400">{stats.verificationQueueSize ?? 0}</span>
+        </div>
+        <div>
+          <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider block">System Status</span>
+          <div className="flex flex-col items-center">
+            <span className={`text-sm font-extrabold inline-flex items-center gap-1.5 px-2.5 py-1 mt-1 rounded-full border ${
+              (stats.activeIncidentsCount || 0) === 0 && (stats.systemHealth?.status !== "DEGRADED")
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${ (stats.activeIncidentsCount || 0) === 0 ? "bg-emerald-400 animate-pulse" : "bg-rose-400 animate-ping" }`} />
+              {(stats.activeIncidentsCount || 0) === 0 ? "Operational" : `${stats.activeIncidentsCount} Incident(s)`}
+            </span>
+            {stats.systemHealth && (
+              <span className="text-[9px] text-gray-400 font-mono mt-1">
+                DB: {stats.systemHealth.dbLatencyMs >= 0 ? `${stats.systemHealth.dbLatencyMs}ms` : "ERR"} | P95: {stats.systemHealth.p95LatencyMs}ms
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
